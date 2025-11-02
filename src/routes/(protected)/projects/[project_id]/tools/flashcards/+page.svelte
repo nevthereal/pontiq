@@ -7,12 +7,12 @@
 </script>
 
 <div>
-	{#each await getFlashCards(params.project_id) as fc (fc.id)}
-		<Accordion.Root type="single">
-			<Accordion.Item value="item-1">
+	<Accordion.Root type="single">
+		{#each await getFlashCards(params.project_id) as fc (fc.id)}
+			<Accordion.Item value={fc.id}>
 				<Accordion.Trigger>{fc.term}</Accordion.Trigger>
 				<Accordion.Content>{fc.definition}</Accordion.Content>
 			</Accordion.Item>
-		</Accordion.Root>
-	{/each}
+		{/each}
+	</Accordion.Root>
 </div>
