@@ -60,13 +60,8 @@
 		</InputGroup.Addon>
 
 		<InputGroup.Addon align="block-end">
-			<Toggle
-				bind:pressed={
-					() => chatConfig.current.studyModeEnabled,
-					(v) => (chatConfig.current.studyModeEnabled = v)
-				}
-				variant="outline"
-				size="sm"><GraduationCap />Enhanced mode</Toggle
+			<Toggle bind:pressed={chatConfig.current.studyModeEnabled} variant="outline" size="sm"
+				><GraduationCap />Enhanced mode</Toggle
 			>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}

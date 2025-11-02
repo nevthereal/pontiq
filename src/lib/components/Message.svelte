@@ -176,7 +176,7 @@
 									<Brain size={16} /> Reasoning summaries ({completedReasoningParts.length})
 								</p>
 							</Accordion.Trigger>
-							<Accordion.Content class="prose- space-y-4">
+							<Accordion.Content class="space-y-4">
 								{#each completedReasoningParts as part, idx (idx)}
 									{#if part.type === 'reasoning' && 'text' in part}
 										<div>
