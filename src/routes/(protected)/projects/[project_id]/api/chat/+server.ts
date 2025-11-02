@@ -1,8 +1,12 @@
 import { type MyUIMessage, tools } from '$lib/server/ai';
 import type { chatConfig } from '$lib/chat.svelte';
-import { gateway } from '$lib/server/utils';
 import { error } from '@sveltejs/kit';
-import { streamText, convertToModelMessages, stepCountIs } from 'ai';
+import { streamText, convertToModelMessages, stepCountIs, createGateway } from 'ai';
+import { VERCEL_AI_KEY } from '$env/static/private';
+
+const gateway = createGateway({
+	apiKey: VERCEL_AI_KEY
+});
 
 export async function POST({ request, locals }) {
 	if (!locals.user) error(401, 'No user');

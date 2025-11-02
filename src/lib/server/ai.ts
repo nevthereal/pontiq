@@ -6,6 +6,7 @@ import { flashcard, studyPlanStep, studyStepTypes } from './db/schema';
 import z from 'zod';
 import Exa from 'exa-js';
 import { EXA_API_KEY } from '$env/static/private';
+import { getFlashCards } from '$lib/remote/tools.remote';
 
 const zStudyStep = z.object({
 	title: z

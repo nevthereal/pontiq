@@ -27,3 +27,15 @@ export const deleteSteps = command(z.string(), async (projectId) => {
 
 	getStudySteps(projectId).refresh();
 });
+
+export const getFlashCards = query(z.string(), async (projectId) => {
+	const flashCards = await db.query.flashcard.findMany({
+		where: {
+			projectId
+		}
+	});
+
+	if (!flashCards.length) return null;
+
+	return flashCards;
+});

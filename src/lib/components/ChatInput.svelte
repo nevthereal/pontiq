@@ -41,37 +41,9 @@
 		<InputGroup.Input bind:value={input} placeholder="Ask, Search or Chat..." />
 
 		<InputGroup.Addon align="block-start">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
-					><Plus /></DropdownMenu.Trigger
-				>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						{#each await getFiles(projectId) as file (file.id)}
-							<DropdownMenu.CheckboxItem
-								bind:checked={
-									() => attachments.isInChat(file),
-									(checked) => {
-										if (checked) {
-											attachments.add(file);
-										} else {
-											attachments.remove(file.id);
-										}
-									}
-								}>{file.name}</DropdownMenu.CheckboxItem
-							>
-						{:else}
-							<DropdownMenu.Item disabled>No files in knowledge base</DropdownMenu.Item>
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-
 			{#each attachments.files as att (att.id)}
 				<ButtonGroup.Root class="w-48">
-					<ButtonGroup.Text class="min-w-0 overflow-x-auto font-mono">
+					<ButtonGroup.Text class="min-w-0 overflow-x-auto font-mono whitespace-nowrap">
 						{att.name}
 					</ButtonGroup.Text>
 					<InputGroup.Button
@@ -91,8 +63,37 @@
 					() => chatConfig.current.studyModeEnabled,
 					(v) => (chatConfig.current.studyModeEnabled = v)
 				}
-				variant="outline"><GraduationCap />Enhanced mode</Toggle
+				variant="outline"
+				size="sm"><GraduationCap />Enhanced mode</Toggle
 			>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
+					><Plus /></DropdownMenu.Trigger
+				>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						{#each await getFiles(projectId) as file (file.id)}
+							<DropdownMenu.CheckboxItem
+								closeOnSelect={false}
+								bind:checked={
+									() => attachments.isInChat(file),
+									(checked) => {
+										if (checked) {
+											attachments.add(file);
+										} else {
+											attachments.remove(file.id);
+										}
+									}
+								}>{file.name}</DropdownMenu.CheckboxItem
+							>
+						{:else}
+							<DropdownMenu.Item disabled>No files in knowledge base</DropdownMenu.Item>
+						{/each}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 			<InputGroup.Button
 				variant="default"
 				class="ml-auto rounded-full"

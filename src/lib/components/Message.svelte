@@ -95,7 +95,7 @@
 
 <li in:fade|global>
 	{#if message.role === 'user'}
-		<Item.Root class="ml-auto w-fit" variant="muted">
+		<Item.Root class="ml-auto w-fit max-w-lg" variant="muted">
 			<Item.Content>
 				<!-- Files container - flex row -->
 				{#if message.parts.some((part) => part.type === 'file')}
