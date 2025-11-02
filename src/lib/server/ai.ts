@@ -6,6 +6,7 @@ import { flashcard, studyPlanStep, studyStepTypes } from './db/schema';
 import z from 'zod';
 import Exa from 'exa-js';
 import { EXA_API_KEY } from '$env/static/private';
+import { eq, asc } from 'drizzle-orm';
 
 const zStudyStep = z.object({
 	title: z
@@ -85,10 +86,44 @@ const flashCardTool = tool({
 	}
 });
 
+const getFlashcardsTool = tool({
+	description: 'Retrieve all existing flashcards for the current project',
+	inputSchema: z.object({}),
+	name: 'get_flashcards',
+
+	execute: async () => {
+		const { params } = getRequestEvent();
+
+		if (!params.project_id) error(404, 'No project ID');
+
+		return await db.select().from(flashcard).where(eq(flashcard.projectId, params.project_id));
+	}
+});
+
+const getStudyPlanTool = tool({
+	description: 'Retrieve the existing study plan for the current project',
+	inputSchema: z.object({}),
+	name: 'get_study_plan',
+
+	execute: async () => {
+		const { params } = getRequestEvent();
+
+		if (!params.project_id) error(404, 'No project ID');
+
+		return await db
+			.select()
+			.from(studyPlanStep)
+			.where(eq(studyPlanStep.projectId, params.project_id))
+			.orderBy(asc(studyPlanStep.date));
+	}
+});
+
 export const tools = {
 	study_plan: studyPlanTool,
 	web_search: webSearchTool,
-	flashcards: flashCardTool
+	flashcards: flashCardTool,
+	get_flashcards: getFlashcardsTool,
+	get_study_plan: getStudyPlanTool
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof tools>;

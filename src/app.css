@@ -6,6 +6,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+@utility no-scrollbar {
+	::-webkit-scrollbar {
+		display: none;
+	}
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
 :root {
 	--radius: 0.65rem;
 	--background: oklch(1 0 0);

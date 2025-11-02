@@ -11,4 +11,6 @@
 	class="mt-2 mr-auto text-muted-foreground"
 	href={resolve('/(protected)/projects/[project_id]', params)}><ArrowLeft /> All tools</Button
 >
-{@render children()}
+<div class="overflow-y-scroll">
+	{@render children()}
+</div>

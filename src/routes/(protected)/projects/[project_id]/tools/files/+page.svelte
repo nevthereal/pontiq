@@ -31,36 +31,16 @@
 		onUploadError: (e) => {
 			toast.error(e.message);
 		},
-		url: resolve('/(protected)/projects/[project_id]/tools/files/upload', params),
+		url: resolve('/(protected)/projects/[project_id]/api/upload', params),
 		config: { cn: twMerge }
 	});
 </script>
 
 <h2 class="my-2 font-medium">Your files:</h2>
-<div class="mb-2 flex-1 overflow-y-auto">
-	<svelte:boundary onerror={(e) => console.error(e)}>
-		{#snippet pending()}
-			<Loading thing="files" />
-		{/snippet}
-		{#snippet failed()}
-			<p>Failed to load files</p>
-		{/snippet}
-		<ul class="grid grid-cols-2 gap-2">
-			{#each await getFiles(params.project_id) as file (file.id)}
-				<File {file} />
-			{:else}
-				<Muted class="col-span-2 text-xs text-muted-foreground"
-					>No files yet. Upload some below</Muted
-				>
-			{/each}
-		</ul>
-	</svelte:boundary>
-</div>
-
 <Drawer.Root bind:open>
-	<Drawer.Trigger class={buttonVariants()}><Upload /> Upload</Drawer.Trigger>
+	<Drawer.Trigger class={[buttonVariants(), 'mb-2 w-full']}><Upload /> Upload</Drawer.Trigger>
 	<Drawer.Content>
-		<div class="mx-auto mb-8 max-w-sm">
+		<div class="mx-auto mb-6 max-w-2xl">
 			<Drawer.Header>
 				<Drawer.Title>Upload files</Drawer.Title>
 			</Drawer.Header>
@@ -85,3 +65,22 @@
 		</div>
 	</Drawer.Content>
 </Drawer.Root>
+<div class="mb-2 flex-1 overflow-y-auto">
+	<svelte:boundary onerror={(e) => console.error(e)}>
+		{#snippet pending()}
+			<Loading thing="files" />
+		{/snippet}
+		{#snippet failed()}
+			<p>Failed to load files</p>
+		{/snippet}
+		<ul class="grid grid-cols-2 gap-2 xl:grid-cols-3">
+			{#each await getFiles(params.project_id) as file (file.id)}
+				<File {file} />
+			{:else}
+				<Muted class="col-span-2 text-xs text-muted-foreground"
+					>No files yet. Upload some below</Muted
+				>
+			{/each}
+		</ul>
+	</svelte:boundary>
+</div>
