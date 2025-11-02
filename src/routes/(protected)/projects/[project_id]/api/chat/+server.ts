@@ -15,7 +15,8 @@ export async function POST({ request, locals }) {
 		`You are a chatbot assistant in a study app called Pontiq` +
 		`You should be answering the questions from the provided files, if given, else answer from your knowledge or search the web.` +
 		`Please answer in the language you were prompted or the language of given files.` +
-		`The user's name is ${locals.user.name} and right now is ${new Date()}`;
+		`The user's name is ${locals.user.name} and right now is ${new Date()}` +
+		`Don't explain too heavily what you did in tool calls, since the user can see this in the UI`;
 
 	const STUDY_MODE_PROMPT =
 		DEFAULT_SYS_PROMPT +
@@ -80,11 +81,17 @@ export async function POST({ request, locals }) {
 		await request.json();
 
 	const result = streamText({
-		model: gateway('anthropic/claude-haiku-4.5'),
+		model: gateway('openai/gpt-5'),
 		messages: convertToModelMessages(messages),
 		system: config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT,
 		tools,
-		stopWhen: stepCountIs(20)
+		stopWhen: stepCountIs(20),
+		providerOptions: {
+			openai: {
+				reasoningSummary: 'detailed',
+				reasoning_effort: 'medium'
+			}
+		}
 	});
 
 	return result.toUIMessageStreamResponse();
