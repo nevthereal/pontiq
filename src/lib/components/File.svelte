@@ -67,7 +67,9 @@
 	</div>
 	<Tooltip.Provider>
 		<Tooltip.Root delayDuration={100}>
-			<Tooltip.Trigger class="overflow-x-scroll font-mono text-xs">{slicedName}</Tooltip.Trigger>
+			<Tooltip.Trigger class="no-scrollbar overflow-x-scroll font-mono text-xs"
+				>{slicedName}</Tooltip.Trigger
+			>
 			<Tooltip.Content>
 				<p>{file.name}</p>
 			</Tooltip.Content>

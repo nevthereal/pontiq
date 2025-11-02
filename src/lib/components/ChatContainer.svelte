@@ -38,7 +38,7 @@
 	<h1 class="flex min-h-0 items-center gap-2 border-b pb-2 text-2xl font-semibold">
 		<MessageCircle /> Document Chat
 	</h1>
-	<div class="relative mt-4 flex h-full min-h-0 flex-col">
+	<div class="relative mt-4 flex h-full min-h-0 flex-col no-scrollbar">
 		<ul bind:this={chatContainer} class="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto pb-48">
 			{#each chat.messages as message, messageIndex (messageIndex)}
 				<Message {message} />
