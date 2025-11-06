@@ -37,18 +37,18 @@
 			<DropdownMenu.Group>
 				<DropdownMenu.Label>Profile</DropdownMenu.Label>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					onclick={async () => await authClient.signOut().then(() => location.reload())}
-					><LogOut /> Sign out</DropdownMenu.Item
-				>
 				<DropdownMenu.Item closeOnSelect={false} onclick={toggleMode}>
 					{#if mode.current === 'dark'}
 						<MoonIcon />
 					{:else}
 						<SunIcon />
 					{/if}
-
 					Change theme</DropdownMenu.Item
+				>
+				<DropdownMenu.Item
+					variant="destructive"
+					onclick={async () => await authClient.signOut().then(() => location.reload())}
+					><LogOut /> Sign out</DropdownMenu.Item
 				>
 			</DropdownMenu.Group>
 		</DropdownMenu.Content>

@@ -14,7 +14,7 @@
 	let value = $state('');
 </script>
 
-<main class="mx-auto max-w-xl">
+<main class="mx-auto max-w-xl p-6">
 	<h1 class="mb-2 text-3xl font-bold">Create project</h1>
 	<form {...createProject}>
 		<Field.Group>

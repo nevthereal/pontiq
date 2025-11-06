@@ -13,7 +13,7 @@
 	let { params, children } = $props();
 </script>
 
-<main class="flex h-[90dvh] flex-col p-2">
+<main class="flex h-screen flex-col py-6">
 	<!-- TODO -->
 	<div class="mx-4 mb-2 flex items-center justify-between text-3xl">
 		<svelte:boundary>
