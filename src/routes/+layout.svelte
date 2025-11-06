@@ -1,14 +1,12 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/button/button.svelte';
 	import Logo from '$lib/assets/logo.png';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import '../app.css';
-	import { authClient } from '$lib/auth-client';
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import AppSidebar from '$lib/components/AppSidebar.svelte';
 	import { getUser } from '$lib/remote/auth.remote';
-	import ModeToggle from '$lib/components/ModeToggle.svelte';
-	import { resolve } from '$app/paths';
 
 	let { children } = $props();
 </script>
@@ -21,44 +19,20 @@
 <Toaster />
 
 <ModeWatcher defaultMode="dark" />
+{#if await getUser()}
+	<nav class="flex h-[10dvh] items-center justify-between px-4">
+		<a href="/" class="items-cnter flex text-3xl font-black tracking-tighter"
+			><img src={Logo} alt="logo" class="mr-2 h-8" /> pontiq (⍺)</a
+		>
 
-<nav class="flex h-[10dvh] items-center justify-between px-4">
-	<a href="/" class="items-cnter flex text-3xl font-black tracking-tighter"
-		><img src={Logo} alt="logo" class="mr-2 h-8" /> pontiq (⍺)</a
-	>
-	{#if await getUser()}
-		<a class="font-medium" href={resolve('/(protected)/explorer')}>Explorer</a>
-	{/if}
-	<div class="mr-4 flex gap-2">
-		<svelte:boundary>
-			{#snippet pending()}
-				<p>loading user</p>
-			{/snippet}
-			{#snippet failed()}
-				<p>failed to load user</p>
-			{/snippet}
-			{@const user = await getUser()}
-			{#if user}
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger class={buttonVariants()}>{user.name}</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							<DropdownMenu.Label>Profile</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item
-								variant="destructive"
-								onclick={async () => await authClient.signOut().then(() => location.reload())}
-								>Sign out</DropdownMenu.Item
-							>
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			{:else}
-				<Button href="/auth">Sign in</Button>
-			{/if}
-		</svelte:boundary>
-
-		<ModeToggle />
-	</div>
-</nav>
-{@render children?.()}
+		<Button href="/auth">Sign in</Button>
+	</nav>
+	{@render children?.()}
+{:else}
+	<Sidebar.Provider>
+		<AppSidebar />
+		<main class="my-8">
+			{@render children?.()}
+		</main>
+	</Sidebar.Provider>
+{/if}

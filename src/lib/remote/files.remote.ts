@@ -18,6 +18,19 @@ export const getFiles = query(z.string(), async (projectId) => {
 		.where(and(eq(file.projectId, projectId), eq(file.ownerId, user.id)));
 });
 
+export const getAllFiles = query(async () => {
+	const user = await requireAuth();
+
+	return await db.query.file.findMany({
+		where: {
+			ownerId: user.id
+		},
+		with: {
+			project: true
+		}
+	});
+});
+
 export const deleteFile = command(z.uuid(), async (fileId) => {
 	const user = await requireAuth();
 
