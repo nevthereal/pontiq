@@ -21,7 +21,7 @@
 			{#snippet pending()}
 				<Loading thing="subjects and projects" />
 			{/snippet}
-			<div class="grid grid-cols-4 gap-4">
+			<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
 				{#each await getSubjectsWithProjects() as sub (sub.id)}
 					<div class="rounded-lg border p-4">
 						<div class="flex items-center justify-between gap-2">

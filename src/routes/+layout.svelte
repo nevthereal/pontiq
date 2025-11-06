@@ -9,6 +9,8 @@
 	import { getUser } from '$lib/remote/auth.remote';
 
 	let { children } = $props();
+
+	const user = $derived(await getUser());
 </script>
 
 <svelte:head>
@@ -19,7 +21,7 @@
 <Toaster />
 
 <ModeWatcher defaultMode="dark" />
-{#if await getUser()}
+{#if !user}
 	<nav class="flex h-[10dvh] items-center justify-between px-4">
 		<a href="/" class="items-cnter flex text-3xl font-black tracking-tighter"
 			><img src={Logo} alt="logo" class="mr-2 h-8" /> pontiq (⍺)</a
