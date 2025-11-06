@@ -2,7 +2,36 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import UserDropdown from './UserDropdown.svelte';
-	import { Search } from '@lucide/svelte';
+	import { Files, Folders, Settings, type IconProps } from '@lucide/svelte';
+	import type { Component } from 'svelte';
+	import type { ResolvedPathname } from '$app/types';
+
+	type Route = {
+		name: string;
+		icon: Component<IconProps>;
+		url: ResolvedPathname;
+	};
+
+	const mainItems: Route[] = [
+		{
+			name: 'Subjects',
+			icon: Folders,
+			url: resolve('/(protected)/explorer')
+		},
+		{
+			name: 'Files',
+			icon: Files,
+			url: resolve('/(protected)/explorer')
+		}
+	];
+
+	const footerItems: Route[] = [
+		{
+			name: 'Settings',
+			icon: Settings,
+			url: resolve('/')
+		}
+	];
 </script>
 
 <Sidebar.Root variant="floating">
@@ -26,20 +55,29 @@
 	<Sidebar.Content class="px-2">
 		<Sidebar.GroupContent>
 			<Sidebar.Menu>
-				<Sidebar.MenuItem>
-					<Sidebar.MenuButton>
-						{#snippet child({ props })}
-							<a class="font-medium" {...props} href={resolve('/(protected)/explorer')}>
-								<Search />Explorer</a
-							>
-						{/snippet}
-					</Sidebar.MenuButton>
-				</Sidebar.MenuItem>
+				{#each mainItems as i, idx (idx)}
+					<Sidebar.MenuItem>
+						<Sidebar.MenuButton>
+							{#snippet child({ props })}
+								<a class="font-medium" {...props} href={i.url}> <i.icon />{i.name}</a>
+							{/snippet}
+						</Sidebar.MenuButton>
+					</Sidebar.MenuItem>
+				{/each}
 			</Sidebar.Menu>
 		</Sidebar.GroupContent>
 	</Sidebar.Content>
 	<Sidebar.Footer>
 		<Sidebar.Menu>
+			{#each footerItems as i, idx (idx)}
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton>
+						{#snippet child({ props })}
+							<a class="font-medium" {...props} href={i.url}> <i.icon />{i.name}</a>
+						{/snippet}
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+			{/each}
 			<Sidebar.MenuItem>
 				<UserDropdown />
 			</Sidebar.MenuItem></Sidebar.Menu
