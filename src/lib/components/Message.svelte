@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { FileText, Globe, WalletCards, NotebookPen, Brain } from '@lucide/svelte';
@@ -44,6 +44,12 @@
 			</Item.Content>
 		</Item.Root>
 	{:else if message.role === 'assistant'}
+		{@const specialParts = {
+			reasoning: message.parts.filter((p) => p.type === 'reasoning' && p.text),
+			studyStep: message.parts.filter((p) => p.type === 'tool-study_plan'),
+			flashcard: message.parts.filter((p) => p.type === 'tool-flashcards'),
+			webSearch: message.parts.filter((p) => p.type === 'tool-web_search')
+		}}
 		<div in:fade|global class="flex flex-col">
 			<!-- Text content -->
 			{#each message.parts as part, idx (idx)}
@@ -52,41 +58,58 @@
 						<!-- eslint-disable svelte/no-at-html-tags -->
 						{@html marked(part.text)}
 					</div>
-				{:else if part.type === 'reasoning'}
-					<Tooltip.Provider delayDuration={250}>
-						<Tooltip.Root>
-							<Tooltip.Trigger class="mr-auto"
-								><ToolWrapper
-									className={part.state === 'streaming' ? 'animate-pulse' : ''}
-									icon={Brain}>Reasoning</ToolWrapper
-								></Tooltip.Trigger
-							>
-							<Tooltip.Content sideOffset={-10} class="max-w-md">
-								{#if part.text}
-									{@html marked(part.text)}
-								{:else}
-									<p>No reasoning summary</p>
-								{/if}
-							</Tooltip.Content>
-						</Tooltip.Root>
-					</Tooltip.Provider>
-				{:else if part.type === 'tool-web_search'}
-					<ToolWrapper
-						className={part.state === 'input-streaming' ? 'animate-pulse' : ''}
-						icon={Globe}>Searched for {part.input?.query}</ToolWrapper
-					>
-				{:else if part.type === 'tool-flashcards'}
-					<ToolWrapper
-						className={part.state === 'input-streaming' ? 'animate-pulse' : ''}
-						icon={WalletCards}>Created flashcard {part.input?.term}</ToolWrapper
-					>
-				{:else if part.type === 'tool-study_plan'}
-					<ToolWrapper
-						className={part.state === 'input-streaming' ? 'animate-pulse' : ''}
-						icon={NotebookPen}>Added {part.input?.type} "{part.input?.title}"</ToolWrapper
-					>
+				{:else if part.type === 'reasoning' && part.state === 'streaming'}
+					<p class="my-2 flex animate-pulse items-center gap-2 text-muted-foreground select-none">
+						<Brain size={14} /> Reasoning
+					</p>
 				{/if}
 			{/each}
+			<Accordion.Root type="single">
+				{#if specialParts.flashcard.length}
+					<Accordion.Item value="flashcards">
+						<Accordion.Trigger>Flashcards ({specialParts.flashcard.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.flashcard as f, idx (idx)}
+								<ToolWrapper>Generated {f.input?.term}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.studyStep.length}
+					<Accordion.Item value="studyplan">
+						<Accordion.Trigger>Study Plan ({specialParts.studyStep.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.studyStep as f, idx (idx)}
+								<ToolWrapper>Added {f.input?.type} {f.input?.title}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.webSearch.length}
+					<Accordion.Item value="websearch">
+						<Accordion.Trigger>Web search ({specialParts.webSearch.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.webSearch as f, idx (idx)}
+								<ToolWrapper>Searched for {f.input?.query}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.reasoning.length}
+					<Accordion.Item value="reasoning">
+						<Accordion.Trigger
+							>Reasoning Summaries ({specialParts.reasoning.length})</Accordion.Trigger
+						>
+						<Accordion.Content
+							>{#each specialParts.reasoning as r, idx (idx)}
+								<p class="my-2 text-muted-foreground">
+									{@html marked(r.text)}
+								</p>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+			</Accordion.Root>
 		</div>
 	{/if}
 </li>
