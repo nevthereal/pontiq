@@ -21,12 +21,15 @@ export const getFiles = query(z.string(), async (projectId) => {
 export const getAllFiles = query(async () => {
 	const user = await requireAuth();
 
-	return await db.query.file.findMany({
+	return await db.query.project.findMany({
 		where: {
-			ownerId: user.id
+			creatorId: user.id
 		},
 		with: {
-			project: true
+			files: true
+		},
+		orderBy: {
+			pinned: 'desc'
 		}
 	});
 });
