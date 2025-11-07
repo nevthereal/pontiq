@@ -21,7 +21,7 @@
 		{
 			name: 'Files',
 			icon: Files,
-			url: resolve('/(protected)/explorer')
+			url: resolve('/(protected)/files')
 		}
 	];
 
@@ -43,7 +43,7 @@
 						<a
 							href="/"
 							{...props}
-							class="flex items-center justify-center gap-2 p-2 text-2xl font-black tracking-tighter"
+							class="flex items-center justify-center gap-2 p-2 font-cooper text-3xl font-black tracking-tighter"
 						>
 							pontiq (⍺)</a
 						>

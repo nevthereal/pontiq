@@ -7,8 +7,8 @@ AI app for school that
 - [x] knowledge base
 - [x] study plan
 - [x] remove/edit subjects & proejcts
-- [ ] file upload revamp
-- [ ] Make chain of thought and step sequence pretty
+- [x] file upload revamp
+- [x] Make chain of thought and step sequence pretty
 - [x] academic/internet search
 - [ ] collapsible tabs
 - [ ] homework solver

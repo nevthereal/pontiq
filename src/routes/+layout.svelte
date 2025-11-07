@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import Logo from '$lib/assets/logo.png';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import '../app.css';
@@ -15,6 +14,7 @@
 
 <svelte:head>
 	<link rel="icon" href="/favicon.png" type="image/png" />
+	<link rel="stylesheet" href="https://use.typekit.net/lab1nsl.css" />
 	<title>Pontiq</title>
 </svelte:head>
 
@@ -23,9 +23,7 @@
 <ModeWatcher defaultMode="dark" />
 {#if !user}
 	<nav class="flex h-[10dvh] items-center justify-between px-4">
-		<a href="/" class="items-cnter flex text-3xl font-black tracking-tighter"
-			><img src={Logo} alt="logo" class="mr-2 h-8" /> pontiq (⍺)</a
-		>
+		<a href="/" class="font-cooper flex text-3xl font-black tracking-tighter">pontiq (⍺)</a>
 
 		<Button href="/auth">Sign in</Button>
 	</nav>
