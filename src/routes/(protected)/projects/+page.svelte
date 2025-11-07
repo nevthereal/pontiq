@@ -9,7 +9,7 @@
 	import Muted from '$lib/components/Muted.svelte';
 </script>
 
-<div class="px-6">
+<div class="p-6">
 	<svelte:boundary>
 		{@const user = await getUser()}
 		{#if user}

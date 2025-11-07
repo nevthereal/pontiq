@@ -1,112 +1,13 @@
 <script lang="ts">
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import * as Item from '$lib/components/ui/item/index.js';
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
-	import { Brain, FileText, Globe, ToolCase, WalletCards } from '@lucide/svelte';
+	import { FileText, Globe, WalletCards, NotebookPen, Brain } from '@lucide/svelte';
 	import { marked } from 'marked';
 	import { fade } from 'svelte/transition';
 	import ToolWrapper from './ToolWrapper.svelte';
 
 	let { message }: { message: MyUIMessage } = $props();
-
-	function getToolLabel(type: string): string {
-		switch (type) {
-			case 'tool-study_plan':
-				return 'Study Plans';
-			case 'tool-web_search':
-				return 'Web Searches';
-			case 'tool-flashcards':
-				return 'Flashcards';
-			default:
-				return 'Tools';
-		}
-	}
-
-	function getToolIcon(type: string) {
-		switch (type) {
-			case 'tool-study_plan':
-				return ToolCase;
-			case 'tool-web_search':
-				return Globe;
-			case 'tool-flashcards':
-				return WalletCards;
-			default:
-				return ToolCase;
-		}
-	}
-
-	// Parse message parts into sections, separating text from tools/reasoning
-	function parseMessageSections(parts: typeof message.parts) {
-		const sections: Array<{
-			type: 'text';
-			data: typeof message.parts;
-		}> = [];
-
-		for (const part of parts) {
-			if (part.type === 'text') {
-				sections.push({ type: 'text', data: [part] });
-			}
-		}
-
-		return sections;
-	}
-
-	// Extract all completed reasoning parts
-	function getCompletedReasoningParts(parts: typeof message.parts) {
-		return parts.filter((part) => part.type === 'reasoning' && part.state === 'done');
-	}
-
-	// Extract streaming reasoning (first one found)
-	function getStreamingReasoning(parts: typeof message.parts) {
-		return parts.find((part) => part.type === 'reasoning' && part.state === 'streaming');
-	}
-
-	// Extract all tool parts
-	function getToolParts(parts: typeof message.parts) {
-		return parts.filter((part) => part.type.startsWith('tool-'));
-	}
-
-	// Group tool calls within a section by type
-	function groupToolsByType(toolParts: typeof message.parts) {
-		const groups: { [key: string]: typeof message.parts } = {
-			'tool-study_plan': [],
-			'tool-web_search': [],
-			'tool-flashcards': []
-		};
-
-		toolParts.forEach((part) => {
-			if (part.type === 'tool-study_plan') {
-				groups['tool-study_plan'].push(part);
-			} else if (part.type === 'tool-web_search') {
-				groups['tool-web_search'].push(part);
-			} else if (part.type === 'tool-flashcards') {
-				groups['tool-flashcards'].push(part);
-			}
-		});
-
-		return groups;
-	}
-
-	const messageSections = $derived(
-		message.role === 'assistant' ? parseMessageSections(message.parts) : []
-	);
-
-	const streamingReasoning = $derived(
-		message.role === 'assistant' ? getStreamingReasoning(message.parts) : null
-	);
-
-	const completedReasoningParts = $derived(
-		message.role === 'assistant' ? getCompletedReasoningParts(message.parts) : []
-	);
-
-	const toolParts = $derived(message.role === 'assistant' ? getToolParts(message.parts) : []);
-
-	const toolGroups = $derived(groupToolsByType(toolParts));
-
-	const hasReasoningOrTools = $derived(
-		completedReasoningParts.length > 0 ||
-			Object.values(toolGroups).some((group) => group.length > 0)
-	);
 </script>
 
 <li in:fade|global>
@@ -143,87 +44,72 @@
 			</Item.Content>
 		</Item.Root>
 	{:else if message.role === 'assistant'}
-		<div in:fade|global>
+		{@const specialParts = {
+			reasoning: message.parts.filter((p) => p.type === 'reasoning' && p.text),
+			studyStep: message.parts.filter((p) => p.type === 'tool-study_plan'),
+			flashcard: message.parts.filter((p) => p.type === 'tool-flashcards'),
+			webSearch: message.parts.filter((p) => p.type === 'tool-web_search')
+		}}
+		<div in:fade|global class="flex flex-col">
 			<!-- Text content -->
-			{#each messageSections as section, sectionIndex (sectionIndex)}
-				{#if section.type === 'text'}
-					{#each section.data as part, partIndex (partIndex)}
-						{#if part.type === 'text'}
-							<div class="prose max-w-full dark:prose-invert">
-								<!-- eslint-disable svelte/no-at-html-tags -->
-								{@html marked(part.text)}
-							</div>
-						{/if}
-					{/each}
+			{#each message.parts as part, idx (idx)}
+				{#if part.type === 'text'}
+					<div class="prose max-w-full dark:prose-invert">
+						<!-- eslint-disable svelte/no-at-html-tags -->
+						{@html marked(part.text)}
+					</div>
+				{:else if part.type === 'reasoning' && part.state === 'streaming'}
+					<p class="my-2 flex animate-pulse items-center gap-2 text-muted-foreground select-none">
+						<Brain size={14} /> Reasoning
+					</p>
 				{/if}
 			{/each}
-
-			<!-- Streaming reasoning (if present) -->
-			{#if streamingReasoning}
-				<p class="mb-2 flex animate-pulse items-center gap-2 text-muted-foreground select-none">
-					<Brain size={16} /> Thinking...
-				</p>
-			{/if}
-
-			<!-- Unified accordion for reasoning and tools -->
-			{#if hasReasoningOrTools}
-				<Accordion.Root class="mt-4 w-full" type="multiple">
-					<!-- Completed reasoning section -->
-					{#if completedReasoningParts.length > 0}
-						<Accordion.Item value="reasoning">
-							<Accordion.Trigger>
-								<p class="flex items-center gap-2">
-									<Brain size={16} /> Reasoning summaries ({completedReasoningParts.length})
+			<Accordion.Root type="single">
+				{#if specialParts.flashcard.length}
+					<Accordion.Item value="flashcards">
+						<Accordion.Trigger>Flashcards ({specialParts.flashcard.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.flashcard as f, idx (idx)}
+								<ToolWrapper>Generated {f.input?.term}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.studyStep.length}
+					<Accordion.Item value="studyplan">
+						<Accordion.Trigger>Study Plan ({specialParts.studyStep.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.studyStep as f, idx (idx)}
+								<ToolWrapper>Added {f.input?.type} {f.input?.title}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.webSearch.length}
+					<Accordion.Item value="websearch">
+						<Accordion.Trigger>Web search ({specialParts.webSearch.length})</Accordion.Trigger>
+						<Accordion.Content
+							>{#each specialParts.webSearch as f, idx (idx)}
+								<ToolWrapper>Searched for {f.input?.query}</ToolWrapper>
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+				{#if specialParts.reasoning.length}
+					<Accordion.Item value="reasoning">
+						<Accordion.Trigger
+							>Reasoning Summaries ({specialParts.reasoning.length})</Accordion.Trigger
+						>
+						<Accordion.Content
+							>{#each specialParts.reasoning as r, idx (idx)}
+								<p class="my-2 text-muted-foreground">
+									{@html marked(r.text)}
 								</p>
-							</Accordion.Trigger>
-							<Accordion.Content class="space-y-4">
-								{#each completedReasoningParts as part, idx (idx)}
-									{#if part.type === 'reasoning' && 'text' in part}
-										<div>
-											{@html marked(part.text)}
-										</div>
-									{/if}
-								{/each}
-							</Accordion.Content>
-						</Accordion.Item>
-					{/if}
-
-					<!-- Tool calls sections -->
-					{#each Object.entries(toolGroups) as [toolType, tools] (toolType)}
-						{@const IconComponent = getToolIcon(toolType)}
-						{#if tools.length > 0}
-							<Accordion.Item value={toolType}>
-								<Accordion.Trigger>
-									<div class="flex items-center gap-2">
-										<IconComponent size={16} />
-										<span>{getToolLabel(toolType)}</span>
-										<span class="text-xs text-muted-foreground">({tools.length})</span>
-									</div>
-								</Accordion.Trigger>
-								<Accordion.Content>
-									<div class="space-y-2 pl-4">
-										{#each tools as tool, toolIndex (toolIndex)}
-											{#if tool.type === 'tool-study_plan'}
-												<ToolWrapper>
-													Added {tool.input?.type} "{tool.input?.title}"
-												</ToolWrapper>
-											{:else if tool.type === 'tool-web_search'}
-												<ToolWrapper>
-													Searched for "{tool.input?.query}"
-												</ToolWrapper>
-											{:else if tool.type === 'tool-flashcards'}
-												<ToolWrapper>
-													Created "{tool.input?.term}"
-												</ToolWrapper>
-											{/if}
-										{/each}
-									</div>
-								</Accordion.Content>
-							</Accordion.Item>
-						{/if}
-					{/each}
-				</Accordion.Root>
-			{/if}
+							{/each}</Accordion.Content
+						>
+					</Accordion.Item>
+				{/if}
+			</Accordion.Root>
 		</div>
 	{/if}
 </li>

@@ -33,7 +33,7 @@
 {:else}
 	<Sidebar.Provider>
 		<AppSidebar />
-		<main class="my-8">
+		<main class="h-full w-full">
 			{@render children?.()}
 		</main>
 	</Sidebar.Provider>

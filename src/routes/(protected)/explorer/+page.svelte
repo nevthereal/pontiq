@@ -13,7 +13,7 @@
 	import { resolve } from '$app/paths';
 </script>
 
-<main class="px-6">
+<main class="p-6">
 	<h1 class="mb-4 text-3xl font-bold">Subjects</h1>
 	<section>
 		<h2 class="mb-2 text-lg font-medium">Other subjects</h2>
@@ -21,7 +21,7 @@
 			{#snippet pending()}
 				<Loading thing="subjects and projects" />
 			{/snippet}
-			<div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+			<div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
 				{#each await getSubjectsWithProjects() as sub (sub.id)}
 					<div class="rounded-lg border p-4">
 						<div class="flex items-center justify-between gap-2">
@@ -29,7 +29,7 @@
 								{sub.title}
 								{#if sub.pinned}
 									<span>(pinned)</span>
-								{/if}:
+								{/if}
 							</h2>
 							<div class="flex items-center gap-2">
 								<Dialog.Root>
