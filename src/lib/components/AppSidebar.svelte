@@ -44,15 +44,14 @@
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
-					<img src={Logo} alt="logo" class="h-lh" />
-					<a
-						href="/"
-						class="flex items-center justify-center gap-2 truncate p-2 font-cooper text-2xl font-black tracking-tighter"
-					>
-						<span>pontiq (⍺)</span></a
-					>
-				</Sidebar.MenuButton>
+				<a href={resolve('/')}>
+					<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
+						<img src={Logo} alt="logo" class="h-lh" />
+						<span class="gap-2 truncate p-2 font-cooper text-2xl font-black tracking-tighter"
+							>pontiq (⍺)</span
+						>
+					</Sidebar.MenuButton>
+				</a>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
