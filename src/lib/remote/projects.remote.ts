@@ -27,8 +27,7 @@ export const getSubjects = query(async () => {
 	const subjects = await db.query.subject.findMany({
 		where: {
 			creatorId: user.id,
-			active: true,
-			pinned: false
+			active: true
 		}
 	});
 
@@ -66,7 +65,7 @@ export const createProject = form(
 				creatorId: user.id
 			})
 			.returning();
-		return redirect(302, `/project/${id}`);
+		return redirect(302, `/projects/${id}`);
 	}
 );
 

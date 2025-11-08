@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import '../app.css';
@@ -23,7 +23,7 @@
 <ModeWatcher defaultMode="dark" />
 {#if !user}
 	<nav class="flex h-[10dvh] items-center justify-between px-4">
-		<a href="/" class="font-cooper flex text-3xl font-black tracking-tighter">pontiq (⍺)</a>
+		<a href="/" class="flex font-cooper text-3xl font-black tracking-tighter">pontiq (⍺)</a>
 
 		<Button href="/auth">Sign in</Button>
 	</nav>
@@ -31,8 +31,14 @@
 {:else}
 	<Sidebar.Provider>
 		<AppSidebar />
-		<main class="h-full w-full">
-			{@render children?.()}
-		</main>
+
+		{#if user.isApproved}
+			<Sidebar.Trigger />
+			<main class="h-full w-full">
+				{@render children?.()}
+			</main>
+		{:else}
+			<p class="mt-8 text-center font-mono">Your account is not approved. Please request.</p>
+		{/if}
 	</Sidebar.Provider>
 {/if}

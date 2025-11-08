@@ -14,8 +14,8 @@
 	<h1 class="mb-4 text-3xl font-bold">Files</h1>
 	<section class="space-y-4">
 		{#each allFiles as p (p.id)}
-			<h2>{p.name}</h2>
-			<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+			<h2>{p.name} ({p.files.length})</h2>
+			<div class="grid gap-4 xl:grid-cols-4">
 				{#each p.files as f (f.id)}
 					<Item.Root variant="outline">
 						<Item.Media variant="icon"
