@@ -22,7 +22,7 @@
 	data-slot="sidebar-trigger"
 	variant="outline"
 	size="icon"
-	class={cn('size-7', className, 'mt-2', !sidebar.open && 'ml-2')}
+	class={cn('relative top-4 left-4 size-7 md:hidden', className)}
 	type="button"
 	onclick={(e) => {
 		onclick?.(e);

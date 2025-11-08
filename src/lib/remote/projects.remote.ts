@@ -65,7 +65,7 @@ export const createProject = form(
 				creatorId: user.id
 			})
 			.returning();
-		return redirect(302, `/project/${id}`);
+		return redirect(302, `/projects/${id}`);
 	}
 );
 
