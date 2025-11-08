@@ -2,7 +2,7 @@
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import * as Item from '$lib/components/ui/item/index.js';
-	import { FileText, Globe, WalletCards, NotebookPen, Brain } from '@lucide/svelte';
+	import { FileText, Brain } from '@lucide/svelte';
 	import { marked } from 'marked';
 	import { fade } from 'svelte/transition';
 	import ToolWrapper from './ToolWrapper.svelte';
@@ -45,7 +45,7 @@
 		</Item.Root>
 	{:else if message.role === 'assistant'}
 		{@const specialParts = {
-			reasoning: message.parts.filter((p) => p.type === 'reasoning' && p.text),
+			reasoning: message.parts.filter((p) => p.type === 'reasoning'),
 			studyStep: message.parts.filter((p) => p.type === 'tool-study_plan'),
 			flashcard: message.parts.filter((p) => p.type === 'tool-flashcards'),
 			webSearch: message.parts.filter((p) => p.type === 'tool-web_search')

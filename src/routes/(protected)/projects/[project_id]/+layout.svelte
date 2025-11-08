@@ -13,14 +13,14 @@
 	let { params, children } = $props();
 </script>
 
-<main class="flex h-screen flex-col py-6">
+<section class="flex h-screen flex-col">
 	<!-- TODO -->
-	<div class="mx-4 mb-2 flex items-center justify-between text-3xl">
+	<div class="mx-4 mb-2 flex items-center justify-between text-4xl">
 		<svelte:boundary>
 			{#snippet pending()}
-				<Skeleton class="h-lh w-48 rounded-full" />
+				<Skeleton class="h-lh w-48 rounded-sm" />
 			{/snippet}
-			<h1 class="text-3xl font-bold">
+			<h1 class="font-bold">
 				{(await getProject(params.project_id)).name}
 			</h1>
 			<div class="flex items-center gap-2">
@@ -66,4 +66,4 @@
 		</div>
 		<ChatContainer projectId={params.project_id} />
 	</div>
-</main>
+</section>
