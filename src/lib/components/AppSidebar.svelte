@@ -1,8 +1,9 @@
 <script lang="ts">
+	import Logo from '$lib/assets/favicon.png';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { resolve } from '$app/paths';
 	import UserDropdown from './UserDropdown.svelte';
-	import { Files, Folders, Settings, type IconProps } from '@lucide/svelte';
+	import { DatabaseZap, Files, Folders, Settings, type IconProps } from '@lucide/svelte';
 	import type { Component } from 'svelte';
 	import type { ResolvedPathname } from '$app/types';
 
@@ -13,6 +14,11 @@
 	};
 
 	const mainItems: Route[] = [
+		{
+			name: 'Projects',
+			icon: DatabaseZap,
+			url: resolve('/(protected)/projects')
+		},
 		{
 			name: 'Subjects',
 			icon: Folders,
@@ -34,26 +40,23 @@
 	];
 </script>
 
-<Sidebar.Root variant="floating">
-	<Sidebar.Header class="px-4">
+<Sidebar.Root collapsible="icon" variant="inset">
+	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
-					{#snippet child({ props })}
-						<a
-							href="/"
-							{...props}
-							class="flex items-center justify-center gap-2 p-2 font-cooper text-3xl font-black tracking-tighter"
+				<a href={resolve('/')}>
+					<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
+						<img src={Logo} alt="logo" class="h-lh" />
+						<span class="gap-2 truncate p-2 font-cooper text-2xl font-black tracking-tighter"
+							>pontiq (⍺)</span
 						>
-							pontiq (⍺)</a
-						>
-					{/snippet}
-				</Sidebar.MenuButton>
+					</Sidebar.MenuButton>
+				</a>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
-	<Sidebar.Content class="px-2">
-		<Sidebar.GroupContent>
+	<Sidebar.Content>
+		<Sidebar.Group>
 			<Sidebar.Menu>
 				{#each mainItems as i, idx (idx)}
 					<Sidebar.MenuItem>
@@ -65,7 +68,7 @@
 					</Sidebar.MenuItem>
 				{/each}
 			</Sidebar.Menu>
-		</Sidebar.GroupContent>
+		</Sidebar.Group>
 	</Sidebar.Content>
 	<Sidebar.Footer>
 		<Sidebar.Menu>

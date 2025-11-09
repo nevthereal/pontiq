@@ -5,6 +5,7 @@
 	import '../app.css';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import AppSidebar from '$lib/components/AppSidebar.svelte';
+	import Logo from '$lib/assets/favicon.png';
 	import { getUser } from '$lib/remote/auth.remote';
 
 	let { children } = $props();
@@ -23,7 +24,9 @@
 <ModeWatcher defaultMode="dark" />
 {#if !user}
 	<nav class="flex h-[10dvh] items-center justify-between px-4">
-		<a href="/" class="flex font-cooper text-3xl font-black tracking-tighter">pontiq (⍺)</a>
+		<a href="/" class="flex items-center gap-2 font-cooper text-3xl font-black tracking-tighter"
+			><img class="size-8" src={Logo} alt="pontiq logo" /> pontiq (⍺)</a
+		>
 
 		<Button href="/auth">Sign in</Button>
 	</nav>
@@ -32,13 +35,17 @@
 	<Sidebar.Provider>
 		<AppSidebar />
 
-		{#if user.isApproved}
-			<Sidebar.Trigger />
-			<main class="h-full w-full">
-				{@render children?.()}
-			</main>
-		{:else}
-			<p class="mt-8 text-center font-mono">Your account is not approved. Please request.</p>
-		{/if}
+		<Sidebar.Inset>
+			{#if user.isApproved}
+				<div class="m-2">
+					<Sidebar.Trigger />
+				</div>
+				<main class="px-4">
+					{@render children?.()}
+				</main>
+			{:else}
+				<p class="mt-8 text-center font-mono">Your account is not approved. Please request.</p>
+			{/if}
+		</Sidebar.Inset>
 	</Sidebar.Provider>
 {/if}
