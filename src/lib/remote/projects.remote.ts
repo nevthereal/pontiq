@@ -1,4 +1,4 @@
-import { command, form, query } from '$app/server';
+import { command, form, getRequestEvent, query } from '$app/server';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
 import { error, redirect } from '@sveltejs/kit';
@@ -41,9 +41,6 @@ export const getProject = query(z.string(), async (id) => {
 		where: {
 			id,
 			creatorId: user.id
-		},
-		with: {
-			files: true
 		}
 	});
 

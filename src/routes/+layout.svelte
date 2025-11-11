@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import '../app.css';
@@ -37,9 +37,6 @@
 
 		<Sidebar.Inset>
 			{#if user.isApproved}
-				<div class="m-2">
-					<Sidebar.Trigger />
-				</div>
 				<main class="px-4">
 					{@render children?.()}
 				</main>

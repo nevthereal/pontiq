@@ -31,8 +31,8 @@
 		onUploadError: (e) => {
 			toast.error(e.message);
 		},
-		url: resolve('/(protected)/projects/[project_id]/api/upload', params),
-		config: { cn: twMerge }
+		config: { cn: twMerge },
+		url: resolve('/(protected)/projects/[project_id]/api/upload', params)
 	});
 </script>
 
