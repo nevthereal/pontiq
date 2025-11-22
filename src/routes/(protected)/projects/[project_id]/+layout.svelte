@@ -55,7 +55,7 @@
 					<AlertDialog.Header>
 						<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 						<AlertDialog.Description>
-							This action cannot be undone. This will permanently delete this project, all of it's
+							This action cannot be undone. This will permanently delete this project, all of its
 							files, threads and tool results.
 						</AlertDialog.Description>
 					</AlertDialog.Header>
@@ -67,8 +67,8 @@
 									deleteProject(params.project_id).then(() => goto(resolve('/'))),
 									{
 										loading: 'Deleting project…',
-										success: 'Deletion sucessful',
-										error: 'An error occured during deletion'
+										success: 'Deletion successful',
+										error: 'An error occurred during deletion'
 									}
 								)}
 							class={buttonVariants({ variant: 'destructive' })}>Continue</AlertDialog.Action

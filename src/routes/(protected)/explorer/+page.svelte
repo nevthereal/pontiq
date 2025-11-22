@@ -89,7 +89,7 @@
 										<AlertDialog.Header>
 											<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 											<AlertDialog.Description
-												>This action cannot be undone. Your subject and all of it's projects and the
+												>This action cannot be undone. Your subject and all of its projects and the
 												project's files will be deleted permanently.</AlertDialog.Description
 											>
 										</AlertDialog.Header>
@@ -100,8 +100,8 @@
 												onclick={() =>
 													toast.promise(deleteSubject(sub.id).updates(getSubjectsWithProjects()), {
 														loading: 'Deleting subject…',
-														success: 'Deletion sucessful',
-														error: 'An error occured during deletion'
+														success: 'Deletion successful',
+														error: 'An error occurred during deletion'
 													})}>Continue</AlertDialog.Action
 											>
 										</AlertDialog.Footer>
