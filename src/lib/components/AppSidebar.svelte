@@ -40,7 +40,7 @@
 	];
 </script>
 
-<Sidebar.Root collapsible="icon" variant="inset">
+<Sidebar.Root collapsible="icon">
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>

@@ -41,9 +41,6 @@ export const getProject = query(z.string(), async (id) => {
 		where: {
 			id,
 			creatorId: user.id
-		},
-		with: {
-			files: true
 		}
 	});
 
