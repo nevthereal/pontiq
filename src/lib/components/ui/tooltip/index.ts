@@ -3,6 +3,7 @@ import Trigger from './tooltip-trigger.svelte';
 import Content from './tooltip-content.svelte';
 
 const Root = TooltipPrimitive.Root;
+
 const Provider = TooltipPrimitive.Provider;
 const Portal = TooltipPrimitive.Portal;
 

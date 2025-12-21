@@ -21,18 +21,18 @@
 <section class="flex h-screen flex-col py-4">
 	<!-- TODO -->
 	<div class="mx-4 flex items-center justify-between">
-		<div class="flex items-center gap-4">
+		<div class="flex items-center gap-2">
 			<Sidebar.Trigger />
-			<h1 class="text-4xl font-bold">
+			<h1 class="font-bold">
 				{project.name}
 			</h1>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'ghost' })}
 					><ChevronsUpDown /></DropdownMenu.Trigger
 				>
-				<DropdownMenu.Content sideOffset={16} align="end">
+				<DropdownMenu.Content align="start">
 					<DropdownMenu.Group>
-						<DropdownMenu.Label>Select project</DropdownMenu.Label>
+						<DropdownMenu.Label>Switch project</DropdownMenu.Label>
 						<DropdownMenu.Separator />
 						{#each await getSubjectsWithProjects() as sub (sub.id)}
 							<DropdownMenu.Label>{sub.title}</DropdownMenu.Label>
