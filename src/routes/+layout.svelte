@@ -23,7 +23,11 @@
 <Toaster />
 
 {#if dev}
-	<div class="fixed right-4 bottom-4 z-10 rounded-lg bg-red-500 p-2">Dev mode</div>
+	<div
+		class="fixed right-4 bottom-4 z-50 rounded-lg bg-red-500 p-2 font-mono font-bold hover:opacity-0"
+	>
+		Dev mode
+	</div>
 {/if}
 
 <ModeWatcher defaultMode="dark" />
