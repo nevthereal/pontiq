@@ -13,7 +13,7 @@
 	let { projectId }: { projectId: string } = $props();
 
 	const chat = new Chat<MyUIMessage>({
-		id: `${projectId}-chat`,
+		id: `${() => projectId}-chat`,
 		transport: new DefaultChatTransport({
 			api: resolve('/(protected)/projects/[project_id]/api/chat', { project_id: projectId })
 		})
