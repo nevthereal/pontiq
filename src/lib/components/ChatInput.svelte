@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { ArrowUpIcon, GraduationCap, Plus, Trash2 } from '@lucide/svelte';
+	import { ArrowUpIcon, Globe, GraduationCap, Plus, Trash2 } from '@lucide/svelte';
 	import * as InputGroup from '$lib/components/ui/input-group/index.js';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
 
@@ -61,7 +61,13 @@
 
 		<InputGroup.Addon align="block-end">
 			<Toggle bind:pressed={chatConfig.current.studyModeEnabled} variant="outline" size="sm"
-				><GraduationCap />Enhanced mode</Toggle
+				><GraduationCap />Study mode</Toggle
+			>
+			<Toggle bind:pressed={chatConfig.current.enhancedReasoning} variant="outline" size="sm"
+				><GraduationCap />Reasoning</Toggle
+			>
+			<Toggle bind:pressed={chatConfig.current.webSearch} variant="outline" size="sm"
+				><Globe />Web Search</Toggle
 			>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}

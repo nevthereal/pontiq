@@ -1,7 +1,7 @@
 import { type MyUIMessage, tools } from '$lib/server/ai';
 import type { chatConfig } from '$lib/chat.svelte';
 import { error } from '@sveltejs/kit';
-import { streamText, convertToModelMessages, stepCountIs, createGateway } from 'ai';
+import { streamText, convertToModelMessages, stepCountIs, createGateway, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
 
 const gateway = createGateway({
@@ -81,17 +81,24 @@ export async function POST({ request, locals }) {
 		await request.json();
 
 	const result = streamText({
-		model: gateway('openai/gpt-5.1-instant'),
+		model: gateway('google/gemini-3-flash'),
 		messages: convertToModelMessages(messages),
-		system: config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT,
+		system:
+			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) + config.webSearch &&
+			'Use web search',
 		tools,
 		stopWhen: stepCountIs(20),
 		providerOptions: {
-			openai: {
-				reasoningSummary: 'detailed',
-				reasoning_effort: 'medium'
+			google: {
+				thinkingConfig: {
+					thinkingLevel: config.enhancedReasoning ? 'high' : 'minimal',
+					includeThoughts: true
+				}
 			}
-		}
+		},
+		experimental_transform: smoothStream({
+			chunking: 'word'
+		})
 	});
 
 	return result.toUIMessageStreamResponse();

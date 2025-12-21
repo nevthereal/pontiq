@@ -120,10 +120,10 @@ const getStudyPlanTool = tool({
 
 export const tools = {
 	study_plan: studyPlanTool,
-	web_search: webSearchTool,
 	flashcards: flashCardTool,
 	get_flashcards: getFlashcardsTool,
-	get_study_plan: getStudyPlanTool
+	get_study_plan: getStudyPlanTool,
+	web_search: webSearchTool
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof tools>;
