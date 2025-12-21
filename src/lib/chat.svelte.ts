@@ -30,7 +30,7 @@ class Attachments {
 
 export const attachments = new Attachments();
 
-export const chatConfig = new PersistedState('chat-config', {
+export const chatConfig = new PersistedState('chat-config-2', {
 	studyModeEnabled: false,
 	enhancedReasoning: false,
 	webSearch: false

@@ -6,8 +6,10 @@
 	import { marked } from 'marked';
 	import { fade } from 'svelte/transition';
 	import ToolWrapper from './ToolWrapper.svelte';
+	import markedKatex from 'marked-katex-extension';
 
 	let { message }: { message: MyUIMessage } = $props();
+	marked.use(markedKatex({ throwOnError: false }));
 </script>
 
 <li in:fade|global>

@@ -7,6 +7,7 @@
 	import AppSidebar from '$lib/components/AppSidebar.svelte';
 	import Logo from '$lib/assets/favicon.png';
 	import { getUser } from '$lib/remote/auth.remote';
+	import { dev } from '$app/environment';
 
 	let { children } = $props();
 
@@ -20,6 +21,10 @@
 </svelte:head>
 
 <Toaster />
+
+{#if dev}
+	<div class="fixed right-4 bottom-4 z-10 rounded-lg bg-red-500 p-2">Dev mode</div>
+{/if}
 
 <ModeWatcher defaultMode="dark" />
 {#if !user}
