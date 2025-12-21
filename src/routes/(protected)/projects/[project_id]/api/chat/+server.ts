@@ -81,7 +81,7 @@ export async function POST({ request, locals }) {
 		await request.json();
 
 	const result = streamText({
-		model: gateway('openai/gpt-5.1-instant'),
+		model: gateway('google/gemini-3-flash'),
 		messages: convertToModelMessages(messages),
 		system: config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT,
 		tools,
