@@ -9,8 +9,9 @@
 	import ToolWrapper from './ToolWrapper.svelte';
 	import markedKatex from 'marked-katex-extension';
 
-	let { message }: { message: MyUIMessage } = $props();
 	marked.use(markedKatex({ throwOnError: false }));
+
+	let { message }: { message: MyUIMessage } = $props();
 </script>
 
 <li in:fade|global>
