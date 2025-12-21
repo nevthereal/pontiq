@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DOMPurify from 'isomorphic-dompurify';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import * as Item from '$lib/components/ui/item/index.js';
@@ -6,6 +7,9 @@
 	import { marked } from 'marked';
 	import { fade } from 'svelte/transition';
 	import ToolWrapper from './ToolWrapper.svelte';
+	import markedKatex from 'marked-katex-extension';
+
+	marked.use(markedKatex({ throwOnError: false }));
 
 	let { message }: { message: MyUIMessage } = $props();
 </script>
@@ -35,10 +39,10 @@
 				<!-- Text content below files -->
 				{#each message.parts as part, partIndex (partIndex)}
 					{#if part.type === 'text'}
-						<Item.Title class="prose dark:prose-invert">
+						<div class="prose dark:prose-invert">
 							<!-- eslint-disable svelte/no-at-html-tags -->
-							{@html marked(part.text)}
-						</Item.Title>
+							{@html DOMPurify.sanitize(await marked(part.text))}
+						</div>
 					{/if}
 				{/each}
 			</Item.Content>
@@ -56,7 +60,7 @@
 				{#if part.type === 'text'}
 					<div class="prose max-w-full dark:prose-invert">
 						<!-- eslint-disable svelte/no-at-html-tags -->
-						{@html marked(part.text)}
+						{@html DOMPurify.sanitize(await marked(part.text))}
 					</div>
 				{:else if part.type === 'reasoning' && part.state === 'streaming'}
 					<p class="my-2 flex animate-pulse items-center gap-2 text-muted-foreground select-none">
@@ -103,7 +107,7 @@
 						<Accordion.Content
 							>{#each specialParts.reasoning as r, idx (idx)}
 								<p class="my-2 text-muted-foreground">
-									{@html marked(r.text)}
+									{@html DOMPurify.sanitize(await marked(r.text))}
 								</p>
 							{/each}</Accordion.Content
 						>
