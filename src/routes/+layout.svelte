@@ -24,9 +24,9 @@
 
 {#if dev}
 	<div
-		class="fixed right-4 bottom-4 z-50 rounded-lg bg-red-500 p-2 font-mono font-bold hover:opacity-0"
+		class="fixed right-4 bottom-4 z-50 rounded-lg bg-destructive p-2 font-mono font-bold duration-200 ease-in-out select-none hover:opacity-20"
 	>
-		Dev mode
+		dev mode
 	</div>
 {/if}
 
