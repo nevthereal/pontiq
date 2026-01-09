@@ -4,14 +4,18 @@
 
 	import { deleteSteps, getStudySteps } from '$lib/remote/tools.remote';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { Maximize2, RefreshCcw } from '@lucide/svelte';
+	import { Maximize2, NotebookPen, RefreshCcw } from '@lucide/svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
+	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
+	import Loading from '$lib/components/typography/Loading.svelte';
 
 	let { params } = $props();
 </script>
 
 <div class="flex justify-between">
-	<h1 class="mb-4 text-xl font-bold">Study Plan</h1>
+	<ToolHeading>
+		<NotebookPen /> Study Plan
+	</ToolHeading>
 	<Button
 		variant="ghost"
 		size="icon-sm"
@@ -20,6 +24,9 @@
 	>
 </div>
 <svelte:boundary>
+	{#snippet pending()}
+		<Loading thing="study plan" />
+	{/snippet}
 	{#if await getStudySteps(params.project_id)}
 		<Button onclick={async () => await deleteSteps(params.project_id)}>Delete</Button>
 		<ul class="space-y-2 overflow-scroll">

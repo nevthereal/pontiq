@@ -56,10 +56,14 @@
 		{@render deleteButton()}
 	</div>
 
-	<div class="m-4 flex h-full gap-4 overflow-scroll">
+	<div class="m-3 flex min-h-0 flex-1 gap-4">
 		<!-- Sidebar!! -->
-		<div class="flex h-full min-w-sm flex-col rounded-2xl border p-6">
-			<h1 class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold">Tools</h1>
+		<div class="flex min-h-0 min-w-sm flex-col rounded-2xl border p-6">
+			<a
+				href={resolve('/(protected)/projects/[project_id]', { project_id: params.project_id })}
+				class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold"
+				>Project: {project.name}</a
+			>
 			<Item.Group class="mt-4 space-y-2">
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
@@ -109,7 +113,7 @@
 				</Item.Root>
 			</Item.Group>
 		</div>
-		<div class="w-full">
+		<div class="flex min-h-0 w-full flex-col">
 			{@render children()}
 		</div>
 	</div>
