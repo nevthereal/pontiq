@@ -6,7 +6,7 @@
 	import { FileText, Brain } from '@lucide/svelte';
 	import { marked } from '$lib/utils';
 	import { fade } from 'svelte/transition';
-	import ToolWrapper from './ToolWrapper.svelte';
+	import ToolWrapper from './typography/ToolWrapper.svelte';
 
 	let { message }: { message: MyUIMessage } = $props();
 </script>

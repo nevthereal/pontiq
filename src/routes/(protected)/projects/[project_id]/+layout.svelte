@@ -1,11 +1,18 @@
 <script lang="ts">
-	import ChatContainer from '$lib/components/ChatContainer.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Item from '$lib/components/ui/item/index.js';
 
 	import { deleteProject, getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import { ChevronsUpDown, FlaskConical, Trash2 } from '@lucide/svelte';
+	import {
+		ChevronsUpDown,
+		Trash2,
+		CreditCard,
+		MessageCircle,
+		NotebookPen,
+		Workflow
+	} from '@lucide/svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -46,46 +53,98 @@
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 		</div>
-		<div class="flex items-center gap-2">
-			<AlertDialog.Root>
-				<AlertDialog.Trigger class={buttonVariants({ size: 'sm', variant: 'destructive' })}
-					><Trash2 /> Delete</AlertDialog.Trigger
-				>
-				<AlertDialog.Content>
-					<AlertDialog.Header>
-						<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-						<AlertDialog.Description>
-							This action cannot be undone. This will permanently delete this project, all of its
-							files, threads and tool results.
-						</AlertDialog.Description>
-					</AlertDialog.Header>
-					<AlertDialog.Footer>
-						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-						<AlertDialog.Action
-							onclick={() =>
-								toast.promise(
-									deleteProject(params.project_id).then(() => goto(resolve('/'))),
-									{
-										loading: 'Deleting project…',
-										success: 'Deletion successful',
-										error: 'An error occurred during deletion'
-									}
-								)}
-							class={buttonVariants({ variant: 'destructive' })}>Continue</AlertDialog.Action
-						>
-					</AlertDialog.Footer>
-				</AlertDialog.Content>
-			</AlertDialog.Root>
-		</div>
+		{@render deleteButton()}
 	</div>
 
 	<div class="m-4 flex h-full gap-4 overflow-scroll">
-		<div class="flex h-full w-lg max-w-2xl flex-col rounded-2xl border p-6">
-			<h1 class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold">
-				<FlaskConical /> Tools
-			</h1>
+		<!-- Sidebar!! -->
+		<div class="flex h-full min-w-sm flex-col rounded-2xl border p-6">
+			<h1 class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold">Tools</h1>
+			<Item.Group class="mt-4 space-y-2">
+				<Item.Root variant="outline">
+					{#snippet child({ props })}
+						<a href={resolve('/(protected)/projects/[project_id]/tools/chat', params)} {...props}>
+							<Item.Media class="max-lg:hidden" variant="icon">
+								<MessageCircle />
+							</Item.Media>
+							<Item.Content>Chat</Item.Content>
+						</a>
+					{/snippet}
+				</Item.Root>
+				<Item.Root variant="outline">
+					{#snippet child({ props })}
+						<a href={resolve('/(protected)/projects/[project_id]/tools/files', params)} {...props}>
+							<Item.Media class="max-lg:hidden" variant="icon">
+								<Workflow />
+							</Item.Media>
+							<Item.Content>Knowledge Base</Item.Content>
+						</a>
+					{/snippet}
+				</Item.Root>
+				<Item.Root variant="outline">
+					{#snippet child({ props })}
+						<a
+							href={resolve('/(protected)/projects/[project_id]/tools/study-plan', params)}
+							{...props}
+						>
+							<Item.Media class="max-lg:hidden" variant="icon">
+								<NotebookPen />
+							</Item.Media>
+							<Item.Content>Study Plan</Item.Content>
+						</a>
+					{/snippet}
+				</Item.Root>
+				<Item.Root variant="outline">
+					{#snippet child({ props })}
+						<a
+							href={resolve('/(protected)/projects/[project_id]/tools/flashcards', params)}
+							{...props}
+						>
+							<Item.Media class="max-lg:hidden" variant="icon">
+								<CreditCard />
+							</Item.Media>
+							<Item.Content>Flashcards (work in progress)</Item.Content>
+						</a>
+					{/snippet}
+				</Item.Root>
+			</Item.Group>
+		</div>
+		<div class="w-full">
 			{@render children()}
 		</div>
-		<ChatContainer projectId={params.project_id} />
 	</div>
 </section>
+
+{#snippet deleteButton()}
+	<div class="flex items-center gap-2">
+		<AlertDialog.Root>
+			<AlertDialog.Trigger class={buttonVariants({ size: 'sm', variant: 'destructive' })}
+				><Trash2 /> Delete</AlertDialog.Trigger
+			>
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+					<AlertDialog.Description>
+						This action cannot be undone. This will permanently delete this project, all of its
+						files, threads and tool results.
+					</AlertDialog.Description>
+				</AlertDialog.Header>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+					<AlertDialog.Action
+						onclick={() =>
+							toast.promise(
+								deleteProject(params.project_id).then(() => goto(resolve('/'))),
+								{
+									loading: 'Deleting project…',
+									success: 'Deletion successful',
+									error: 'An error occurred during deletion'
+								}
+							)}
+						class={buttonVariants({ variant: 'destructive' })}>Continue</AlertDialog.Action
+					>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
+	</div>
+{/snippet}

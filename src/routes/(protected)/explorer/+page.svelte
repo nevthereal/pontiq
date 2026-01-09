@@ -8,10 +8,10 @@
 	import { CircleCheck, Pencil, Trash2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import Input from '$lib/components/ui/input/input.svelte';
-	import Loading from '$lib/components/Loading.svelte';
-	import Muted from '$lib/components/Muted.svelte';
+	import Loading from '$lib/components/typography/Loading.svelte';
+	import Muted from '$lib/components/typography/Muted.svelte';
 	import { resolve } from '$app/paths';
-	import SiteHeading from '$lib/components/SiteHeading.svelte';
+	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
 </script>
 
 <section class="py-4">

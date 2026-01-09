@@ -34,36 +34,34 @@
 	);
 </script>
 
-<div class="flex h-full w-full flex-col rounded-2xl border p-6">
-	<h1 class="flex min-h-0 items-center gap-2 border-b pb-2 text-2xl font-semibold">
-		<MessageCircle /> Document Chat
-	</h1>
-	<div class="relative mt-4 no-scrollbar flex h-full min-h-0 flex-col">
-		<ul bind:this={chatContainer} class="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto pb-48">
-			{#each chat.messages as message, messageIndex (messageIndex)}
-				<Message {message} />
-			{/each}
-			{#if chat.status === 'submitted'}
-				<p class="flex items-center gap-2 font-medium text-muted-foreground">
-					<Spinner /> Loading message
-				</p>
-			{/if}
-		</ul>
-
-		{#if !atBottom}
-			<Button
-				size="icon-sm"
-				class="absolute right-0 bottom-40"
-				variant="outline"
-				onclick={() => scroll.scrollToBottom()}
-				aria-label="Scroll to bottom"
-			>
-				<ChevronDown class="h-5 w-5" />
-			</Button>
+<h1 class="flex min-h-0 items-center gap-2 border-b pb-2 text-2xl font-semibold">
+	<MessageCircle /> Document Chat
+</h1>
+<div class="relative mt-4 no-scrollbar flex h-full min-h-0 flex-col">
+	<ul bind:this={chatContainer} class="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto pb-48">
+		{#each chat.messages as message, messageIndex (messageIndex)}
+			<Message {message} />
+		{/each}
+		{#if chat.status === 'submitted'}
+			<p class="flex items-center gap-2 font-medium text-muted-foreground">
+				<Spinner /> Loading message
+			</p>
 		{/if}
+	</ul>
 
-		<div class="mt-2 flex-shrink-0">
-			<ChatInput {projectId} {chat} />
-		</div>
+	{#if !atBottom}
+		<Button
+			size="icon-sm"
+			class="absolute right-0 bottom-40"
+			variant="outline"
+			onclick={() => scroll.scrollToBottom()}
+			aria-label="Scroll to bottom"
+		>
+			<ChevronDown class="h-5 w-5" />
+		</Button>
+	{/if}
+
+	<div class="mt-2 flex-shrink-0">
+		<ChatInput {projectId} {chat} />
 	</div>
 </div>

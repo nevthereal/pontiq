@@ -5,7 +5,7 @@
 	import { deleteSteps, getStudySteps } from '$lib/remote/tools.remote';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { Maximize2, RefreshCcw } from '@lucide/svelte';
-	import Muted from '$lib/components/Muted.svelte';
+	import Muted from '$lib/components/typography/Muted.svelte';
 
 	let { params } = $props();
 </script>

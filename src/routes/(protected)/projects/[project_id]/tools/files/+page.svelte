@@ -2,8 +2,8 @@
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 
 	import { getFiles } from '$lib/remote/files.remote';
-	import Loading from '$lib/components/Loading.svelte';
-	import Muted from '$lib/components/Muted.svelte';
+	import Loading from '$lib/components/typography/Loading.svelte';
+	import Muted from '$lib/components/typography/Muted.svelte';
 	import File from '$lib/components/File.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { resolve } from '$app/paths';
