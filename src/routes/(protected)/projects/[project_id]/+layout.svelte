@@ -17,12 +17,15 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { resolve } from '$app/paths';
+	import { createAIContext } from '@ai-sdk/svelte';
 
 	let { params, children } = $props();
 
 	const projectPromise = $derived(getProject(params.project_id));
 
 	const project = $derived(await projectPromise);
+
+	createAIContext();
 </script>
 
 <section class="flex h-screen flex-col py-4">
@@ -67,7 +70,7 @@
 			<Item.Group class="mt-4 space-y-2">
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/tools/chat', params)} {...props}>
+						<a href={resolve('/(protected)/projects/[project_id]/chat', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<MessageCircle />
 							</Item.Media>
@@ -77,7 +80,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/tools/files', params)} {...props}>
+						<a href={resolve('/(protected)/projects/[project_id]/files', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<Workflow />
 							</Item.Media>
@@ -87,10 +90,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a
-							href={resolve('/(protected)/projects/[project_id]/tools/study-plan', params)}
-							{...props}
-						>
+						<a href={resolve('/(protected)/projects/[project_id]/study-plan', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<NotebookPen />
 							</Item.Media>
@@ -100,10 +100,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a
-							href={resolve('/(protected)/projects/[project_id]/tools/flashcards', params)}
-							{...props}
-						>
+						<a href={resolve('/(protected)/projects/[project_id]/flashcards', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<CreditCard />
 							</Item.Media>

@@ -14,12 +14,12 @@
 	import { attachments, chatConfig } from '$lib/chat.svelte';
 	import { Toggle } from '$lib/components/ui/toggle';
 	import { getFiles } from '$lib/remote/files.remote';
+	import { goto } from '$app/navigation';
 
 	let { params, children } = $props();
 
 	const chat = $derived(
 		new Chat<MyUIMessage>({
-			id: undefined,
 			transport: new DefaultChatTransport({
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
@@ -46,6 +46,12 @@
 		);
 		input = '';
 		attachments.clear();
+		goto(
+			resolve('/(protected)/projects/[project_id]/chat/[chat_id]', {
+				project_id: params.project_id,
+				chat_id: chat.id
+			})
+		);
 	}
 </script>
 
@@ -54,7 +60,11 @@
 		<ToolHeading>
 			<MessageCircle /> Document Chat
 		</ToolHeading>
-		<Button size="sm" variant="outline"><Plus /> New chat</Button>
+		<Button
+			href={resolve('/(protected)/projects/[project_id]/chat', params)}
+			size="sm"
+			variant="outline"><Plus /> New chat</Button
+		>
 	</div>
 	<div class="flex min-h-0 flex-1 flex-col">
 		<div class="relative no-scrollbar flex h-full min-h-0 flex-col">

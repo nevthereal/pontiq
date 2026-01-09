@@ -27,12 +27,12 @@
 
 	const chat = $derived(
 		new Chat<MyUIMessage>({
-			id: params.chat_id,
 			transport: new DefaultChatTransport({
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
 				})
-			})
+			}),
+			id: params.chat_id
 		})
 	);
 </script>
