@@ -15,10 +15,11 @@
 	import { Toggle } from '$lib/components/ui/toggle';
 	import { getFiles } from '$lib/remote/files.remote';
 
-	let { params } = $props();
+	let { params, children } = $props();
 
 	const chat = $derived(
 		new Chat<MyUIMessage>({
+			id: undefined,
 			transport: new DefaultChatTransport({
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
@@ -57,6 +58,7 @@
 	</div>
 	<div class="flex min-h-0 flex-1 flex-col">
 		<div class="relative no-scrollbar flex h-full min-h-0 flex-col">
+			{@render children()}
 			{@render chatInput()}
 		</div>
 	</div>
