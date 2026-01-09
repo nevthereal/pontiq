@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import Message from '$lib/components/Message.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import { Chat } from '@ai-sdk/svelte';
+	import type { MyUIMessage } from '$lib/server/ai.js';
+	import type { Chat } from '@ai-sdk/svelte';
 	import { ChevronDown } from '@lucide/svelte';
-	import { DefaultChatTransport } from 'ai';
 	import { ScrollState, watch } from 'runed';
-
-	let { params } = $props();
+	import { getContext } from 'svelte';
 
 	let chatContainer = $state<HTMLElement>();
+
+	// Get the Chat instance from context (shared from layout)
+	const chat = getContext<Chat<MyUIMessage>>('chat');
 
 	const scroll = new ScrollState({ element: () => chatContainer, behavior: 'smooth' });
 
@@ -23,17 +23,6 @@
 		(s) => {
 			if (s === 'ready') scroll.scrollToBottom();
 		}
-	);
-
-	const chat = $derived(
-		new Chat<MyUIMessage>({
-			transport: new DefaultChatTransport({
-				api: resolve('/(protected)/projects/[project_id]/api/chat', {
-					project_id: params.project_id
-				})
-			}),
-			id: params.chat_id
-		})
 	);
 </script>
 

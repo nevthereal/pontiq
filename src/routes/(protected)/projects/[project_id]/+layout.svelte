@@ -17,15 +17,12 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import { resolve } from '$app/paths';
-	import { createAIContext } from '@ai-sdk/svelte';
 
 	let { params, children } = $props();
 
 	const projectPromise = $derived(getProject(params.project_id));
 
 	const project = $derived(await projectPromise);
-
-	createAIContext();
 </script>
 
 <section class="flex h-screen flex-col py-4">

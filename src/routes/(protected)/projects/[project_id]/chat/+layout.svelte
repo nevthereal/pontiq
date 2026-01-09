@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ArrowUpIcon, Brain, Globe, GraduationCap, Plus, Trash2 } from '@lucide/svelte';
-	import { Chat } from '@ai-sdk/svelte';
+	import { Chat, createAIContext } from '@ai-sdk/svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { DefaultChatTransport } from 'ai';
@@ -15,23 +15,42 @@
 	import { Toggle } from '$lib/components/ui/toggle';
 	import { getFiles } from '$lib/remote/files.remote';
 	import { goto } from '$app/navigation';
+	import { setContext } from 'svelte';
 
 	let { params, children } = $props();
 
+	createAIContext();
+
+	// Check if we're viewing a specific chat from URL
+	const isViewingSpecificChat = $derived(!!params.chat_id);
+
+	// Generate or use existing chat ID
+	const chatId = $derived(
+		isViewingSpecificChat ? params.chat_id || crypto.randomUUID() : crypto.randomUUID()
+	);
+
+	// Create a single persistent Chat instance with the consistent ID
 	const chat = $derived(
 		new Chat<MyUIMessage>({
 			transport: new DefaultChatTransport({
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
 				})
-			})
+			}),
+			id: chatId
 		})
 	);
 
+	setContext('chat', chat);
+
 	let input = $state('');
 
-	function handleSubmit(event: SubmitEvent) {
+	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+
+		// Check if this is the first message (no params.chat_id yet)
+		const isFirstMessage = !isViewingSpecificChat;
+
 		chat.sendMessage(
 			{
 				text: input,
@@ -46,12 +65,18 @@
 		);
 		input = '';
 		attachments.clear();
-		goto(
-			resolve('/(protected)/projects/[project_id]/chat/[chat_id]', {
-				project_id: params.project_id,
-				chat_id: chat.id
-			})
-		);
+
+		// Only navigate if this was the first message
+		if (isFirstMessage && chat.id) {
+			// Wait for message to be sent
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			goto(
+				resolve('/(protected)/projects/[project_id]/chat/[chat_id]', {
+					project_id: params.project_id,
+					chat_id: chatId
+				})
+			);
+		}
 	}
 </script>
 
