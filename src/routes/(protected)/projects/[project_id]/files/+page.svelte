@@ -86,7 +86,7 @@
 					<File {file} />
 				{:else}
 					<Muted class="col-span-2 text-xs text-muted-foreground"
-						>No files yet. Upload some below</Muted
+						>No files yet. Upload some above</Muted
 					>
 				{/each}
 			</ul>
