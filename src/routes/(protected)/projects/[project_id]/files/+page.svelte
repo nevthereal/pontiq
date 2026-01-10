@@ -73,7 +73,7 @@
 			</div>
 		</Drawer.Content>
 	</Drawer.Root>
-	<div class="min-h-0 flex-1 overflow-y-auto">
+	<div class="min-h-0 flex-1 overflow-y-scroll">
 		<svelte:boundary onerror={(e) => console.error(e)}>
 			{#snippet pending()}
 				<Loading thing="files" />
@@ -81,7 +81,7 @@
 			{#snippet failed()}
 				<p>Failed to load files</p>
 			{/snippet}
-			<ul class="grid grid-cols-2 gap-2 xl:grid-cols-3">
+			<ul class="grid grid-cols-3 gap-2 xl:grid-cols-4">
 				{#each await getFiles(params.project_id) as file (file.id)}
 					<File {file} />
 				{:else}

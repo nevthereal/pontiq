@@ -8,7 +8,7 @@
 	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
 </script>
 
-<section class="py-4">
+<section>
 	<div class="flex justify-between">
 		<SiteHeading>Projects</SiteHeading>
 		<CreateDialog />
