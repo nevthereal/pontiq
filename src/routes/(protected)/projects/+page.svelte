@@ -1,14 +1,14 @@
 <script lang="ts">
 	import * as Item from '$lib/components/ui/item';
 	import { resolve } from '$app/paths';
-	import Loading from '$lib/components/Loading.svelte';
+	import Loading from '$lib/components/typography/Loading.svelte';
 	import { getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import Muted from '$lib/components/Muted.svelte';
+	import Muted from '$lib/components/typography/Muted.svelte';
 	import CreateDialog from '$lib/components/CreateDialog.svelte';
-	import SiteHeading from '$lib/components/SiteHeading.svelte';
+	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
 </script>
 
-<section class="py-4">
+<section>
 	<div class="flex justify-between">
 		<SiteHeading>Projects</SiteHeading>
 		<CreateDialog />

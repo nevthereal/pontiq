@@ -4,12 +4,9 @@
 	import type { MyUIMessage } from '$lib/server/ai';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { FileText, Brain } from '@lucide/svelte';
-	import { marked } from 'marked';
+	import { marked } from '$lib/utils';
 	import { fade } from 'svelte/transition';
-	import ToolWrapper from './ToolWrapper.svelte';
-	import markedKatex from 'marked-katex-extension';
-
-	marked.use(markedKatex({ throwOnError: false }));
+	import ToolWrapper from './typography/ToolWrapper.svelte';
 
 	let { message }: { message: MyUIMessage } = $props();
 </script>

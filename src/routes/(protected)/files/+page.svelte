@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import Muted from '$lib/components/Muted.svelte';
+	import Muted from '$lib/components/typography/Muted.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { deleteFile, getAllFiles } from '$lib/remote/files.remote';
 	import { BookText, FileText, Image, SquareArrowOutUpRight, Trash2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import SiteHeading from '$lib/components/SiteHeading.svelte';
+	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
 
 	const allFiles = $derived(await getAllFiles());
 </script>

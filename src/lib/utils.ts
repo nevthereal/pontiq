@@ -1,5 +1,11 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
+
+marked.use(markedKatex({ throwOnError: false }));
+
+export { marked };
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));

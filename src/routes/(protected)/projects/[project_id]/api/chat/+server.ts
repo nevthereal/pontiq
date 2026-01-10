@@ -3,12 +3,13 @@ import type { chatConfig } from '$lib/chat.svelte';
 import { error } from '@sveltejs/kit';
 import { streamText, convertToModelMessages, stepCountIs, createGateway, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
+import type { RequestHandler } from './$types.js';
 
 const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
 });
 
-export async function POST({ request, locals }) {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) error(401, 'No user');
 
 	const DEFAULT_SYS_PROMPT =
@@ -82,7 +83,7 @@ export async function POST({ request, locals }) {
 
 	const result = streamText({
 		model: gateway('google/gemini-3-flash'),
-		messages: convertToModelMessages(messages),
+		messages: await convertToModelMessages(messages),
 		system:
 			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) + config.webSearch &&
 			'Use web search',
@@ -102,4 +103,4 @@ export async function POST({ request, locals }) {
 	});
 
 	return result.toUIMessageStreamResponse();
-}
+};

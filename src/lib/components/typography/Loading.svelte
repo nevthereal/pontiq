@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Spinner } from './ui/spinner';
+	import { Spinner } from '../ui/spinner';
 
 	let { thing, class: className }: { thing: string; class?: string } = $props();
 </script>
