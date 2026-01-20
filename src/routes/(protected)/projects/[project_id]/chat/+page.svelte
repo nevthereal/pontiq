@@ -89,7 +89,7 @@
 		<div class="relative no-scrollbar flex h-full min-h-0 flex-col">
 			<ul
 				bind:this={chatContainer}
-				class="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto pb-48"
+				class="flex min-h-0 flex-1 flex-col gap-8 overflow-x-hidden overflow-y-auto pb-48"
 			>
 				{#each chat.messages as message, messageIndex (messageIndex)}
 					<Message {message} />

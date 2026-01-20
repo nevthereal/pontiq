@@ -49,6 +49,47 @@ export const getProject = query(z.string(), async (id) => {
 	return project;
 });
 
+export const getProjectDetails = query(z.string(), async (id) => {
+	const user = await requireAuth();
+
+	const projectWithRelations = await db.query.project.findFirst({
+		where: {
+			id,
+			creatorId: user.id
+		},
+		with: {
+			subject: true,
+			files: true
+		}
+	});
+
+	if (!projectWithRelations) error(404, 'Project not found');
+
+	// Get all study steps for count
+	const allStudySteps = await db.query.studyPlanStep.findMany({
+		where: { projectId: id },
+		orderBy: { date: 'asc' }
+	});
+
+	// Get next 3 upcoming study steps (from today onwards)
+	const now = new Date();
+	now.setHours(0, 0, 0, 0);
+	const upcomingSteps = allStudySteps.filter((step) => step.date >= now).slice(0, 3);
+
+	// Get flashcards count
+	const flashcards = await db.query.flashcard.findMany({
+		where: { projectId: id }
+	});
+
+	return {
+		...projectWithRelations,
+		fileCount: projectWithRelations.files.length,
+		studyStepCount: allStudySteps.length,
+		flashcardCount: flashcards.length,
+		upcomingSteps
+	};
+});
+
 export const createProject = form(
 	z.object({ name: z.string().min(5), subjectId: z.uuid() }),
 	async ({ name, subjectId }) => {
