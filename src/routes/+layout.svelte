@@ -5,13 +5,13 @@
 	import '../app.css';
 	import Logo from '$lib/assets/favicon.png';
 	import { getUser } from '$lib/remote/auth.remote';
-	import { dev } from '$app/environment';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Check, ChevronsUpDown, LogOut, MoonIcon, SunIcon } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LogOut, MoonIcon, Slash, SunIcon } from '@lucide/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
-	import { getSubjectsWithProjects } from '$lib/remote/projects.remote';
+	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
+	import { page } from '$app/state';
 
 	let { children, params } = $props();
 
@@ -33,32 +33,34 @@
 			<a href="/" class="contents font-cooper text-3xl font-black tracking-tighter"
 				><img class="size-8" src={Logo} alt="pontiq logo" /> pontiq (⍺)</a
 			>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger
-					title="Switch project"
-					class={buttonVariants({ size: 'icon-sm', variant: 'ghost' })}
-					><ChevronsUpDown /></DropdownMenu.Trigger
-				>
-				<DropdownMenu.Content align="start" class="w-48">
-					<DropdownMenu.Group>
-						<DropdownMenu.Label>Switch project</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						{#each await getSubjectsWithProjects() as sub (sub.id)}
-							<DropdownMenu.Label>{sub.title}</DropdownMenu.Label>
-							{#each sub.projects as project (project.id)}
-								<a href={resolve('/(protected)/projects/[project_id]', { project_id: project.id })}
-									><DropdownMenu.Item class="flex justify-between"
-										>{project.name}
-										{#if params.project_id === project.id}
-											<Check />
-										{/if}
-									</DropdownMenu.Item></a
-								>
+			{#if params.project_id}
+				<p class="my-auto text-lg font-bold text-muted-foreground">/</p>
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger title="Switch project" class={buttonVariants({ variant: 'ghost' })}
+						>{(await getProject(params.project_id)).name} <ChevronsUpDown />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" class="w-48">
+						<DropdownMenu.Group>
+							<DropdownMenu.Label>Switch project</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							{#each await getSubjectsWithProjects() as sub (sub.id)}
+								<DropdownMenu.Label>{sub.title}</DropdownMenu.Label>
+								{#each sub.projects as project (project.id)}
+									<a
+										href={resolve('/(protected)/projects/[project_id]', { project_id: project.id })}
+										><DropdownMenu.Item
+											>{project.name}
+											{#if params.project_id === project.id}
+												<Check />
+											{/if}
+										</DropdownMenu.Item></a
+									>
+								{/each}
 							{/each}
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
 		</div>
 		{#if !user}
 			<Button href="/auth">Sign in</Button>

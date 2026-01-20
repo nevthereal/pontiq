@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) error(401, 'No user');
 
 	const DEFAULT_SYS_PROMPT =
-		`You are a chatbot assistant in a study app called Pontiq` +
+		`You are a friendly study chatbot assistant in a study app called Pontiq` +
 		`You should be answering the questions from the provided files, if given, else answer from your knowledge or search the web.` +
 		`Please answer in the language you were prompted or the language of given files.` +
 		`The user's name is ${locals.user.name} and right now is ${new Date()}` +
@@ -82,24 +82,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		await request.json();
 
 	const result = streamText({
-		model: gateway('google/gemini-3-flash'),
+		model: gateway('openai/gpt-5-mini'),
 		messages: await convertToModelMessages(messages),
 		system:
-			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) + config.webSearch &&
-			'Use web search',
+			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
+			(config.webSearch ? ' Use web search' : ''),
 		tools,
 		stopWhen: stepCountIs(20),
-		providerOptions: {
-			google: {
-				thinkingConfig: {
-					thinkingLevel: config.enhancedReasoning ? 'high' : 'minimal',
-					includeThoughts: true
-				}
-			}
-		},
 		experimental_transform: smoothStream({
 			chunking: 'word'
-		})
+		}),
+		providerOptions: {
+			openai: {
+				reasoningEffort: config.enhancedReasoning ? 'medium' : 'low',
+				reasoningSummary: 'detailed'
+			}
+		}
 	});
 
 	return result.toUIMessageStreamResponse();

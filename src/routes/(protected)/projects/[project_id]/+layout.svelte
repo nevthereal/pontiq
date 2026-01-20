@@ -8,7 +8,9 @@
 
 	let { params, children } = $props();
 
-	const project = $derived(await getProject(params.project_id));
+	const projectPromise = $derived(getProject(params.project_id));
+
+	const project = $derived(await projectPromise);
 </script>
 
 <section class="flex h-full w-full flex-col">

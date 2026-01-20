@@ -22,7 +22,6 @@ const zStudyStep = z.object({
 export const exa = new Exa(EXA_API_KEY);
 
 const webSearchTool = tool({
-	name: 'web_search',
 	description: 'Search the web for up-to-date information',
 	inputSchema: z.object({
 		query: z.string().min(1).max(100).describe('The search query')
@@ -45,8 +44,6 @@ const studyPlanTool = tool({
 	description:
 		'Creates a study plan for the user at a given date using the context of given files.',
 	inputSchema: zStudyStep,
-	name: 'study_plan',
-
 	execute: async (args) => {
 		const { params } = getRequestEvent();
 
@@ -70,7 +67,6 @@ const flashCardTool = tool({
 		term: z.string(),
 		definition: z.string()
 	}),
-	name: 'flashcards',
 
 	execute: async (args) => {
 		const { params } = getRequestEvent();
@@ -89,7 +85,6 @@ const flashCardTool = tool({
 const getFlashcardsTool = tool({
 	description: 'Retrieve all existing flashcards for the current project',
 	inputSchema: z.object({}),
-	name: 'get_flashcards',
 
 	execute: async () => {
 		const { params } = getRequestEvent();
@@ -103,7 +98,6 @@ const getFlashcardsTool = tool({
 const getStudyPlanTool = tool({
 	description: 'Retrieve the existing study plan for the current project',
 	inputSchema: z.object({}),
-	name: 'get_study_plan',
 
 	execute: async () => {
 		const { params } = getRequestEvent();
