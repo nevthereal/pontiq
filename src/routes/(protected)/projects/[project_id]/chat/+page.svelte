@@ -186,7 +186,8 @@
 						variant="default"
 						class="ml-auto rounded-full"
 						size="icon-xs"
-						disabled={!input || chat.status !== 'ready'}
+						disabled={!(input || (attachments.files && attachments.files.length > 0)) ||
+							chat.status !== 'ready'}
 					>
 						{#if chat.status === 'ready'}
 							<ArrowUpIcon />
