@@ -43,6 +43,7 @@
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		if (chat.status !== 'ready') return;
+		if (!input.trim() && attachments.files.length === 0) return;
 
 		chat.sendMessage(
 			{
