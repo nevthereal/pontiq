@@ -42,6 +42,7 @@
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+		if (chat.status !== 'ready') return;
 
 		chat.sendMessage(
 			{
@@ -184,7 +185,7 @@
 						variant="default"
 						class="ml-auto rounded-full"
 						size="icon-xs"
-						disabled={!input}
+						disabled={!input || chat.status !== 'ready'}
 					>
 						{#if chat.status === 'ready'}
 							<ArrowUpIcon />

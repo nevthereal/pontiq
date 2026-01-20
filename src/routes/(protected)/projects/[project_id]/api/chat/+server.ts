@@ -85,8 +85,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		model: gateway('openai/gpt-5-mini'),
 		messages: await convertToModelMessages(messages),
 		system:
-			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) + config.webSearch &&
-			'Use web search',
+			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
+			(config.webSearch ? ' Use web search' : ''),
 		tools,
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
