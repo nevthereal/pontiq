@@ -54,7 +54,7 @@
 					mediaType: a.type,
 					type: 'file',
 					filename: a.name,
-					url: new URL(a.utURL).toString()
+					url: a.utURL
 				}))
 			},
 			{ body: { config: chatConfig.current, attachments } }
