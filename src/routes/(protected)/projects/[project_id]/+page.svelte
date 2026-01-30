@@ -41,7 +41,7 @@
 		<p class="text-destructive">Failed to load project</p>
 	{/snippet}
 
-	<div class="flex flex-col gap-6">
+	<div class="flex flex-col gap-6 overflow-y-scroll">
 		<header>
 			<ToolHeading>
 				<FolderOpen />
@@ -153,68 +153,6 @@
 					</p>
 				</div>
 			{/if}
-		</section>
-
-		<!-- Quick Actions -->
-		<section>
-			<h2 class="mb-3 text-lg font-semibold">Quick Actions</h2>
-			<Item.Group class="space-y-2">
-				<Item.Root variant="outline">
-					{#snippet child({ props })}
-						<a
-							href={resolve('/(protected)/projects/[project_id]/chat', params)}
-							{...props}
-							class="flex items-center gap-3"
-						>
-							<Item.Media variant="icon">
-								<MessageCircle />
-							</Item.Media>
-							<Item.Content>
-								<Item.Title>Start a Chat</Item.Title>
-								<Item.Description>Ask questions about your study materials</Item.Description>
-							</Item.Content>
-						</a>
-					{/snippet}
-				</Item.Root>
-
-				<Item.Root variant="outline">
-					{#snippet child({ props })}
-						<a
-							href={resolve('/(protected)/projects/[project_id]/files', params)}
-							{...props}
-							class="flex items-center gap-3"
-						>
-							<Item.Media variant="icon">
-								<FileText />
-							</Item.Media>
-							<Item.Content>
-								<Item.Title>Upload Files</Item.Title>
-								<Item.Description>Add documents to your knowledge base</Item.Description>
-							</Item.Content>
-						</a>
-					{/snippet}
-				</Item.Root>
-
-				{#if projectDetails.studyStepCount === 0}
-					<Item.Root variant="outline">
-						{#snippet child({ props })}
-							<a
-								href={resolve('/(protected)/projects/[project_id]/chat', params)}
-								{...props}
-								class="flex items-center gap-3"
-							>
-								<Item.Media variant="icon">
-									<NotebookPen />
-								</Item.Media>
-								<Item.Content>
-									<Item.Title>Generate Study Plan</Item.Title>
-									<Item.Description>Ask the AI to create a study plan for you</Item.Description>
-								</Item.Content>
-							</a>
-						{/snippet}
-					</Item.Root>
-				{/if}
-			</Item.Group>
 		</section>
 
 		<Separator />

@@ -1,10 +1,9 @@
 import { type MyUIMessage, tools } from '$lib/server/ai';
-import { type AnthropicProviderOptions } from '@ai-sdk/anthropic';
 import type { chatConfig } from '$lib/chat.svelte';
 import { error } from '@sveltejs/kit';
 import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
-import { type GatewayProviderOptions, createGateway } from '@ai-sdk/gateway';
+import { createGateway } from '@ai-sdk/gateway';
 import type { RequestHandler } from './$types.js';
 
 const gateway = createGateway({
@@ -89,7 +88,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	} = await request.json();
 
 	const result = streamText({
-		model: gateway('anthropic/claude-haiku-4.5'),
+		model: gateway('openai/gpt-5-mini'),
 		messages: await convertToModelMessages(messages),
 		system:
 			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
@@ -98,24 +97,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
 			chunking: 'word'
-		}),
-		providerOptions: {
-			openai: {
-				reasoningEffort: config.enhancedReasoning ? 'medium' : 'low',
-				reasoningSummary: 'detailed'
-			},
-			anthropic: {
-				effort: config.studyModeEnabled ? 'high' : 'low',
-				sendReasoning: true,
-				thinking: {
-					type: 'enabled'
-				}
-			} satisfies AnthropicProviderOptions,
-			gateway: {
-				order: ['anthropic', 'vertex', 'openai'],
-				models: ['openai/gpt-5-mini', 'google/gemini-3-flash']
-			} satisfies GatewayProviderOptions
-		}
+		})
 	});
 
 	return result.toUIMessageStreamResponse();
