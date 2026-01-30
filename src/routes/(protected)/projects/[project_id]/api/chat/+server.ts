@@ -1,8 +1,9 @@
 import { type MyUIMessage, tools } from '$lib/server/ai';
 import type { chatConfig } from '$lib/chat.svelte';
 import { error } from '@sveltejs/kit';
-import { streamText, convertToModelMessages, stepCountIs, createGateway, smoothStream } from 'ai';
+import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
+import { createGateway } from '@ai-sdk/gateway';
 import type { RequestHandler } from './$types.js';
 
 const gateway = createGateway({
@@ -78,8 +79,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   END OF STUDY MODE SYSTEM PROMPT
   `;
 
-	const { messages, config }: { messages: MyUIMessage[]; config: typeof chatConfig.current } =
-		await request.json();
+	const {
+		messages,
+		config
+	}: {
+		messages: MyUIMessage[];
+		config: typeof chatConfig.current;
+	} = await request.json();
 
 	const result = streamText({
 		model: gateway('openai/gpt-5-mini'),
@@ -91,13 +97,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
 			chunking: 'word'
-		}),
-		providerOptions: {
-			openai: {
-				reasoningEffort: config.enhancedReasoning ? 'medium' : 'low',
-				reasoningSummary: 'detailed'
-			}
-		}
+		})
 	});
 
 	return result.toUIMessageStreamResponse();

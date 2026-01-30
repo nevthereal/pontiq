@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Item from '$lib/components/ui/item/index.js';
 	import {
 		ArrowUpIcon,
 		Brain,
@@ -47,15 +48,16 @@
 
 		chat.sendMessage(
 			{
+				// refactor to content:
 				text: input,
 				files: attachments.files.map((a) => ({
 					mediaType: a.type,
 					type: 'file',
-					url: a.utURL,
-					filename: a.name
+					filename: a.name,
+					url: a.utURL
 				}))
 			},
-			{ body: { config: chatConfig.current } }
+			{ body: { config: chatConfig.current, attachments } }
 		);
 		input = '';
 		attachments.clear();
@@ -100,6 +102,19 @@
 					<p class="flex items-center gap-2 font-medium text-muted-foreground">
 						<Spinner /> Loading message
 					</p>
+				{:else if chat.status === 'error'}
+					<Item.Root variant="outline" class="bg-destructive/10">
+						<Item.Content>
+							<Item.Title>An unexpected error occured.</Item.Title>
+							<Item.Description>
+								{#if chat.error}
+									{chat.error.name}: {chat.error.message}
+								{:else}
+									Try again later
+								{/if}</Item.Description
+							>
+						</Item.Content>
+					</Item.Root>
 				{/if}
 			</ul>
 			{#if !atBottom}
