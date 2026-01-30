@@ -44,7 +44,7 @@
 							<DropdownMenu.Label>Switch project</DropdownMenu.Label>
 							<DropdownMenu.Separator />
 							{#each await getSubjectsWithProjects() as sub (sub.id)}
-								<DropdownMenu.Label>{sub.title}</DropdownMenu.Label>
+								<DropdownMenu.Label>{sub.title}:</DropdownMenu.Label>
 								{#each sub.projects as project (project.id)}
 									<a
 										href={resolve('/(protected)/projects/[project_id]', { project_id: project.id })}
