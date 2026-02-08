@@ -6,7 +6,7 @@
 
 	import { getFlashCards, reviewFlashcard } from '$lib/remote/tools.remote';
 	import { getProjectDetails } from '$lib/remote/projects.remote';
-	import { applySrsReview } from '$lib/srs';
+	import { applySrsReview, type ReviewRating } from '$lib/srs';
 	import { CreditCard, Frown, Laugh, Meh, Smile } from '@lucide/svelte';
 	import { PressedKeys } from 'runed';
 	import { cubicInOut } from 'svelte/easing';
@@ -41,7 +41,7 @@
 		return `${when} (${label})`;
 	}
 
-	function estimateNextDue(rating) {
+	function estimateNextDue(rating: ReviewRating) {
 		if (!currentFlashcard) return '';
 		const next = applySrsReview(
 			{
@@ -57,7 +57,7 @@
 		return formatDueEstimate(next.dueAt);
 	}
 
-	async function handleSubmission(index) {
+	async function handleSubmission(index: number) {
 		if (!currentFlashcard) return;
 		await reviewFlashcard({
 			projectId: params.project_id,
