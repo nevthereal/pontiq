@@ -1,4 +1,14 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+	boolean,
+	doublePrecision,
+	index,
+	integer,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uuid
+} from 'drizzle-orm/pg-core';
 import { project } from './projects.sql';
 
 export const studyStepTypes = [
@@ -26,9 +36,25 @@ export const studyPlanStep = pgTable('study_plan_step', {
 	type: typeEnum().notNull()
 });
 
-export const flashcard = pgTable('flashcard', {
-	id: uuid().primaryKey().defaultRandom(),
-	term: text().notNull(),
-	definition: text().notNull(),
-	projectId
-});
+export const flashcard = pgTable(
+	'flashcard',
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		term: text().notNull(),
+		definition: text().notNull(),
+		projectId,
+		createdAt: timestamp().defaultNow().notNull(),
+		updatedAt: timestamp().defaultNow().notNull(),
+		dueAt: timestamp().defaultNow().notNull(),
+		intervalDays: integer().default(0).notNull(),
+		easeFactor: doublePrecision().default(2.5).notNull(),
+		repetitions: integer().default(0).notNull(),
+		lapses: integer().default(0).notNull(),
+		lastReviewedAt: timestamp(),
+		suspended: boolean().default(false).notNull()
+	},
+	(t) => [
+		index('flashcard_project_idx').on(t.projectId),
+		index('flashcard_due_idx').on(t.projectId, t.dueAt)
+	]
+);

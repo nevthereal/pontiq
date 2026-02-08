@@ -15,12 +15,16 @@
 		Calendar
 	} from '@lucide/svelte';
 	import { deleteProject, getProjectDetails } from '$lib/remote/projects.remote';
+	import { setProjectExamDate } from '$lib/remote/projects.remote';
 	import { resolve } from '$app/paths';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import * as Field from '$lib/components/ui/field';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let { params } = $props();
 
@@ -31,6 +35,15 @@
 		return new Intl.DateTimeFormat('en-GB', {
 			dateStyle: 'long'
 		}).format(date);
+	}
+
+	function formatDateInput(date: Date | null) {
+		if (!date) return '';
+		const d = new Date(date);
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
 	}
 </script>
 
@@ -108,6 +121,58 @@
 				<span class="text-3xl font-bold">AI</span>
 				<Muted>powered assistant</Muted>
 			</a>
+		</section>
+
+		<section>
+			<div class="mb-3 flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Exam Date</h2>
+				{#if projectDetails.examDate}
+					<Muted>{formatDate(projectDetails.examDate)}</Muted>
+				{:else}
+					<Muted>Not set</Muted>
+				{/if}
+			</div>
+			<div class="rounded-xl border p-4">
+				<form
+					{...setProjectExamDate
+						.for(projectDetails.id)
+						.enhance(async ({ submit, data }) => {
+							toast.promise(submit().updates(getProjectDetails(projectDetails.id)), {
+								loading: 'Saving exam date...',
+								success: data.examDate?.length
+									? 'Exam date updated'
+									: 'Exam date cleared',
+								error: 'Failed to update exam date'
+							});
+						})}
+				>
+					<input type="hidden" name="id" value={projectDetails.id} />
+					<Field.Set>
+						<Field.Group>
+							<Field.Field>
+								<Field.Label for="examDate">Exam date</Field.Label>
+								<Input
+									id="examDate"
+									name="examDate"
+									type="date"
+									value={formatDateInput(projectDetails.examDate)}
+								/>
+								{#if setProjectExamDate.fields.examDate.issues()}
+									{#each setProjectExamDate.fields.examDate.issues() as issue, idx (idx)}
+										<Field.Error>{issue.message}</Field.Error>
+									{/each}
+								{/if}
+								<Muted class="mt-1">
+									Used to tighten review intervals as the exam approaches.
+								</Muted>
+							</Field.Field>
+						</Field.Group>
+						<Field.Field>
+							<Button type="submit">Save</Button>
+						</Field.Field>
+					</Field.Set>
+				</form>
+			</div>
 		</section>
 
 		<!-- Upcoming Study Steps -->

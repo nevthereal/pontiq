@@ -2,8 +2,9 @@
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
-	import { getFlashCards } from '$lib/remote/tools.remote';
+	import { getFlashCards, reviewFlashcard } from '$lib/remote/tools.remote';
 	import { CreditCard, Frown, Laugh, Meh, Smile } from '@lucide/svelte';
 	import { PressedKeys } from 'runed';
 	import { cubicInOut } from 'svelte/easing';
@@ -19,13 +20,21 @@
 	let flipped = $state(false);
 
 	const responses = [
-		{ value: 1, icon: Frown, label: 'Not at all', color: 'text-red-400' },
-		{ value: 2, icon: Meh, label: 'Struggling', color: 'text-orange-400' },
-		{ value: 3, icon: Smile, label: 'Got it!', color: 'text-green-400' },
-		{ value: 4, icon: Laugh, label: 'Very Fast', color: 'text-emerald-400' }
+		{ value: 1, icon: Frown, label: 'Not at all', color: 'text-red-400', tooltip: 'Again' },
+		{ value: 2, icon: Meh, label: 'Struggling', color: 'text-orange-400', tooltip: 'Hard' },
+		{ value: 3, icon: Smile, label: 'Got it!', color: 'text-green-400', tooltip: 'Good' },
+		{ value: 4, icon: Laugh, label: 'Very Fast', color: 'text-emerald-400', tooltip: 'Easy' }
 	];
 
-	function handleSubmission(index) {
+	const currentFlashcard = $derived(flashcards?.[currentIndex] ?? null);
+
+	async function handleSubmission(index) {
+		if (!currentFlashcard) return;
+		await reviewFlashcard({
+			projectId: params.project_id,
+			flashcardId: currentFlashcard.id,
+			rating: index
+		});
 		currentIndex++;
 		flipped = false;
 	}
@@ -44,31 +53,42 @@
 	<ToolHeading>
 		<CreditCard /> Flashcards
 	</ToolHeading>
-	<div class="max-w-lg">
-		{#if flashcards != null}
+	<div class="mx-auto my-4 max-w-lg">
+		{#if flashcards != null && currentFlashcard}
 			<p class="my-2 text-center font-bold text-muted-foreground">
 				{currentIndex + 1} / {flashcards.length}
 			</p>
 			<Flashcard
-				front={flashcards[currentIndex].term}
-				back={flashcards[currentIndex].definition}
+				front={currentFlashcard.term}
+				back={currentFlashcard.definition}
 				bind:flipped
 			/>
 
 			{#if flipped}
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
-					<div class="grid grid-cols-4 gap-4">
+					<Tooltip.Provider>
+						<div class="grid grid-cols-4 gap-4">
 						{#each responses as response (response.value)}
 							{@const Icon = response.icon}
-							<Button onclick={() => handleSubmission(response.value)} variant="outline">
-								<Icon class={response.color} />
-								{response.label}
-							</Button>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<Button onclick={() => handleSubmission(response.value)} variant="outline">
+										<Icon class={response.color} />
+										{response.label}
+									</Button>
+								</Tooltip.Trigger>
+								<Tooltip.Content side="top">
+									{response.tooltip}
+								</Tooltip.Content>
+							</Tooltip.Root>
 						{/each}
-					</div>
+						</div>
+					</Tooltip.Provider>
 				</div>
 			{/if}
+		{:else if flashcards != null}
+			<p class="my-6 text-center text-muted-foreground">No cards due right now.</p>
 		{/if}
 	</div>
 </div>

@@ -167,6 +167,32 @@ export const editProject = form(
 	}
 );
 
+export const setProjectExamDate = form(
+	z.object({
+		id: z.uuid(),
+		examDate: z.string().optional()
+	}),
+	async ({ id, examDate }) => {
+		const user = await requireAuth();
+		const nextExamDate = examDate && examDate.trim().length > 0 ? new Date(`${examDate}T00:00:00`) : null;
+
+		await db.transaction(async (tx) => {
+			const qProject = await tx.query.project.findFirst({
+				where: {
+					id,
+					creatorId: user.id
+				}
+			});
+
+			if (!qProject) return error(401, 'Not your project');
+
+			await tx.update(project).set({ examDate: nextExamDate }).where(eq(project.id, qProject.id));
+		});
+
+		return { examDate: nextExamDate };
+	}
+);
+
 export const editSubject = form(
 	z.object({ id: z.uuid(), title: z.string().min(3) }),
 	async ({ id, title }) => {
