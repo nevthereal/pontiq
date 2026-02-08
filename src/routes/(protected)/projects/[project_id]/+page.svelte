@@ -91,7 +91,7 @@
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2 text-muted-foreground">
-									<FileText class="h-4 w-4" />
+									<CalendarIcon class="h-4 w-4" />
 									<span class="text-sm font-medium">Exam Date</span>
 								</div>
 								<span class="text-xs font-medium text-muted-foreground">
