@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
@@ -41,7 +42,7 @@
 		<p class="text-destructive">Failed to load project</p>
 	{/snippet}
 
-	<div class="flex flex-col gap-6 overflow-y-scroll">
+	<div class="no-scrollbar flex flex-col gap-6 overflow-y-scroll">
 		<header>
 			<ToolHeading>
 				<FolderOpen />
@@ -142,16 +143,21 @@
 					{/each}
 				</Item.Group>
 			{:else}
-				<div class="rounded-xl border border-dashed p-6 text-center">
-					<NotebookPen class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">
-						{#if projectDetails.studyStepCount === 0}
-							No study plan yet. Ask the AI in chat to generate one for you.
-						{:else}
-							No upcoming steps. All your study steps are in the past.
-						{/if}
-					</p>
-				</div>
+				<Empty.Root class="border border-dashed">
+					<Empty.Header>
+						<Empty.Media variant="icon">
+							<NotebookPen />
+						</Empty.Media>
+						<Empty.Title>No study steps</Empty.Title>
+						<Empty.Description
+							>{#if projectDetails.studyStepCount === 0}
+								No study plan yet. Ask the AI in chat to generate one for you.
+							{:else}
+								No upcoming steps. All your study steps are in the past.
+							{/if}</Empty.Description
+						>
+					</Empty.Header>
+				</Empty.Root>
 			{/if}
 		</section>
 
