@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
@@ -14,12 +15,16 @@
 		Calendar
 	} from '@lucide/svelte';
 	import { deleteProject, getProjectDetails } from '$lib/remote/projects.remote';
+	import { setProjectExamDate } from '$lib/remote/projects.remote';
 	import { resolve } from '$app/paths';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import * as Field from '$lib/components/ui/field';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let { params } = $props();
 
@@ -31,6 +36,15 @@
 			dateStyle: 'long'
 		}).format(date);
 	}
+
+	function formatDateInput(date: Date | null) {
+		if (!date) return '';
+		const d = new Date(date);
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
 </script>
 
 <svelte:boundary>
@@ -41,7 +55,7 @@
 		<p class="text-destructive">Failed to load project</p>
 	{/snippet}
 
-	<div class="flex flex-col gap-6 overflow-y-scroll">
+	<div class="no-scrollbar flex flex-col gap-6 overflow-y-scroll">
 		<header>
 			<ToolHeading>
 				<FolderOpen />
@@ -109,6 +123,58 @@
 			</a>
 		</section>
 
+		<section>
+			<div class="mb-3 flex items-center justify-between">
+				<h2 class="text-lg font-semibold">Exam Date</h2>
+				{#if projectDetails.examDate}
+					<Muted>{formatDate(projectDetails.examDate)}</Muted>
+				{:else}
+					<Muted>Not set</Muted>
+				{/if}
+			</div>
+			<div class="rounded-xl border p-4">
+				<form
+					{...setProjectExamDate
+						.for(projectDetails.id)
+						.enhance(async ({ submit, data }) => {
+							toast.promise(submit().updates(getProjectDetails(projectDetails.id)), {
+								loading: 'Saving exam date...',
+								success: data.examDate?.length
+									? 'Exam date updated'
+									: 'Exam date cleared',
+								error: 'Failed to update exam date'
+							});
+						})}
+				>
+					<input type="hidden" name="id" value={projectDetails.id} />
+					<Field.Set>
+						<Field.Group>
+							<Field.Field>
+								<Field.Label for="examDate">Exam date</Field.Label>
+								<Input
+									id="examDate"
+									name="examDate"
+									type="date"
+									value={formatDateInput(projectDetails.examDate)}
+								/>
+								{#if setProjectExamDate.fields.examDate.issues()}
+									{#each setProjectExamDate.fields.examDate.issues() as issue, idx (idx)}
+										<Field.Error>{issue.message}</Field.Error>
+									{/each}
+								{/if}
+								<Muted class="mt-1">
+									Used to tighten review intervals as the exam approaches.
+								</Muted>
+							</Field.Field>
+						</Field.Group>
+						<Field.Field>
+							<Button type="submit">Save</Button>
+						</Field.Field>
+					</Field.Set>
+				</form>
+			</div>
+		</section>
+
 		<!-- Upcoming Study Steps -->
 		<section>
 			<div class="mb-3 flex items-center justify-between">
@@ -142,16 +208,21 @@
 					{/each}
 				</Item.Group>
 			{:else}
-				<div class="rounded-xl border border-dashed p-6 text-center">
-					<NotebookPen class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">
-						{#if projectDetails.studyStepCount === 0}
-							No study plan yet. Ask the AI in chat to generate one for you.
-						{:else}
-							No upcoming steps. All your study steps are in the past.
-						{/if}
-					</p>
-				</div>
+				<Empty.Root class="border border-dashed">
+					<Empty.Header>
+						<Empty.Media variant="icon">
+							<NotebookPen />
+						</Empty.Media>
+						<Empty.Title>No study steps</Empty.Title>
+						<Empty.Description
+							>{#if projectDetails.studyStepCount === 0}
+								No study plan yet. Ask the AI in chat to generate one for you.
+							{:else}
+								No upcoming steps. All your study steps are in the past.
+							{/if}</Empty.Description
+						>
+					</Empty.Header>
+				</Empty.Root>
 			{/if}
 		</section>
 

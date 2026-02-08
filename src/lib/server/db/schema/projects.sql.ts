@@ -13,6 +13,7 @@ export const project = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
 		pinned: boolean().notNull().default(false),
+		examDate: timestamp(),
 		createdAt: timestamp().defaultNow()
 	},
 	(t) => [index('prj_sub_idx').on(t.subjectId), index('prj_creator_idx').on(t.creatorId)]
