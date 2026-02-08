@@ -12,7 +12,7 @@
 		NotebookPen,
 		CreditCard,
 		FileText,
-		Calendar
+		Calendar as CalendarIcon
 	} from '@lucide/svelte';
 	import { deleteProject, getProjectDetails } from '$lib/remote/projects.remote';
 	import { setProjectExamDate } from '$lib/remote/projects.remote';
@@ -22,28 +22,36 @@
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import * as Field from '$lib/components/ui/field';
-	import Input from '$lib/components/ui/input/input.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Calendar } from '$lib/components/ui/calendar/index.js';
+	import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
 	let { params } = $props();
 
 	const projectDetails = $derived(await getProjectDetails(params.project_id));
+	const dateFormatter = new DateFormatter('en-GB', {
+		day: '2-digit',
+		month: 'short'
+	});
+	const toCalendarDate = (date: Date | null) =>
+		date ? new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate()) : undefined;
+	let examDateOpen = $state(false);
+	let examDateValue = $derived<CalendarDate | undefined>(toCalendarDate(projectDetails.examDate));
+	let examDateDialogOpen = $state(false);
 
 	function formatDate(date: Date | null) {
 		if (!date) return 'Unknown';
 		return new Intl.DateTimeFormat('en-GB', {
-			dateStyle: 'long'
+			day: '2-digit',
+			month: 'short'
 		}).format(date);
 	}
 
-	function formatDateInput(date: Date | null) {
-		if (!date) return '';
-		const d = new Date(date);
-		const year = d.getFullYear();
-		const month = String(d.getMonth() + 1).padStart(2, '0');
-		const day = String(d.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
+	function formatCalendarDate(date: CalendarDate | undefined) {
+		if (!date) return 'Select date';
+		return dateFormatter.format(date.toDate(getLocalTimeZone()));
 	}
 </script>
 
@@ -74,24 +82,97 @@
 
 		<!-- Stats Grid -->
 		<section class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-			<a
-				href={resolve('/(protected)/projects/[project_id]/files', params)}
-				class="group flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
-			>
-				<div class="flex items-center gap-2 text-muted-foreground">
-					<FileText class="h-4 w-4" />
-					<span class="text-sm font-medium">Files</span>
-				</div>
-				<span class="text-3xl font-bold">{projectDetails.fileCount}</span>
-				<Muted>in knowledge base</Muted>
-			</a>
+			<Dialog.Root bind:open={examDateDialogOpen}>
+				<Dialog.Trigger>
+					{#snippet child({ props })}
+						<div
+							{...props}
+							class="group flex cursor-pointer flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
+						>
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2 text-muted-foreground">
+									<FileText class="h-4 w-4" />
+									<span class="text-sm font-medium">Exam Date</span>
+								</div>
+								<span class="text-xs font-medium text-muted-foreground">
+									{projectDetails.examDate ? 'Edit' : 'Set'}
+								</span>
+							</div>
+							<span class="text-3xl font-bold">
+								{projectDetails.examDate ? formatDate(projectDetails.examDate) : 'Not set'}
+							</span>
+							<Muted>
+								{projectDetails.examDate
+									? 'Click to update your target date'
+									: 'Set a target date to guide your review cadence'}
+							</Muted>
+						</div>
+					{/snippet}
+				</Dialog.Trigger>
+
+				<Dialog.Content class="sm:max-w-110">
+					<Dialog.Header>
+						<Dialog.Title>Set Exam Date</Dialog.Title>
+						<Dialog.Description>
+							Choose a date to tighten review intervals as the exam approaches.
+						</Dialog.Description>
+					</Dialog.Header>
+					<form
+						{...setProjectExamDate.for(projectDetails.id).enhance(async ({ submit, data }) => {
+							toast.promise(submit().updates(getProjectDetails(projectDetails.id)), {
+								loading: 'Saving exam date...',
+								success: data.examDate?.length ? 'Exam date updated' : 'Exam date cleared',
+								error: 'Failed to update exam date'
+							});
+						})}
+					>
+						<input type="hidden" name="id" value={projectDetails.id} />
+						<div class="flex flex-col gap-3 py-3">
+							<input type="hidden" name="examDate" value={examDateValue?.toString() ?? ''} />
+							<Popover.Root bind:open={examDateOpen}>
+								<Popover.Trigger id="examDate">
+									{#snippet child({ props })}
+										<Button {...props} variant="outline" class="w-full justify-between font-normal">
+											{formatCalendarDate(examDateValue)}
+											<CalendarIcon class="h-4 w-4" />
+										</Button>
+									{/snippet}
+								</Popover.Trigger>
+								<Popover.Content class="w-auto overflow-hidden p-0" align="start">
+									<Calendar
+										type="single"
+										bind:value={examDateValue}
+										captionLayout="dropdown"
+										onValueChange={() => {
+											examDateOpen = false;
+										}}
+									/>
+								</Popover.Content>
+							</Popover.Root>
+							{#if setProjectExamDate.fields.examDate.issues()}
+								{#each setProjectExamDate.fields.examDate.issues() as issue, idx (idx)}
+									<p class="text-sm text-destructive">{issue.message}</p>
+								{/each}
+							{/if}
+						</div>
+						<Dialog.Footer class="gap-2">
+							<Dialog.Close>
+								{#snippet child({ props })}
+									<Button {...props} type="button" variant="ghost">Cancel</Button>
+								{/snippet}
+							</Dialog.Close>
+							<Button type="submit">Save</Button>
+						</Dialog.Footer>
+					</form>
+				</Dialog.Content>
+			</Dialog.Root>
 
 			<a
 				href={resolve('/(protected)/projects/[project_id]/study-plan', params)}
 				class="group flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
 			>
 				<div class="flex items-center gap-2 text-muted-foreground">
-					<Calendar class="h-4 w-4" />
+					<CalendarIcon class="h-4 w-4" />
 					<span class="text-sm font-medium">Study Steps</span>
 				</div>
 				<span class="text-3xl font-bold">{projectDetails.studyStepCount}</span>
@@ -123,58 +204,6 @@
 			</a>
 		</section>
 
-		<section>
-			<div class="mb-3 flex items-center justify-between">
-				<h2 class="text-lg font-semibold">Exam Date</h2>
-				{#if projectDetails.examDate}
-					<Muted>{formatDate(projectDetails.examDate)}</Muted>
-				{:else}
-					<Muted>Not set</Muted>
-				{/if}
-			</div>
-			<div class="rounded-xl border p-4">
-				<form
-					{...setProjectExamDate
-						.for(projectDetails.id)
-						.enhance(async ({ submit, data }) => {
-							toast.promise(submit().updates(getProjectDetails(projectDetails.id)), {
-								loading: 'Saving exam date...',
-								success: data.examDate?.length
-									? 'Exam date updated'
-									: 'Exam date cleared',
-								error: 'Failed to update exam date'
-							});
-						})}
-				>
-					<input type="hidden" name="id" value={projectDetails.id} />
-					<Field.Set>
-						<Field.Group>
-							<Field.Field>
-								<Field.Label for="examDate">Exam date</Field.Label>
-								<Input
-									id="examDate"
-									name="examDate"
-									type="date"
-									value={formatDateInput(projectDetails.examDate)}
-								/>
-								{#if setProjectExamDate.fields.examDate.issues()}
-									{#each setProjectExamDate.fields.examDate.issues() as issue, idx (idx)}
-										<Field.Error>{issue.message}</Field.Error>
-									{/each}
-								{/if}
-								<Muted class="mt-1">
-									Used to tighten review intervals as the exam approaches.
-								</Muted>
-							</Field.Field>
-						</Field.Group>
-						<Field.Field>
-							<Button type="submit">Save</Button>
-						</Field.Field>
-					</Field.Set>
-				</form>
-			</div>
-		</section>
-
 		<!-- Upcoming Study Steps -->
 		<section>
 			<div class="mb-3 flex items-center justify-between">
@@ -200,7 +229,7 @@
 									</Badge>
 								</div>
 								<Item.Description class="flex items-center gap-1">
-									<Calendar class="h-3 w-3" />
+									<CalendarIcon class="h-3 w-3" />
 									{formatDate(step.date)}
 								</Item.Description>
 							</Item.Content>
