@@ -36,8 +36,7 @@
 	function formatDueEstimate(date: Date) {
 		const now = new Date();
 		const diffDays = Math.round((date.getTime() - now.getTime()) / MS_PER_DAY);
-		const when =
-			diffDays <= 0 ? 'today' : diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
+		const when = diffDays <= 0 ? 'today' : diffDays === 1 ? 'tomorrow' : `in ${diffDays} days`;
 		const label = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(date);
 		return `${when} (${label})`;
 	}
@@ -65,7 +64,11 @@
 			flashcardId: currentFlashcard.id,
 			rating: index
 		});
-		currentIndex++;
+		if (flashcards && currentIndex < flashcards.length - 1) {
+			currentIndex++;
+		} else {
+			currentIndex = 0;
+		}
 		flipped = false;
 	}
 
@@ -88,31 +91,27 @@
 			<p class="my-2 text-center font-bold text-muted-foreground">
 				{currentIndex + 1} / {flashcards.length}
 			</p>
-			<Flashcard
-				front={currentFlashcard.term}
-				back={currentFlashcard.definition}
-				bind:flipped
-			/>
+			<Flashcard front={currentFlashcard.term} back={currentFlashcard.definition} bind:flipped />
 
 			{#if flipped}
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
 					<Tooltip.Provider delayDuration={100}>
 						<div class="grid grid-cols-4 gap-4">
-						{#each responses as response (response.value)}
-							{@const Icon = response.icon}
-							<Tooltip.Root>
-								<Tooltip.Trigger>
-									<Button onclick={() => handleSubmission(response.value)} variant="outline">
-										<Icon class={response.color} />
-										{response.label}
-									</Button>
-								</Tooltip.Trigger>
-								<Tooltip.Content side="top">
-									{response.tooltip} · {estimateNextDue(response.value)}
-								</Tooltip.Content>
-							</Tooltip.Root>
-						{/each}
+							{#each responses as response (response.value)}
+								{@const Icon = response.icon}
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										<Button onclick={() => handleSubmission(response.value)} variant="outline">
+											<Icon class={response.color} />
+											{response.label}
+										</Button>
+									</Tooltip.Trigger>
+									<Tooltip.Content side="top">
+										{response.tooltip} · {estimateNextDue(response.value)}
+									</Tooltip.Content>
+								</Tooltip.Root>
+							{/each}
 						</div>
 					</Tooltip.Provider>
 				</div>
