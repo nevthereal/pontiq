@@ -60,6 +60,8 @@ export const applySrsReview = (
 		repetitions += 1;
 	}
 
+	intervalDays = capIntervalForExam(intervalDays, reviewedAt, examDate);
+
 	if (rating === 4) intervalDays = Math.max(1, Math.round(intervalDays * EASY_BONUS) + 1);
 
 	// SM-2 ease factor update
