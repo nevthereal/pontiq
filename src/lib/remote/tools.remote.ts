@@ -5,7 +5,7 @@ import { flashcard, studyPlanStep, project } from '$lib/server/db/schema';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
-import { applySrsReview } from '$lib/server/srs';
+import { applySrsReview } from '$lib/srs';
 
 export const getStudySteps = query(z.string(), async (projectId) => {
 	const steps = await db.query.studyPlanStep.findMany({
