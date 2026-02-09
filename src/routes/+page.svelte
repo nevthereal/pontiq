@@ -1,8 +1,4 @@
 <svelte:head>
-	<link
-		rel="stylesheet"
-		href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Work+Sans:wght@300;400;500;600;700&display=swap"
-	/>
 	<title>AI Study | Memory-first learning</title>
 </svelte:head>
 
@@ -23,11 +19,11 @@
 	<div class="hero-orbit" aria-hidden="true"></div>
 	<div class="hero-grain" aria-hidden="true"></div>
 
-	<section class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-8">
+	<section class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-0">
 		<div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 			<div class="space-y-6">
 				<Badge class="w-fit border-foreground/20 bg-background/60 text-foreground">New: Study maps</Badge>
-				<h1 class="font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
+				<h1 class="font-display text-4xl leading-[1] sm:text-5xl lg:text-6xl">
 					A study companion that treats memory like a craft.
 				</h1>
 				<p class="text-lg text-muted-foreground sm:text-xl">
@@ -66,7 +62,7 @@
 						</p>
 						<Badge variant="secondary" class="bg-secondary/70">Today</Badge>
 					</div>
-					<h3 class="mt-4 font-display text-2xl">Modern European History</h3>
+					<h3 class="mt-4 text-2xl font-semibold">Modern European History</h3>
 					<p class="text-sm text-muted-foreground">12 cards · 25 min · 9:30 PM</p>
 					<Separator class="my-4" />
 					<div class="space-y-3">
@@ -104,17 +100,17 @@
 				</div>
 
 				<div
-					class="absolute -right-2 top-14 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
+					class="absolute right-0 bottom-6 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
 				>
 					<p class="text-xs uppercase tracking-[0.2em] text-muted-foreground">Weekly</p>
-					<h4 class="mt-2 font-display text-lg">Memory map</h4>
+					<h4 class="mt-2 text-lg font-semibold">Memory map</h4>
 					<p class="text-xs text-muted-foreground">See all your anchors</p>
 				</div>
 				<div
-					class="absolute -left-2 bottom-8 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
+					class="absolute left-0 bottom-6 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
 				>
 					<p class="text-xs uppercase tracking-[0.2em] text-muted-foreground">Streak</p>
-					<h4 class="mt-2 font-display text-lg">7-day rhythm</h4>
+					<h4 class="mt-2 text-lg font-semibold">7-day rhythm</h4>
 					<p class="text-xs text-muted-foreground">Consistency wins</p>
 				</div>
 			</div>
@@ -136,7 +132,7 @@
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
 					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">01</p>
-					<h3 class="font-display text-xl">Capture</h3>
+					<h3 class="text-xl font-semibold">Capture</h3>
 					<p class="text-sm text-muted-foreground">
 						Drop PDFs, lectures, or notes. We carve them into concepts, anchors, and prompts.
 					</p>
@@ -145,7 +141,7 @@
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
 					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">02</p>
-					<h3 class="font-display text-xl">Plan</h3>
+					<h3 class="text-xl font-semibold">Plan</h3>
 					<p class="text-sm text-muted-foreground">
 						AI builds a schedule that respects your workload and spacing intervals.
 					</p>
@@ -154,7 +150,7 @@
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
 					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">03</p>
-					<h3 class="font-display text-xl">Recall</h3>
+					<h3 class="text-xl font-semibold">Recall</h3>
 					<p class="text-sm text-muted-foreground">
 						Do one focused sprint with prompts tailored to how you retain information.
 					</p>
@@ -163,7 +159,7 @@
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
 					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">04</p>
-					<h3 class="font-display text-xl">Reflect</h3>
+					<h3 class="text-xl font-semibold">Reflect</h3>
 					<p class="text-sm text-muted-foreground">
 						Save a quick summary and confidence score to guide the next review.
 					</p>
@@ -187,21 +183,21 @@
 				<div
 					class="rounded-2xl border border-border bg-background/40 p-5 text-card-foreground shadow-[0_12px_30px_rgba(15,15,20,0.12)]"
 				>
-					<h3 class="font-display text-xl">Study Plans</h3>
+					<h3 class="text-xl font-semibold">Study Plans</h3>
 					<p class="text-sm text-muted-foreground">Weekly rhythms with built-in spacing.</p>
 					<Badge variant="secondary" class="mt-4">Adaptive</Badge>
 				</div>
 				<div
 					class="rounded-2xl border border-border bg-background/40 p-5 text-card-foreground shadow-[0_12px_30px_rgba(15,15,20,0.12)]"
 				>
-					<h3 class="font-display text-xl">Flashcards</h3>
+					<h3 class="text-xl font-semibold">Flashcards</h3>
 					<p class="text-sm text-muted-foreground">AI-crafted, edited, and linked to sources.</p>
 					<Badge variant="secondary" class="mt-4">Source-aware</Badge>
 				</div>
 				<div
 					class="rounded-2xl border border-border bg-background/40 p-5 text-card-foreground shadow-[0_12px_30px_rgba(15,15,20,0.12)]"
 				>
-					<h3 class="font-display text-xl">Study Chat</h3>
+					<h3 class="text-xl font-semibold">Study Chat</h3>
 					<p class="text-sm text-muted-foreground">Ask for explanations without losing context.</p>
 					<Badge variant="secondary" class="mt-4">Memory safe</Badge>
 				</div>
@@ -261,7 +257,7 @@
 				<div
 					class="rounded-2xl border border-border bg-background/40 p-6 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.12)]"
 				>
-					<h3 class="font-display text-xl">Starter</h3>
+					<h3 class="text-xl font-semibold">Starter</h3>
 					<p class="mt-2 text-3xl font-semibold">$0</p>
 					<p class="text-sm text-muted-foreground">Perfect for a single course.</p>
 					<ul class="mt-6 space-y-2 text-sm text-muted-foreground">
@@ -275,7 +271,7 @@
 					class="rounded-2xl border border-primary/40 bg-primary/10 p-6 text-card-foreground shadow-[0_26px_60px_rgba(240,183,74,0.24)]"
 				>
 					<div class="flex items-center justify-between">
-						<h3 class="font-display text-xl">Scholar</h3>
+						<h3 class="text-xl font-semibold">Scholar</h3>
 						<Badge>Most popular</Badge>
 					</div>
 					<p class="mt-2 text-3xl font-semibold">$12</p>
@@ -342,12 +338,8 @@
 </main>
 
 <style>
-	:global(body) {
-		font-family: 'Work Sans', system-ui, sans-serif;
-	}
-
 	.font-display {
-		font-family: 'Fraunces', 'Times New Roman', serif;
+		font-family: var(--font-cooper), 'Times New Roman', serif;
 	}
 
 	.hero-orbit {
@@ -378,126 +370,5 @@
 		background: rgba(240, 183, 74, 0.9);
 		box-shadow: 0 0 0 4px rgba(240, 183, 74, 0.12);
 		display: inline-block;
-	}
-
-	.glass-card {
-		background: rgba(255, 255, 255, 0.85);
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		border-radius: 24px;
-		padding: 24px;
-		box-shadow: 0 28px 80px rgba(15, 15, 20, 0.12);
-		backdrop-filter: blur(12px);
-		position: relative;
-	}
-
-	.stack-card {
-		position: absolute;
-		width: 190px;
-		background: rgba(255, 255, 255, 0.7);
-		border: 1px solid rgba(15, 15, 20, 0.12);
-		border-radius: 20px;
-		padding: 16px;
-		box-shadow: 0 18px 40px rgba(15, 15, 20, 0.1);
-		backdrop-filter: blur(10px);
-	}
-
-	.mini-row {
-		display: flex;
-		gap: 12px;
-		align-items: center;
-	}
-
-	.mini-tag {
-		font-size: 10px;
-		text-transform: uppercase;
-		letter-spacing: 0.2em;
-		padding: 4px 8px;
-		border-radius: 999px;
-		background: rgba(15, 15, 20, 0.06);
-	}
-
-	.flow-card {
-		border-radius: 20px;
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		padding: 20px;
-		background: rgba(255, 255, 255, 0.75);
-		box-shadow: 0 14px 30px rgba(15, 15, 20, 0.08);
-	}
-
-	.kit-panel {
-		border-radius: 28px;
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		padding: 32px;
-		background: linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(250, 248, 242, 0.8));
-		box-shadow: 0 24px 60px rgba(15, 15, 20, 0.1);
-		display: grid;
-		gap: 24px;
-	}
-
-	.kit-card {
-		border-radius: 20px;
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		padding: 20px;
-		background: rgba(255, 255, 255, 0.9);
-		box-shadow: 0 12px 30px rgba(15, 15, 20, 0.08);
-	}
-
-	.quote-card {
-		border-radius: 28px;
-		border: 1px solid rgba(15, 15, 20, 0.1);
-		padding: 28px;
-		background: rgba(255, 255, 255, 0.88);
-		box-shadow: 0 20px 50px rgba(15, 15, 20, 0.12);
-	}
-
-	.stat-row {
-		display: flex;
-		align-items: baseline;
-		gap: 16px;
-	}
-
-	.pricing-panel {
-		border-radius: 28px;
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		padding: 32px;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(252, 250, 246, 0.9));
-		box-shadow: 0 24px 60px rgba(15, 15, 20, 0.12);
-		display: grid;
-		gap: 24px;
-	}
-
-	.price-card {
-		border-radius: 22px;
-		border: 1px solid rgba(15, 15, 20, 0.1);
-		padding: 24px;
-		background: rgba(255, 255, 255, 0.95);
-		box-shadow: 0 18px 40px rgba(15, 15, 20, 0.08);
-	}
-
-	.price-card.highlight {
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 240, 221, 0.9));
-		border-color: rgba(240, 183, 74, 0.4);
-		box-shadow: 0 26px 60px rgba(240, 183, 74, 0.18);
-	}
-
-	.cta-panel {
-		border-radius: 28px;
-		border: 1px solid rgba(15, 15, 20, 0.08);
-		padding: 32px;
-		background: rgba(255, 255, 255, 0.92);
-		box-shadow: 0 24px 60px rgba(15, 15, 20, 0.1);
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
-		align-items: center;
-		text-align: center;
-	}
-
-	@media (min-width: 640px) {
-		.cta-panel {
-			flex-direction: row;
-			justify-content: space-between;
-			text-align: left;
-		}
 	}
 </style>
