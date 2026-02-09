@@ -30,7 +30,6 @@
 
 	let { params } = $props();
 
-	const projectDetails = $derived(await getProjectDetails(params.project_id));
 	const dateFormatter = new DateFormatter('en-GB', {
 		day: '2-digit',
 		month: 'short'
@@ -38,8 +37,11 @@
 	const toCalendarDate = (date: Date | null) =>
 		date ? new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate()) : undefined;
 	let examDateOpen = $state(false);
-	let examDateValue = $derived<CalendarDate | undefined>(toCalendarDate(projectDetails.examDate));
+	let examDateValue = $state<CalendarDate | undefined>(undefined);
 	let examDateDialogOpen = $state(false);
+	let projectDetails = $state<Awaited<ReturnType<typeof getProjectDetails>> | null>(null);
+	let projectDetailsPending = $state(true);
+	let projectDetailsError = $state<Error | null>(null);
 
 	function formatDate(date: Date | null) {
 		if (!date) return 'Unknown';
@@ -53,16 +55,35 @@
 		if (!date) return 'Select date';
 		return dateFormatter.format(date.toDate(getLocalTimeZone()));
 	}
+
+	async function loadProjectDetails(projectId: string) {
+		projectDetailsPending = true;
+		projectDetailsError = null;
+		try {
+			const details = await getProjectDetails(projectId);
+			if (params.project_id !== projectId) return;
+			projectDetails = details;
+			examDateValue = toCalendarDate(details.examDate);
+		} catch (error) {
+			if (params.project_id !== projectId) return;
+			projectDetailsError = error as Error;
+		} finally {
+			if (params.project_id === projectId) {
+				projectDetailsPending = false;
+			}
+		}
+	}
+
+	$effect(() => {
+		void loadProjectDetails(params.project_id);
+	});
 </script>
 
-<svelte:boundary>
-	{#snippet pending()}
-		<Loading thing="project" />
-	{/snippet}
-	{#snippet failed()}
-		<p class="text-destructive">Failed to load project</p>
-	{/snippet}
-
+{#if projectDetailsPending}
+	<Loading thing="project" />
+{:else if projectDetailsError || !projectDetails}
+	<p class="text-destructive">Failed to load project</p>
+{:else}
 	<div class="no-scrollbar flex flex-col gap-6 overflow-y-scroll">
 		<header>
 			<ToolHeading>
@@ -119,16 +140,23 @@
 					</Dialog.Header>
 					<form
 						{...setProjectExamDate.for(projectDetails.id).enhance(async ({ submit, data }) => {
-							toast.promise(submit().updates(getProjectDetails(projectDetails.id)), {
+							const savePromise = submit()
+								.updates(getProjectDetails(projectDetails.id))
+								.then(() => loadProjectDetails(projectDetails.id));
+							toast.promise(savePromise, {
 								loading: 'Saving exam date...',
 								success: data.examDate?.length ? 'Exam date updated' : 'Exam date cleared',
 								error: 'Failed to update exam date'
 							});
 						})}
 					>
-						<input type="hidden" name="id" value={projectDetails.id} />
 						<div class="flex flex-col gap-3 py-3">
-							<input type="hidden" name="examDate" value={examDateValue?.toString() ?? ''} />
+							<input
+								type="hidden"
+								id="{projectDetails.id}-date"
+								name="examDate"
+								defaultValue={examDateValue?.toString() ?? ''}
+							/>
 							<Popover.Root bind:open={examDateOpen}>
 								<Popover.Trigger id="examDate">
 									{#snippet child({ props })}
@@ -291,4 +319,4 @@
 			</AlertDialog.Root>
 		</section>
 	</div>
-</svelte:boundary>
+{/if}
