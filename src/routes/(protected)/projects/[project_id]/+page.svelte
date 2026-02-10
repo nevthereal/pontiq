@@ -151,12 +151,12 @@
 						})}
 					>
 						<div class="flex flex-col gap-3 py-3">
-							<input
-								type="hidden"
-								id="{projectDetails.id}-date"
-								name="examDate"
-								defaultValue={examDateValue?.toString() ?? ''}
-							/>
+						<input
+							type="hidden"
+							id="{projectDetails.id}-date"
+							name="examDate"
+							value={examDateValue?.toString() ?? ''}
+						/>
 							<Popover.Root bind:open={examDateOpen}>
 								<Popover.Trigger id="examDate">
 									{#snippet child({ props })}
