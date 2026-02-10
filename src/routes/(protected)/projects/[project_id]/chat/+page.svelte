@@ -138,7 +138,12 @@
 	<div class="mt-4 shrink-0 pb-2">
 		<form onsubmit={handleSubmit} class="absolute bottom-0 w-full backdrop-blur-sm">
 			<InputGroup.Root class="rounded-xl">
-				<InputGroup.Input bind:value={input} placeholder="Ask, Search or Chat..." />
+				<InputGroup.Input
+					bind:value={input}
+					id="chat-input"
+					name="message"
+					placeholder="Ask, Search or Chat..."
+				/>
 
 				<InputGroup.Addon align="block-start" class="overflow-scroll">
 					{#each attachments.files as att (att.id)}
