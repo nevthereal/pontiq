@@ -1,15 +1,6 @@
-import {
-	boolean,
-	doublePrecision,
-	index,
-	integer,
-	pgEnum,
-	pgTable,
-	text,
-	timestamp,
-	uuid
-} from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { project } from './projects.sql';
+import { ratings } from '../../../utils';
 
 export const studyStepTypes = [
 	'milestone',
@@ -36,6 +27,8 @@ export const studyPlanStep = pgTable('study_plan_step', {
 	type: typeEnum().notNull()
 });
 
+export const ratingEnum = pgEnum('recall_levels', ratings);
+
 export const flashcard = pgTable(
 	'flashcard',
 	{
@@ -45,16 +38,7 @@ export const flashcard = pgTable(
 		projectId,
 		createdAt: timestamp().defaultNow().notNull(),
 		updatedAt: timestamp().defaultNow().notNull(),
-		dueAt: timestamp().defaultNow().notNull(),
-		intervalDays: integer().default(0).notNull(),
-		easeFactor: doublePrecision().default(2.5).notNull(),
-		repetitions: integer().default(0).notNull(),
-		lapses: integer().default(0).notNull(),
-		lastReviewedAt: timestamp(),
-		suspended: boolean().default(false).notNull()
+		rating: ratingEnum()
 	},
-	(t) => [
-		index('flashcard_project_idx').on(t.projectId),
-		index('flashcard_due_idx').on(t.projectId, t.dueAt)
-	]
+	(t) => [index('flashcard_project_idx').on(t.projectId)]
 );

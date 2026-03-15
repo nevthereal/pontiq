@@ -9,6 +9,7 @@
 	import { CreditCard, Frown, Laugh, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
+	import { ratings } from '$lib/utils';
 
 	let { params } = $props();
 
@@ -19,11 +20,35 @@
 	let flipped = $state(false);
 
 	const responses = [
-		{ value: 1, icon: Frown, label: 'Not at all', color: 'text-red-400', tooltip: 'Again' },
-		{ value: 2, icon: Meh, label: 'Struggling', color: 'text-orange-400', tooltip: 'Hard' },
-		{ value: 3, icon: Smile, label: 'Got it!', color: 'text-green-400', tooltip: 'Good' },
-		{ value: 4, icon: Laugh, label: 'Very Fast', color: 'text-emerald-400', tooltip: 'Easy' }
-	];
+		{
+			value: 1,
+			icon: Frown,
+			label: 'Not at all',
+			color: 'text-red-400',
+			tooltip: ratings[0]
+		},
+		{
+			value: 2,
+			icon: Meh,
+			label: 'Struggling',
+			color: 'text-orange-400',
+			tooltip: ratings[1]
+		},
+		{
+			value: 3,
+			icon: Smile,
+			label: 'Got it!',
+			color: 'text-green-400',
+			tooltip: ratings[2]
+		},
+		{
+			value: 4,
+			icon: Laugh,
+			label: 'Very Fast',
+			color: 'text-emerald-400',
+			tooltip: ratings[3]
+		}
+	] as const;
 
 	const currentFlashcard = $derived(flashcards?.[currentIndex] ?? null);
 </script>
