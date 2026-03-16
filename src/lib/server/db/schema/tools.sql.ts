@@ -1,4 +1,4 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, serial, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { project } from './projects.sql';
 import { ratings } from '../../../utils';
 
@@ -38,7 +38,7 @@ export const flashcard = pgTable(
 		projectId,
 		createdAt: timestamp().defaultNow().notNull(),
 		updatedAt: timestamp().defaultNow().notNull(),
-		rating: ratingEnum()
+		rating: ratingEnum().notNull().default('Unrated')
 	},
 	(t) => [index('flashcard_project_idx').on(t.projectId)]
 );

@@ -5,6 +5,7 @@ import { flashcard, studyPlanStep, project } from '$lib/server/db/schema';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
+import { ratings } from '$lib/utils';
 
 export const getStudySteps = query(z.string(), async (projectId) => {
 	const steps = await db.query.studyPlanStep.findMany({
@@ -33,10 +34,18 @@ export const getFlashCards = query(z.string(), async (projectId) => {
 	const flashCards = await db.query.flashcard.findMany({
 		where: {
 			projectId
+		},
+		orderBy: {
+			rating: 'asc'
 		}
 	});
 
-	if (!flashCards.length) return null;
-
 	return flashCards;
 });
+
+export const applyRating = query(
+	z.object({ rating: z.enum(ratings), flashcardId: z.string() }),
+	async ({ flashcardId, rating }) => {
+		await db.update(flashcard).set({ rating }).where(eq(flashcard.id, flashcardId));
+	}
+);
