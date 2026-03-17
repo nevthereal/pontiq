@@ -1,13 +1,16 @@
 <script lang="ts">
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Switch } from '$lib/components/ui/switch';
+	import { Label } from '$lib/components/ui/label';
 
 	import { getProjectDetails } from '$lib/remote/projects.remote';
 	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
 	import { cn, ratings } from '$lib/utils';
-	import { CreditCard, Frown, Laugh, Meh, Smile } from '@lucide/svelte';
+	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 
@@ -18,6 +21,7 @@
 
 	let currentIndex = $state(0);
 	let flipped = $state(false);
+	let activeRatings = $state<(typeof ratings)[number][]>([...ratings]);
 
 	const responses = [
 		{
@@ -50,7 +54,27 @@
 		}
 	] as const;
 
-	const currentFlashcard = $derived(flashcards[currentIndex] ?? null);
+	const filteredFlashcards = $derived(
+		flashcards ? flashcards.filter((flashcard) => activeRatings.includes(flashcard.rating)) : []
+	);
+	const currentFlashcard = $derived(filteredFlashcards[currentIndex] ?? null);
+
+	$effect(() => {
+		if (currentIndex >= filteredFlashcards.length) {
+			currentIndex = 0;
+		}
+		if (!currentFlashcard) {
+			flipped = false;
+		}
+	});
+
+	function toggleRatingFilter(rating: (typeof ratings)[number]) {
+		if (activeRatings.includes(rating)) {
+			activeRatings = activeRatings.filter((value) => value !== rating);
+			return;
+		}
+		activeRatings = [...activeRatings, rating];
+	}
 
 	async function handleRating(rating: (typeof ratings)[number]) {
 		console.log(rating);
@@ -65,22 +89,28 @@
 	<ToolHeading>
 		<CreditCard /> Flashcards
 	</ToolHeading>
-	<div class="my-2">
-		<h1 class="font-semibold">Filter:</h1>
-		<ul class="flex gap-2">
+	<Popover.Root>
+		<Popover.Trigger openOnHover class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+			><ListFilter /> Filter</Popover.Trigger
+		>
+		<Popover.Content align="start" class="flex flex-col gap-1 p-2">
 			{#each ratings as r (r)}
-				<li>
-					<p>
-						{r}: {flashcards.filter((f) => f.rating === r).length}
-					</p>
-				</li>
+				<div class="flex items-center-safe gap-2 rounded-md p-1 hover:bg-muted">
+					<Switch
+						checked={activeRatings.includes(r)}
+						id={r}
+						onCheckedChange={() => toggleRatingFilter(r)}
+					/>
+					<Label for={r}>{r} ({flashcards.filter((f) => f.rating === r).length})</Label>
+				</div>
 			{/each}
-		</ul>
-	</div>
+		</Popover.Content>
+	</Popover.Root>
+
 	<div class="mx-auto my-4 max-w-lg">
 		{#if flashcards != null && currentFlashcard}
 			<p class="my-2 text-center font-bold text-muted-foreground">
-				{currentIndex + 1} / {flashcards.length}
+				{currentIndex + 1} / {filteredFlashcards.length}
 			</p>
 			<Flashcard flashcard={currentFlashcard} bind:flipped />
 
@@ -101,7 +131,11 @@
 				</div>
 			{/if}
 		{:else if flashcards != null}
-			<p class="my-6 text-center text-muted-foreground">No cards due right now.</p>
+			<p class="my-6 text-center text-muted-foreground">
+				{flashcards.length === 0
+					? 'No cards due right now.'
+					: 'No cards match the selected filters.'}
+			</p>
 		{/if}
 	</div>
 </div>

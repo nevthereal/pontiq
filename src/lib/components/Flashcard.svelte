@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Flashcard } from '$lib/server/db/schema';
 	import { cn } from '$lib/utils';
-	import type { Snippet } from 'svelte';
 
 	type Props = {
 		flashcard: Flashcard;
