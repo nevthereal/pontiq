@@ -1,13 +1,9 @@
 <script lang="ts">
+	import type { Flashcard } from '$lib/server/db/schema';
 	import { cn } from '$lib/utils';
-	import type { Snippet } from 'svelte';
 
 	type Props = {
-		front: string;
-		back: string;
-		// Optional richer content
-		frontContent?: Snippet;
-		backContent?: Snippet;
+		flashcard: Flashcard;
 
 		// Allow parent control via bind:flipped
 		flipped?: boolean;
@@ -17,10 +13,7 @@
 	};
 
 	let {
-		front,
-		back,
-		frontContent,
-		backContent,
+		flashcard,
 		flipped = $bindable(false),
 		disabled = false,
 		class: className = ''
@@ -67,15 +60,13 @@
 			)}
 		>
 			<div class="w-full">
-				<div class="text-xs font-medium tracking-wide text-muted-foreground">TERM</div>
+				<div class="text-xs font-medium tracking-wide text-muted-foreground">
+					TERM ({flashcard.rating})
+				</div>
 
-				{#if frontContent}
-					{@render frontContent()}
-				{:else}
-					<div class="mt-2 text-2xl font-semibold sm:text-3xl">
-						{front}
-					</div>
-				{/if}
+				<div class="mt-2 text-2xl font-semibold sm:text-3xl">
+					{flashcard.term}
+				</div>
 
 				<div class="mt-6 text-xs">Click to flip</div>
 			</div>
@@ -97,13 +88,9 @@
 			<div class="w-full">
 				<div class="text-xs font-medium tracking-wide text-muted-foreground">DEFINITION</div>
 
-				{#if backContent}
-					{@render backContent()}
-				{:else}
-					<div class="mt-2 text-lg leading-relaxed sm:text-xl">
-						{back}
-					</div>
-				{/if}
+				<div class="mt-2 text-lg leading-relaxed sm:text-xl">
+					{flashcard.definition}
+				</div>
 
 				<div class="mt-6 text-xs">Click to flip back</div>
 			</div>

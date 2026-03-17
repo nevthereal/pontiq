@@ -7,6 +7,8 @@ marked.use(markedKatex({ throwOnError: false }));
 
 export { marked };
 
+export const ratings = ['Unrated', 'Blank', 'Hard', 'Good', 'Easy'] as const;
+
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
