@@ -106,7 +106,7 @@
 						id={r}
 						onCheckedChange={() => toggleRatingFilter(r)}
 					/>
-					<Label for={r}>{r} ({flashcards.filter((f) => f.rating === r).length})</Label>
+					<Label for={r}>{r} ({(flashcards ?? []).filter((f) => f.rating === r).length})</Label>
 				</div>
 			{/each}
 		</Popover.Content>
