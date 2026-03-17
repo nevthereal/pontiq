@@ -1,24 +1,25 @@
 <script lang="ts">
+	import * as Kbd from '$lib/components/ui/kbd/index.js';
+
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
 
-	import { getProjectDetails } from '$lib/remote/projects.remote';
 	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
 	import { cn, ratings } from '$lib/utils';
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
-	import { watch } from 'runed';
+	import { watch, PressedKeys } from 'runed';
 
 	let { params } = $props();
 
 	const flashcards = $derived(await getFlashCards(params.project_id));
-	const projectDetails = $derived(await getProjectDetails(params.project_id));
 
 	let currentIndex = $state(0);
 	let flipped = $state(false);
@@ -92,6 +93,28 @@
 			currentIndex = 0;
 		}
 	}
+
+	const keys = new PressedKeys();
+
+	watch(
+		() => flipped,
+		() => {
+			if (flipped) {
+				keys.onKeys(['r', '1'], () => {
+					handleRating('Blank');
+				});
+				keys.onKeys(['r', '2'], () => {
+					handleRating('Hard');
+				});
+				keys.onKeys(['r', '3'], () => {
+					handleRating('Good');
+				});
+				keys.onKeys(['r', '4'], () => {
+					handleRating('Unrated');
+				});
+			}
+		}
+	);
 </script>
 
 <div>
@@ -127,7 +150,7 @@
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
 					<div class="grid grid-cols-4 gap-4">
-						{#each responses as response (response.value)}
+						{#each responses as response, idx (response.value)}
 							{@const Icon = response.icon}
 
 							<Tooltip.Provider delayDuration={100}>
@@ -140,7 +163,10 @@
 										{response.label}
 									</Tooltip.Trigger>
 									<Tooltip.Content>
-										<p>{response.tooltip}</p>
+										<p>
+											{response.tooltip}
+											(hold <Kbd.Root>r</Kbd.Root> + <Kbd.Root>{idx + 1}</Kbd.Root>)
+										</p>
 									</Tooltip.Content>
 								</Tooltip.Root>
 							</Tooltip.Provider>
