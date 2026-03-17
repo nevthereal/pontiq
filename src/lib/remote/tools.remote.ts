@@ -43,7 +43,7 @@ export const getFlashCards = query(z.string(), async (projectId) => {
 	return flashCards;
 });
 
-export const applyRating = query(
+export const applyRating = command(
 	z.object({ rating: z.enum(ratings), flashcardId: z.string() }),
 	async ({ flashcardId, rating }) => {
 		await db.update(flashcard).set({ rating }).where(eq(flashcard.id, flashcardId));
