@@ -42,3 +42,5 @@ export const flashcard = pgTable(
 	},
 	(t) => [index('flashcard_project_idx').on(t.projectId)]
 );
+
+export type Flashcard = typeof flashcard.$inferSelect;

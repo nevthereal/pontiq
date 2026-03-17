@@ -6,7 +6,7 @@
 
 	import { getProjectDetails } from '$lib/remote/projects.remote';
 	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
-	import { ratings } from '$lib/utils';
+	import { cn, ratings } from '$lib/utils';
 	import { CreditCard, Frown, Laugh, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
@@ -24,28 +24,28 @@
 			value: 1,
 			icon: Frown,
 			label: 'Not at all',
-			color: 'red-400',
+			color: 'text-red-400',
 			tooltip: ratings[1]
 		},
 		{
 			value: 2,
 			icon: Meh,
 			label: 'Struggling',
-			color: 'orange-400',
+			color: 'text-orange-400',
 			tooltip: ratings[2]
 		},
 		{
 			value: 3,
 			icon: Smile,
 			label: 'Got it!',
-			color: 'green-400',
+			color: 'text-green-400',
 			tooltip: ratings[3]
 		},
 		{
 			value: 4,
 			icon: Laugh,
 			label: 'Very Fast',
-			color: 'emerald-400',
+			color: 'text-emerald-400',
 			tooltip: ratings[4]
 		}
 	] as const;
@@ -82,22 +82,17 @@
 			<p class="my-2 text-center font-bold text-muted-foreground">
 				{currentIndex + 1} / {flashcards.length}
 			</p>
-			<Flashcard front={currentFlashcard.term} back={currentFlashcard.definition} bind:flipped />
+			<Flashcard flashcard={currentFlashcard} bind:flipped />
 
 			{#if flipped}
-				{@const isRated = currentFlashcard.rating != 'Unrated'}
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
 					<Tooltip.Provider delayDuration={100}>
 						<div class="grid grid-cols-4 gap-4">
 							{#each responses as response (response.value)}
 								{@const Icon = response.icon}
-								<Button
-									onclick={() => handleRating(response.tooltip)}
-									variant="outline"
-									class={isRated ? `border-${response.color}` : ''}
-								>
-									<Icon class="text-{response.color}" />
+								<Button onclick={() => handleRating(response.tooltip)} variant="outline">
+									<Icon class={response.color} />
 									{response.label}
 								</Button>
 							{/each}
