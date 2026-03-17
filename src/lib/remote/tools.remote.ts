@@ -44,8 +44,18 @@ export const getFlashCards = query(z.string(), async (projectId) => {
 });
 
 export const applyRating = command(
-	z.object({ rating: z.enum(ratings), flashcardId: z.string() }),
-	async ({ flashcardId, rating }) => {
-		await db.update(flashcard).set({ rating }).where(eq(flashcard.id, flashcardId));
+	z.object({ rating: z.enum(ratings), flashcardId: z.string(), projectId: z.string() }),
+	async ({ flashcardId, rating, projectId }) => {
+		const user = await requireAuth();
+		const projectRow = await db.query.project.findFirst({
+			where: { id: projectId, creatorId: user.id }
+		});
+
+		if (!projectRow) throw error(404, 'Project not found');
+
+		await db
+			.update(flashcard)
+			.set({ rating })
+			.where(and(eq(flashcard.id, flashcardId), eq(flashcard.projectId, projectId)));
 	}
 );

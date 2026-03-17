@@ -83,7 +83,7 @@
 
 	async function handleRating(rating: (typeof ratings)[number]) {
 		console.log(rating);
-		await applyRating({ flashcardId: currentFlashcard.id, rating });
+		await applyRating({ flashcardId: currentFlashcard.id, rating, projectId: params.project_id });
 		getFlashCards(params.project_id).refresh();
 		flipped = false;
 		currentIndex++;
