@@ -13,6 +13,7 @@
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
+	import { watch } from 'runed';
 
 	let { params } = $props();
 
@@ -57,16 +58,20 @@
 	const filteredFlashcards = $derived(
 		flashcards ? flashcards.filter((flashcard) => activeRatings.includes(flashcard.rating)) : []
 	);
+
 	const currentFlashcard = $derived(filteredFlashcards[currentIndex] ?? null);
 
-	$effect(() => {
-		if (currentIndex >= filteredFlashcards.length) {
-			currentIndex = 0;
+	watch(
+		() => filteredFlashcards,
+		() => {
+			if (currentIndex >= filteredFlashcards.length) {
+				currentIndex = 0;
+			}
+			if (!currentFlashcard) {
+				flipped = false;
+			}
 		}
-		if (!currentFlashcard) {
-			flipped = false;
-		}
-	});
+	);
 
 	function toggleRatingFilter(rating: (typeof ratings)[number]) {
 		if (activeRatings.includes(rating)) {
@@ -117,17 +122,26 @@
 			{#if flipped}
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
-					<Tooltip.Provider delayDuration={100}>
-						<div class="grid grid-cols-4 gap-4">
-							{#each responses as response (response.value)}
-								{@const Icon = response.icon}
-								<Button onclick={() => handleRating(response.tooltip)} variant="outline">
-									<Icon class={response.color} />
-									{response.label}
-								</Button>
-							{/each}
-						</div>
-					</Tooltip.Provider>
+					<div class="grid grid-cols-4 gap-4">
+						{#each responses as response (response.value)}
+							{@const Icon = response.icon}
+
+							<Tooltip.Provider delayDuration={100}>
+								<Tooltip.Root>
+									<Tooltip.Trigger
+										onclick={() => handleRating(response.tooltip)}
+										class={buttonVariants({ variant: 'outline' })}
+									>
+										<Icon class={response.color} />
+										{response.label}
+									</Tooltip.Trigger>
+									<Tooltip.Content>
+										<p>{response.tooltip}</p>
+									</Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
+						{/each}
+					</div>
 				</div>
 			{/if}
 		{:else if flashcards != null}
