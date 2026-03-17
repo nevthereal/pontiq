@@ -82,11 +82,15 @@
 	}
 
 	async function handleRating(rating: (typeof ratings)[number]) {
-		console.log(rating);
-		await applyRating({ flashcardId: currentFlashcard.id, rating, projectId: params.project_id });
+		if (!currentFlashcard) return;
+		await applyRating({ flashcardId: currentFlashcard.id, rating });
 		getFlashCards(params.project_id).refresh();
 		flipped = false;
-		currentIndex++;
+		if (currentIndex < filteredFlashcards.length - 1) {
+			currentIndex++;
+		} else {
+			currentIndex = 0;
+		}
 	}
 </script>
 
