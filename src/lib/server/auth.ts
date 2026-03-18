@@ -18,24 +18,15 @@ export const auth = betterAuth({
 		}
 	},
 	secret: BETTER_AUTH_SECRET,
-	user: {
-		additionalFields: {
-			isApproved: {
-				type: 'boolean',
-				defaultValue: false,
-				fieldName: 'approved'
-			}
-		}
-	},
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			if (ctx.path.startsWith('/callback')) {
 				const { newSession } = ctx.context;
 				if (newSession) {
-					console.log('hit');
 					autumn.customers.getOrCreate({
 						customerId: newSession.user.id,
-						name: newSession.user.name
+						name: newSession.user.name,
+						email: newSession.user.email
 					});
 				}
 			}

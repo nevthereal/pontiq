@@ -7,11 +7,12 @@
 	import { getUser } from '$lib/remote/auth.remote';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Check, ChevronsUpDown, LogOut, MoonIcon, SunIcon } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LogOut, MoonIcon, Receipt, SunIcon, User } from '@lucide/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
 	import { page } from '$app/state';
+	import { customerPortal, getCustomer } from '$lib/remote/billing.remote.js';
 
 	let { children, params } = $props();
 
@@ -102,6 +103,12 @@
 							Change theme</DropdownMenu.Item
 						>
 						<DropdownMenu.Item
+							onclick={async () =>
+								await customerPortal().then((url) => {
+									window.location = url;
+								})}><Receipt /> Customer Portal</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
 							variant="destructive"
 							onclick={async () => await authClient.signOut().then(() => location.reload())}
 							><LogOut /> Sign out</DropdownMenu.Item
@@ -117,11 +124,7 @@
 			{@render children()}
 		{:else}
 			<div class="contents">
-				{#if user.isApproved}
-					{@render children?.()}
-				{:else}
-					<p class="mt-8 text-center font-mono">Your account is not approved. Please request.</p>
-				{/if}
+				{@render children?.()}
 			</div>
 		{/if}
 	</main>
