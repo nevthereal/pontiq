@@ -1,6 +1,4 @@
 <script lang="ts">
-	import * as Kbd from '$lib/components/ui/kbd/index.js';
-
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
