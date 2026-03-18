@@ -27,6 +27,7 @@
 	import { marked } from '$lib/utils';
 	import { fade, slide } from 'svelte/transition';
 	import Badge from './ui/badge/badge.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { message }: { message: MyUIMessage } = $props();
 
@@ -87,7 +88,7 @@
 
 	const groupedParts = $derived(message.role === 'assistant' ? groupParts(message.parts) : []);
 
-	const markdownCache = new Map<string, string>();
+	const markdownCache = new SvelteMap<string, string>();
 
 	function renderMarkdown(text: string): string {
 		const cached = markdownCache.get(text);

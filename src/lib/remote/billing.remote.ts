@@ -1,4 +1,4 @@
-import { command, getRequestEvent, query } from '$app/server';
+import { command, getRequestEvent } from '$app/server';
 import { autumn } from '$lib/server/autumn';
 import { requireAuth } from './auth.remote';
 
@@ -22,14 +22,4 @@ export const customerPortal = command(async () => {
 	});
 
 	return url;
-});
-
-export const getCustomer = query(async () => {
-	const user = await requireAuth();
-
-	const customer = await autumn.customers.getOrCreate({
-		customerId: user.id
-	});
-
-	return customer;
 });

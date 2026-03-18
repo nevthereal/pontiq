@@ -12,7 +12,7 @@
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
 	import { page } from '$app/state';
-	import { customerPortal, getCustomer } from '$lib/remote/billing.remote.js';
+	import { customerPortal } from '$lib/remote/billing.remote.js';
 
 	let { children, params } = $props();
 
@@ -93,7 +93,6 @@
 				<DropdownMenu.Content align="end" side="bottom">
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>Profile</DropdownMenu.Label>
-						<DropdownMenu.Separator />
 						<DropdownMenu.Item closeOnSelect={false} onclick={toggleMode}>
 							{#if mode.current === 'dark'}
 								<MoonIcon />
