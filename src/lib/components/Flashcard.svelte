@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Flashcard } from '$lib/server/db/schema';
 	import { cn } from '$lib/utils';
+	import { PressedKeys } from 'runed';
 
 	type Props = {
 		flashcard: Flashcard;
@@ -19,17 +20,41 @@
 		class: className = ''
 	}: Props = $props();
 
+	let buttonRef: HTMLButtonElement | null = $state(null);
+	let pointerActivated = false;
+
 	function toggle() {
 		if (!disabled) flipped = !flipped;
 	}
+
+	function handlePointerDown(event: PointerEvent) {
+		// Prevent pointer interactions from focusing the button (so space/keys don't get "stuck" on it).
+		pointerActivated = true;
+		event.preventDefault();
+	}
+
+	function handleClick() {
+		toggle();
+
+		if (pointerActivated) {
+			pointerActivated = false;
+			buttonRef?.blur();
+		}
+	}
+
+	const keys = new PressedKeys();
+
+	keys.onKeys(' ', () => toggle());
 </script>
 
 <button
+	bind:this={buttonRef}
 	type="button"
 	aria-pressed={flipped}
 	aria-label="Flip flashcard"
 	{disabled}
-	onclick={toggle}
+	onpointerdown={handlePointerDown}
+	onclick={handleClick}
 	style="perspective: 1200px;"
 	class={cn(
 		'relative w-full select-none',

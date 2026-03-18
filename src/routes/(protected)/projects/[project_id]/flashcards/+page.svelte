@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
 
-	import { getProjectDetails } from '$lib/remote/projects.remote';
 	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
 	import { cn, ratings } from '$lib/utils';
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
@@ -18,7 +18,6 @@
 	let { params } = $props();
 
 	const flashcards = $derived(await getFlashCards(params.project_id));
-	const projectDetails = $derived(await getProjectDetails(params.project_id));
 
 	let currentIndex = $state(0);
 	let flipped = $state(false);
@@ -129,18 +128,25 @@
 					<div class="grid grid-cols-4 gap-4">
 						{#each responses as response (response.value)}
 							{@const Icon = response.icon}
+							{@const isCurrentRating = currentFlashcard?.rating === response.tooltip}
 
 							<Tooltip.Provider delayDuration={100}>
 								<Tooltip.Root>
 									<Tooltip.Trigger
 										onclick={() => handleRating(response.tooltip)}
-										class={buttonVariants({ variant: 'outline' })}
+										aria-pressed={isCurrentRating}
+										class={cn(
+											buttonVariants({ variant: 'outline' }),
+											isCurrentRating && 'border-primary bg-primary/5'
+										)}
 									>
 										<Icon class={response.color} />
-										{response.label}
+										<span class={cn(isCurrentRating && response.color)}>{response.label}</span>
 									</Tooltip.Trigger>
-									<Tooltip.Content>
-										<p>{response.tooltip}</p>
+									<Tooltip.Content side="bottom">
+										<p>
+											{response.tooltip}
+										</p>
 									</Tooltip.Content>
 								</Tooltip.Root>
 							</Tooltip.Provider>

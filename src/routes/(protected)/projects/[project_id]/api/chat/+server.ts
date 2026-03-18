@@ -6,6 +6,7 @@ import { VERCEL_AI_KEY } from '$env/static/private';
 import { createGateway } from '@ai-sdk/gateway';
 import type { RequestHandler } from './$types.js';
 import { getProject } from '$lib/remote/projects.remote.js';
+import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
 
 const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
@@ -92,7 +93,7 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 	} = await request.json();
 
 	const result = streamText({
-		model: gateway('openai/gpt-5-mini'),
+		model: gateway('openai/gpt-5.4-mini'),
 		messages: await convertToModelMessages(messages),
 		system:
 			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
@@ -101,7 +102,13 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
 			chunking: 'word'
-		})
+		}),
+		providerOptions: {
+			openai: {
+				reasoningEffort: config.enhancedReasoning ? 'high' : 'none',
+				...(config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
+			} satisfies OpenAILanguageModelResponsesOptions
+		}
 	});
 
 	return result.toUIMessageStreamResponse();
