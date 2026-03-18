@@ -7,7 +7,7 @@
 	import { getUser } from '$lib/remote/auth.remote';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Check, ChevronsUpDown, LogOut, MoonIcon, Slash, SunIcon } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LogOut, MoonIcon, SunIcon } from '@lucide/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
