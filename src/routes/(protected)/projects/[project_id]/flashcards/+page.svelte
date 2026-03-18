@@ -15,7 +15,7 @@
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
-	import { watch, PressedKeys } from 'runed';
+	import { watch } from 'runed';
 
 	let { params } = $props();
 
@@ -93,28 +93,6 @@
 			currentIndex = 0;
 		}
 	}
-
-	const keys = new PressedKeys();
-
-	watch(
-		() => flipped,
-		() => {
-			if (flipped) {
-				keys.onKeys(['r', '1'], () => {
-					handleRating('Blank');
-				});
-				keys.onKeys(['r', '2'], () => {
-					handleRating('Hard');
-				});
-				keys.onKeys(['r', '3'], () => {
-					handleRating('Good');
-				});
-				keys.onKeys(['r', '4'], () => {
-					handleRating('Unrated');
-				});
-			}
-		}
-	);
 </script>
 
 <div>
@@ -150,22 +128,26 @@
 				<div transition:fade={{ duration: 100, easing: cubicInOut }}>
 					<h1 class="mb-2 text-center font-bold">How well could you recall this flashcard?</h1>
 					<div class="grid grid-cols-4 gap-4">
-						{#each responses as response, idx (response.value)}
+						{#each responses as response (response.value)}
 							{@const Icon = response.icon}
+							{@const isCurrentRating = currentFlashcard?.rating === response.tooltip}
 
 							<Tooltip.Provider delayDuration={100}>
 								<Tooltip.Root>
 									<Tooltip.Trigger
 										onclick={() => handleRating(response.tooltip)}
-										class={buttonVariants({ variant: 'outline' })}
+										aria-pressed={isCurrentRating}
+										class={cn(
+											buttonVariants({ variant: 'outline' }),
+											isCurrentRating && 'border-primary bg-primary/5'
+										)}
 									>
 										<Icon class={response.color} />
-										{response.label}
+										<span class={cn(isCurrentRating && response.color)}>{response.label}</span>
 									</Tooltip.Trigger>
-									<Tooltip.Content>
+									<Tooltip.Content side="bottom">
 										<p>
 											{response.tooltip}
-											(hold <Kbd.Root>r</Kbd.Root> + <Kbd.Root>{idx + 1}</Kbd.Root>)
 										</p>
 									</Tooltip.Content>
 								</Tooltip.Root>
