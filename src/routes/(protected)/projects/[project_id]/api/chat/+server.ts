@@ -104,12 +104,10 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 			chunking: 'word'
 		}),
 		providerOptions: {
-			providerOptions: {
-				openai: {
-					reasoningEffort: config.enhancedReasoning ? 'high' : 'none',
-					...(config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
-				} satisfies OpenAILanguageModelResponsesOptions
-			}
+			openai: {
+				reasoningEffort: config.enhancedReasoning ? 'high' : 'none',
+				...(config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
+			} satisfies OpenAILanguageModelResponsesOptions
 		}
 	});
 
