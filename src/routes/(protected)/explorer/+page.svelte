@@ -28,9 +28,6 @@
 						<div class="flex items-center justify-between gap-2">
 							<h2 class="text-xl font-semibold">
 								{sub.title}
-								{#if sub.pinned}
-									<span>(pinned)</span>
-								{/if}
 							</h2>
 							<div class="flex items-center gap-2">
 								<Dialog.Root>

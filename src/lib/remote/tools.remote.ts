@@ -1,11 +1,12 @@
 import { command, query } from '$app/server';
 import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { flashcard, studyPlanStep, project } from '$lib/server/db/schema';
+import { flashcard, studyPlanStep } from '$lib/server/db/schema';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
 import { ratings } from '$lib/utils';
+import { autumn } from '$lib/server/autumn';
 
 export const getStudySteps = query(z.string(), async (projectId) => {
 	const steps = await db.query.studyPlanStep.findMany({
@@ -30,7 +31,19 @@ export const deleteSteps = command(z.string(), async (projectId) => {
 	getStudySteps(projectId).refresh();
 });
 
+export const checkFlashcard = query(async () => {
+	const user = await requireAuth();
+	const { allowed } = await autumn.check({
+		customerId: user.id,
+		featureId: 'flashcards'
+	});
+
+	return allowed;
+});
+
 export const getFlashCards = query(z.string(), async (projectId) => {
+	await requireAuth();
+
 	const flashCards = await db.query.flashcard.findMany({
 		where: {
 			projectId

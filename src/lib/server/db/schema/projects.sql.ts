@@ -28,7 +28,6 @@ export const subject = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
 		active: boolean().default(true).notNull(),
-		pinned: boolean().notNull().default(false),
 		createdAt: timestamp().defaultNow()
 	},
 	(t) => [index('sub_creator_idx').on(t.creatorId)]

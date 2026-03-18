@@ -6,6 +6,7 @@
 		ChevronDown,
 		Globe,
 		GraduationCap,
+		Paperclip,
 		Plus,
 		Trash2
 	} from '@lucide/svelte';
@@ -176,7 +177,7 @@
 					>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
-							><Plus /></DropdownMenu.Trigger
+							><Paperclip /></DropdownMenu.Trigger
 						>
 						<DropdownMenu.Content>
 							<DropdownMenu.Group>

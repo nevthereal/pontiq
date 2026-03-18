@@ -8,7 +8,7 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
 
-	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
+	import { applyRating, checkFlashcard, getFlashCards } from '$lib/remote/tools.remote';
 	import { cn, ratings } from '$lib/utils';
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
