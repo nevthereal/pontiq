@@ -5,7 +5,7 @@ import { requireAuth } from './auth.remote';
 export const subscribe = command(async () => {
 	const user = await requireAuth();
 
-	autumn.billing.attach({
+	await autumn.billing.attach({
 		customerId: user.id,
 		planId: 'pontiq_pro'
 	});
