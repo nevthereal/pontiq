@@ -40,7 +40,7 @@
 							{/each}
 						{/if}
 					</Field.Field>
-					<Field.Field class="mt-4">
+					<Field.Field>
 						<Field.Label for="subjectId" class="mb-1">Subject/Class</Field.Label>
 
 						<Select.Root type="single" bind:value name="subjectId">

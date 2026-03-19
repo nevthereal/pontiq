@@ -6,12 +6,19 @@
 	import Muted from '$lib/components/typography/Muted.svelte';
 	import CreateDialog from '$lib/components/CreateDialog.svelte';
 	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { Plus } from '@lucide/svelte';
 </script>
 
 <section>
 	<div class="flex justify-between">
 		<SiteHeading>Projects</SiteHeading>
-		<CreateDialog />
+		<svelte:boundary>
+			{#snippet pending()}
+				<Button size="sm" disabled><Plus />Create project</Button>
+			{/snippet}
+			<CreateDialog />
+		</svelte:boundary>
 	</div>
 	<svelte:boundary>
 		{#each await getSubjectsWithProjects() as sub (sub.id)}

@@ -93,7 +93,7 @@
 	function renderMarkdown(text: string): string {
 		const cached = markdownCache.get(text);
 		if (cached) return cached;
-		const html = DOMPurify.sanitize(marked(text));
+		const html = DOMPurify.sanitize(String(marked.parse(text)));
 		markdownCache.set(text, html);
 		return html;
 	}

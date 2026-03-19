@@ -166,14 +166,27 @@
 				</InputGroup.Addon>
 
 				<InputGroup.Addon align="block-end">
-					<Toggle bind:pressed={chatConfig.current.studyModeEnabled} variant="outline" size="sm"
-						><GraduationCap />Study mode</Toggle
+					<Toggle
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
+						bind:pressed={chatConfig.current.studyModeEnabled}><GraduationCap />Study mode</Toggle
 					>
-					<Toggle bind:pressed={chatConfig.current.enhancedReasoning} variant="outline" size="sm"
+					<Toggle
+						bind:pressed={chatConfig.current.enhancedReasoning}
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
 						><Brain />Reasoning</Toggle
 					>
-					<Toggle bind:pressed={chatConfig.current.webSearch} variant="outline" size="sm"
-						><Globe />Web Search</Toggle
+					<Toggle
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
+						bind:pressed={chatConfig.current.webSearch}><Globe />Web Search</Toggle
 					>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}

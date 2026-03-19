@@ -22,7 +22,7 @@
 				class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold"
 				>Project: {project.name}</a
 			>
-			<Item.Group class="mt-4 space-y-2">
+			<Item.Group class="mt-4">
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
 						<a href={resolve('/(protected)/projects/[project_id]/chat', params)} {...props}>
