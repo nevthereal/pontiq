@@ -24,7 +24,7 @@
 	} from '@lucide/svelte';
 	import type { studyStepTypes } from '$lib/server/db/schema/tools.sql';
 	import type { Component } from 'svelte';
-	import { marked } from '$lib/utils';
+	import { marked } from '$lib/things';
 	import { fade, slide } from 'svelte/transition';
 	import Badge from './ui/badge/badge.svelte';
 	import { SvelteMap } from 'svelte/reactivity';

@@ -1,19 +1,13 @@
-<svelte:head>
-	<title>AI Study | Memory-first learning</title>
-</svelte:head>
-
 <script>
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { Separator } from '$lib/components/ui/separator';
-	import {
-		Accordion,
-		AccordionContent,
-		AccordionItem,
-		AccordionTrigger
-	} from '$lib/components/ui/accordion';
 </script>
+
+<svelte:head>
+	<title>AI Study | Memory-first learning</title>
+</svelte:head>
 
 <main class="relative overflow-hidden bg-background text-foreground">
 	<div class="hero-orbit" aria-hidden="true"></div>
@@ -22,13 +16,15 @@
 	<section class="relative z-10 mx-auto w-full max-w-6xl px-6 pt-0">
 		<div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 			<div class="space-y-6">
-				<Badge class="w-fit border-foreground/20 bg-background/60 text-foreground">New: Study maps</Badge>
+				<Badge class="w-fit border-foreground/20 bg-background/60 text-foreground"
+					>New: Study maps</Badge
+				>
 				<h1 class="font-display text-4xl leading-[1] sm:text-5xl lg:text-6xl">
 					A study companion that treats memory like a craft.
 				</h1>
 				<p class="text-lg text-muted-foreground sm:text-xl">
-					Turn messy notes into a guided plan, timed reviews, and beautiful recall prompts. Built for
-					students, researchers, and anyone who wants to actually remember.
+					Turn messy notes into a guided plan, timed reviews, and beautiful recall prompts. Built
+					for students, researchers, and anyone who wants to actually remember.
 				</p>
 				<div class="flex flex-wrap gap-3">
 					<Button size="lg" class="rounded-full px-6">Start a free plan</Button>
@@ -57,7 +53,7 @@
 					class="rounded-3xl border border-border bg-card/90 p-6 text-card-foreground shadow-[0_28px_80px_rgba(15,15,20,0.18)] backdrop-blur"
 				>
 					<div class="flex items-center justify-between">
-						<p class="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+						<p class="text-xs font-semibold tracking-[0.3em] text-muted-foreground uppercase">
 							Next review
 						</p>
 						<Badge variant="secondary" class="bg-secondary/70">Today</Badge>
@@ -68,7 +64,7 @@
 					<div class="space-y-3">
 						<div class="flex items-center gap-3">
 							<span
-								class="rounded-full bg-muted px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+								class="rounded-full bg-muted px-2 py-1 text-[10px] tracking-[0.2em] text-muted-foreground uppercase"
 								>Prime</span
 							>
 							<div>
@@ -78,7 +74,7 @@
 						</div>
 						<div class="flex items-center gap-3">
 							<span
-								class="rounded-full bg-muted px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+								class="rounded-full bg-muted px-2 py-1 text-[10px] tracking-[0.2em] text-muted-foreground uppercase"
 								>Recall</span
 							>
 							<div>
@@ -88,7 +84,7 @@
 						</div>
 						<div class="flex items-center gap-3">
 							<span
-								class="rounded-full bg-muted px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+								class="rounded-full bg-muted px-2 py-1 text-[10px] tracking-[0.2em] text-muted-foreground uppercase"
 								>Reflect</span
 							>
 							<div>
@@ -102,14 +98,14 @@
 				<div
 					class="absolute right-0 bottom-6 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
 				>
-					<p class="text-xs uppercase tracking-[0.2em] text-muted-foreground">Weekly</p>
+					<p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">Weekly</p>
 					<h4 class="mt-2 text-lg font-semibold">Memory map</h4>
 					<p class="text-xs text-muted-foreground">See all your anchors</p>
 				</div>
 				<div
-					class="absolute left-0 bottom-6 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
+					class="absolute bottom-6 left-0 w-[190px] rounded-2xl border border-border bg-card/80 p-4 text-card-foreground shadow-[0_18px_40px_rgba(15,15,20,0.18)] backdrop-blur"
 				>
-					<p class="text-xs uppercase tracking-[0.2em] text-muted-foreground">Streak</p>
+					<p class="text-xs tracking-[0.2em] text-muted-foreground uppercase">Streak</p>
 					<h4 class="mt-2 text-lg font-semibold">7-day rhythm</h4>
 					<p class="text-xs text-muted-foreground">Consistency wins</p>
 				</div>
@@ -120,18 +116,20 @@
 	<section id="flow" class="relative z-10 mx-auto mt-16 w-full max-w-6xl px-6">
 		<div class="grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]">
 			<div class="space-y-4">
-				<p class="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">The flow</p>
+				<p class="text-xs font-semibold tracking-[0.4em] text-muted-foreground uppercase">
+					The flow
+				</p>
 				<h2 class="font-display text-3xl sm:text-4xl">A ritualized learning loop.</h2>
 				<p class="text-muted-foreground">
-					Each session moves from framing to recall to reflection. The pace is intentional, the prompts
-					are precise, and your progress is visible.
+					Each session moves from framing to recall to reflection. The pace is intentional, the
+					prompts are precise, and your progress is visible.
 				</p>
 			</div>
 			<div class="grid gap-4 sm:grid-cols-2">
 				<div
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
-					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">01</p>
+					<p class="text-xs tracking-[0.3em] text-muted-foreground uppercase">01</p>
 					<h3 class="text-xl font-semibold">Capture</h3>
 					<p class="text-sm text-muted-foreground">
 						Drop PDFs, lectures, or notes. We carve them into concepts, anchors, and prompts.
@@ -140,7 +138,7 @@
 				<div
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
-					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">02</p>
+					<p class="text-xs tracking-[0.3em] text-muted-foreground uppercase">02</p>
 					<h3 class="text-xl font-semibold">Plan</h3>
 					<p class="text-sm text-muted-foreground">
 						AI builds a schedule that respects your workload and spacing intervals.
@@ -149,7 +147,7 @@
 				<div
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
-					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">03</p>
+					<p class="text-xs tracking-[0.3em] text-muted-foreground uppercase">03</p>
 					<h3 class="text-xl font-semibold">Recall</h3>
 					<p class="text-sm text-muted-foreground">
 						Do one focused sprint with prompts tailored to how you retain information.
@@ -158,7 +156,7 @@
 				<div
 					class="rounded-2xl border border-border bg-card/80 p-5 text-card-foreground shadow-[0_14px_30px_rgba(15,15,20,0.12)]"
 				>
-					<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">04</p>
+					<p class="text-xs tracking-[0.3em] text-muted-foreground uppercase">04</p>
 					<h3 class="text-xl font-semibold">Reflect</h3>
 					<p class="text-sm text-muted-foreground">
 						Save a quick summary and confidence score to guide the next review.
@@ -173,7 +171,9 @@
 			class="grid gap-6 rounded-3xl border border-border bg-card/90 p-8 text-card-foreground shadow-[0_24px_60px_rgba(15,15,20,0.14)]"
 		>
 			<div class="space-y-3">
-				<p class="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">Study kit</p>
+				<p class="text-xs font-semibold tracking-[0.4em] text-muted-foreground uppercase">
+					Study kit
+				</p>
 				<h2 class="font-display text-3xl sm:text-4xl">Everything in one quiet cockpit.</h2>
 				<p class="text-muted-foreground">
 					Build projects, generate flashcards, and ship your notes straight into practice sessions.
@@ -210,8 +210,8 @@
 			<div
 				class="rounded-3xl border border-border bg-card/85 p-7 text-card-foreground shadow-[0_20px_50px_rgba(15,15,20,0.16)]"
 			>
-				<p class="text-xs uppercase tracking-[0.3em] text-muted-foreground">Story</p>
-				<p class="mt-4 font-display text-2xl">
+				<p class="text-xs tracking-[0.3em] text-muted-foreground uppercase">Story</p>
+				<p class="font-display mt-4 text-2xl">
 					“AI Study is the first tool that actually helped me *retain* material. The rhythm and
 					prompts are exactly what I needed.”
 				</p>
@@ -247,7 +247,9 @@
 			class="grid gap-6 rounded-3xl border border-border bg-card/90 p-8 text-card-foreground shadow-[0_24px_60px_rgba(15,15,20,0.16)]"
 		>
 			<div class="space-y-3">
-				<p class="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">Pricing</p>
+				<p class="text-xs font-semibold tracking-[0.4em] text-muted-foreground uppercase">
+					Pricing
+				</p>
 				<h2 class="font-display text-3xl sm:text-4xl">Start free, stay focused.</h2>
 				<p class="text-muted-foreground">
 					Upgrade when you are ready to scale your study pipeline.
@@ -290,32 +292,10 @@
 
 	<section id="faq" class="relative z-10 mx-auto mt-16 w-full max-w-5xl px-6">
 		<div class="space-y-4 text-center">
-			<p class="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">FAQ</p>
+			<p class="text-xs font-semibold tracking-[0.4em] text-muted-foreground uppercase">FAQ</p>
 			<h2 class="font-display text-3xl sm:text-4xl">Quick answers for busy brains.</h2>
 			<p class="text-muted-foreground">Everything you need to know before you dive in.</p>
 		</div>
-		<Accordion type="single" collapsible class="mt-8">
-			<AccordionItem value="item-1">
-				<AccordionTrigger>What files can I upload?</AccordionTrigger>
-				<AccordionContent>
-					PDFs, docs, slides, and links. We preserve the citations and let you trace every card to its
-					source.
-				</AccordionContent>
-			</AccordionItem>
-			<AccordionItem value="item-2">
-				<AccordionTrigger>Do I have to follow the schedule?</AccordionTrigger>
-				<AccordionContent>
-					No. You can edit sessions, skip, or move them. The plan adapts as you go.
-				</AccordionContent>
-			</AccordionItem>
-			<AccordionItem value="item-3">
-				<AccordionTrigger>Is this safe for sensitive research?</AccordionTrigger>
-				<AccordionContent>
-					Your data stays in your workspace. We never train on your files, and you can delete sources
-					anytime.
-				</AccordionContent>
-			</AccordionItem>
-		</Accordion>
 	</section>
 
 	<section class="relative z-10 mx-auto mt-16 w-full max-w-6xl px-6 pb-20">
@@ -323,8 +303,8 @@
 			class="flex flex-col items-center gap-6 rounded-3xl border border-border bg-card/90 p-8 text-center text-card-foreground shadow-[0_24px_60px_rgba(15,15,20,0.14)] sm:flex-row sm:justify-between sm:text-left"
 		>
 			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">Ready?</p>
-				<h2 class="mt-3 font-display text-3xl sm:text-4xl">Launch your next study season.</h2>
+				<p class="text-xs font-semibold tracking-[0.4em] text-muted-foreground uppercase">Ready?</p>
+				<h2 class="font-display mt-3 text-3xl sm:text-4xl">Launch your next study season.</h2>
 				<p class="mt-3 text-muted-foreground">
 					Join the weekly memory lab and get early feature drops.
 				</p>
