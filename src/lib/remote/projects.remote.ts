@@ -1,10 +1,11 @@
 import { command, form, query } from '$app/server';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
-import { error, redirect } from '@sveltejs/kit';
+import { error, invalid, redirect } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
 import { project, subject } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { autumn } from '$lib/server/autumn';
 
 export const getSubjectsWithProjects = query(async () => {
 	const user = await requireAuth();
@@ -90,10 +91,32 @@ export const getProjectDetails = query(z.string(), async (id) => {
 	};
 });
 
+export const getProjectBalance = query(async () => {
+	const user = await requireAuth();
+
+	const balance = await autumn.check({
+		customerId: user.id,
+		featureId: 'projects'
+	});
+
+	return balance;
+});
+
 export const createProject = form(
 	z.object({ name: z.string().min(5), subjectId: z.uuid() }),
-	async ({ name, subjectId }) => {
+	async ({ name, subjectId }, issue) => {
 		const user = await requireAuth();
+
+		const { allowed } = await autumn.check({
+			customerId: user.id,
+			featureId: 'projects',
+			requiredBalance: 1,
+			sendEvent: true
+		});
+
+		if (!allowed) {
+			invalid(issue(`You can only create 1 project per plan`));
+		}
 
 		const [{ id }] = await db
 			.insert(project)
@@ -145,6 +168,12 @@ export const deleteProject = command(z.string(), async (id) => {
 		if (!qProject) return error(401, 'Not your project');
 
 		await tx.delete(project).where(eq(project.id, qProject.id));
+
+		await autumn.track({
+			customerId: user.id,
+			featureId: 'projects',
+			value: -1 // Increases balance when removing a seat
+		});
 	});
 });
 
@@ -174,7 +203,8 @@ export const setProjectExamDate = form(
 	}),
 	async ({ id, examDate }) => {
 		const user = await requireAuth();
-		const nextExamDate = examDate && examDate.trim().length > 0 ? new Date(`${examDate}T00:00:00`) : null;
+		const nextExamDate =
+			examDate && examDate.trim().length > 0 ? new Date(`${examDate}T00:00:00`) : null;
 
 		await db.transaction(async (tx) => {
 			const qProject = await tx.query.project.findFirst({

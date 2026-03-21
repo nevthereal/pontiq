@@ -7,16 +7,16 @@
 	import { getUser } from '$lib/remote/auth.remote';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Check, ChevronsUpDown, LogOut, MoonIcon, Slash, SunIcon } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LogOut, MoonIcon, Receipt, SunIcon, User } from '@lucide/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
 	import { page } from '$app/state';
+	import { customerPortal } from '$lib/remote/billing.remote.js';
 
 	let { children, params } = $props();
 
 	const user = $derived(await getUser());
-	const isLanding = $derived(page.url.pathname === '/');
 </script>
 
 <svelte:head>
@@ -65,14 +65,6 @@
 		</div>
 		{#if !user}
 			<div class="flex items-center gap-6">
-				{#if isLanding}
-					<div class="hidden items-center gap-6 text-sm font-medium md:flex">
-						<a class="text-muted-foreground hover:text-foreground" href="#flow">Flow</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#kit">Study kit</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#pricing">Pricing</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#faq">FAQ</a>
-					</div>
-				{/if}
 				<Button href="/auth">Sign in</Button>
 			</div>
 		{:else}
@@ -92,7 +84,6 @@
 				<DropdownMenu.Content align="end" side="bottom">
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>Profile</DropdownMenu.Label>
-						<DropdownMenu.Separator />
 						<DropdownMenu.Item closeOnSelect={false} onclick={toggleMode}>
 							{#if mode.current === 'dark'}
 								<MoonIcon />
@@ -100,6 +91,12 @@
 								<SunIcon />
 							{/if}
 							Change theme</DropdownMenu.Item
+						>
+						<DropdownMenu.Item
+							onclick={async () =>
+								await customerPortal().then((url) => {
+									window.location = url;
+								})}><Receipt /> Customer Portal</DropdownMenu.Item
 						>
 						<DropdownMenu.Item
 							variant="destructive"
@@ -112,16 +109,12 @@
 		{/if}
 	</nav>
 
-	<main class={`flex-1 ${isLanding ? 'overflow-y-auto p-0' : 'overflow-hidden p-4'}`}>
+	<main class="flex-1 overflow-hidden p-4">
 		{#if !user}
 			{@render children()}
 		{:else}
 			<div class="contents">
-				{#if user.isApproved}
-					{@render children?.()}
-				{:else}
-					<p class="mt-8 text-center font-mono">Your account is not approved. Please request.</p>
-				{/if}
+				{@render children?.()}
 			</div>
 		{/if}
 	</main>

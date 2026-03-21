@@ -6,7 +6,14 @@
 	import * as Field from '$lib/components/ui/field/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';
-	import { createProject, createSubject, getSubjects } from '$lib/remote/projects.remote';
+	import {
+		createProject,
+		createSubject,
+		getProjectBalance,
+		getSubjects
+	} from '$lib/remote/projects.remote';
+
+	const balance = $derived(await getProjectBalance());
 
 	let open = $state(false);
 
@@ -14,7 +21,9 @@
 </script>
 
 <Dialog.Root>
-	<Dialog.Trigger class={buttonVariants({ size: 'sm' })}><Plus />Create project</Dialog.Trigger>
+	<Dialog.Trigger disabled={!balance.allowed} class={buttonVariants({ size: 'sm' })}
+		><Plus />Create project</Dialog.Trigger
+	>
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Create a project</Dialog.Title>
@@ -31,7 +40,7 @@
 							{/each}
 						{/if}
 					</Field.Field>
-					<Field.Field class="mt-4">
+					<Field.Field>
 						<Field.Label for="subjectId" class="mb-1">Subject/Class</Field.Label>
 
 						<Select.Root type="single" bind:value name="subjectId">
@@ -81,7 +90,9 @@
 					</Field.Field>
 				</Field.Set>
 				<Field.Field orientation="horizontal">
-					<Button type="submit" class="mt-2">Create Project</Button>
+					<Button type="submit" class="mt-2"
+						>Create Project ({balance.balance?.granted} remaining)</Button
+					>
 				</Field.Field>
 			</Field.Group>
 		</form>

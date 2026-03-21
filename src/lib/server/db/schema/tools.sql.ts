@@ -1,6 +1,6 @@
 import { index, pgEnum, pgTable, serial, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { project } from './projects.sql';
-import { ratings } from '../../../utils';
+import { ratings } from '../../../things';
 
 export const studyStepTypes = [
 	'milestone',

@@ -24,9 +24,10 @@
 	} from '@lucide/svelte';
 	import type { studyStepTypes } from '$lib/server/db/schema/tools.sql';
 	import type { Component } from 'svelte';
-	import { marked } from '$lib/utils';
+	import { marked } from '$lib/things';
 	import { fade, slide } from 'svelte/transition';
 	import Badge from './ui/badge/badge.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { message }: { message: MyUIMessage } = $props();
 
@@ -87,12 +88,12 @@
 
 	const groupedParts = $derived(message.role === 'assistant' ? groupParts(message.parts) : []);
 
-	const markdownCache = new Map<string, string>();
+	const markdownCache = new SvelteMap<string, string>();
 
 	function renderMarkdown(text: string): string {
 		const cached = markdownCache.get(text);
 		if (cached) return cached;
-		const html = DOMPurify.sanitize(marked(text));
+		const html = DOMPurify.sanitize(String(marked.parse(text)));
 		markdownCache.set(text, html);
 		return html;
 	}

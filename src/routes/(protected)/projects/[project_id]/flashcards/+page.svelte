@@ -9,7 +9,8 @@
 	import { Label } from '$lib/components/ui/label';
 
 	import { applyRating, getFlashCards } from '$lib/remote/tools.remote';
-	import { cn, ratings } from '$lib/utils';
+	import { cn } from '$lib/utils';
+	import { ratings } from '$lib/things';
 	import { CreditCard, Frown, Laugh, ListFilter, Meh, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';

@@ -15,16 +15,7 @@ export const auth = betterAuth({
 			clientSecret: GOOGLE_CLIENT_SECRET
 		}
 	},
-	secret: BETTER_AUTH_SECRET,
-	user: {
-		additionalFields: {
-			isApproved: {
-				type: 'boolean',
-				defaultValue: false,
-				fieldName: 'approved'
-			}
-		}
-	}
+	secret: BETTER_AUTH_SECRET
 });
 
 export type Auth = typeof auth;
