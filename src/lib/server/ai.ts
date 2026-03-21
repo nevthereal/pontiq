@@ -2,7 +2,7 @@ import { tool, type InferUITools, type ToolSet, type UIMessage } from 'ai';
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from './db';
-import { flashcard, studyPlanStep, studyStepTypes } from './db/schema';
+import { flashcard, studyPlanStep, studyStepTypes, project } from './db/schema';
 import z from 'zod';
 import { EXA_API_KEY } from '$env/static/private';
 import { eq, asc } from 'drizzle-orm';
@@ -102,12 +102,51 @@ const getStudyPlanTool = tool({
 	}
 });
 
+const getExamDate = tool({
+	description: 'Retrieve the exam date of the current project',
+	inputSchema: z.object({}),
+	execute: async () => {
+		const { params } = getRequestEvent();
+
+		if (!params.project_id) error(404, 'No project ID');
+
+		const qproject = await db.query.project.findFirst({ where: { id: params.project_id } });
+
+		if (!qproject) error(404, 'Project not found');
+
+		if (!qproject.examDate) return 'Project does not have an exam date yet';
+
+		return qproject.examDate;
+	}
+});
+
+const setExamDate = tool({
+	description: 'Set the exam date of the current project',
+	inputSchema: z.object({ date: z.iso.date() }),
+	execute: async ({ date }) => {
+		const { params } = getRequestEvent();
+
+		if (!params.project_id) error(404, 'No project ID');
+
+		const qproject = await db.query.project.findFirst({ where: { id: params.project_id } });
+
+		if (!qproject) error(404, 'Project not found');
+
+		await db
+			.update(project)
+			.set({ examDate: new Date(date) })
+			.where(eq(project.id, qproject.id));
+	}
+});
+
 export const tools = {
 	study_plan: studyPlanTool,
 	flashcards: flashCardTool,
 	get_flashcards: getFlashcardsTool,
 	get_study_plan: getStudyPlanTool,
-	web_search: webSearchTool
+	web_search: webSearchTool,
+	setExamDate,
+	getExamDate
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof tools>;

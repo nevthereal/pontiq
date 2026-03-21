@@ -17,7 +17,6 @@
 	let { children, params } = $props();
 
 	const user = $derived(await getUser());
-	const isLanding = $derived(page.url.pathname === '/');
 </script>
 
 <svelte:head>
@@ -66,14 +65,6 @@
 		</div>
 		{#if !user}
 			<div class="flex items-center gap-6">
-				{#if isLanding}
-					<div class="hidden items-center gap-6 text-sm font-medium md:flex">
-						<a class="text-muted-foreground hover:text-foreground" href="#flow">Flow</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#kit">Study kit</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#pricing">Pricing</a>
-						<a class="text-muted-foreground hover:text-foreground" href="#faq">FAQ</a>
-					</div>
-				{/if}
 				<Button href="/auth">Sign in</Button>
 			</div>
 		{:else}
@@ -118,7 +109,7 @@
 		{/if}
 	</nav>
 
-	<main class={`flex-1 ${isLanding ? 'overflow-y-auto p-0' : 'overflow-hidden p-4'}`}>
+	<main class="flex-1 overflow-hidden p-4">
 		{#if !user}
 			{@render children()}
 		{:else}

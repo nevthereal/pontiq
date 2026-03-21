@@ -220,8 +220,7 @@
 						variant="default"
 						class="ml-auto rounded-full"
 						size="icon-xs"
-						disabled={!(input || (attachments.files && attachments.files.length > 0)) ||
-							chat.status !== 'ready'}
+						disabled={chat.status !== 'ready'}
 					>
 						{#if chat.status === 'ready'}
 							<ArrowUpIcon />
