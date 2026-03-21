@@ -149,9 +149,7 @@
 				<InputGroup.Addon align="block-start" class="overflow-scroll">
 					{#each attachments.files as att (att.id)}
 						<ButtonGroup.Root class="w-48">
-							<ButtonGroup.Text
-								class="no-scrollbar min-w-0 overflow-x-auto font-mono whitespace-nowrap"
-							>
+							<ButtonGroup.Text class="no-scrollbar min-w-0 truncate overflow-x-auto font-mono">
 								{att.name}
 							</ButtonGroup.Text>
 							<InputGroup.Button
@@ -192,12 +190,13 @@
 						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
 							><Paperclip /></DropdownMenu.Trigger
 						>
-						<DropdownMenu.Content>
+						<DropdownMenu.Content class="w-80">
 							<DropdownMenu.Group>
 								<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								{#each await getFiles(params.project_id) as file (file.id)}
 									<DropdownMenu.CheckboxItem
+										class="truncate"
 										closeOnSelect={false}
 										bind:checked={
 											() => attachments.isInChat(file),

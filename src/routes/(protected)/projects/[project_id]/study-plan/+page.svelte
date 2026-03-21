@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
@@ -11,6 +12,8 @@
 	import Loading from '$lib/components/typography/Loading.svelte';
 
 	let { params } = $props();
+
+	let open = $state(false);
 </script>
 
 <div class="flex justify-between">
@@ -37,49 +40,61 @@
 				</AlertDialog.Header>
 				<AlertDialog.Footer>
 					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-					<AlertDialog.Action onclick={async () => await deleteSteps(params.project_id)}
-						>Continue</AlertDialog.Action
+					<AlertDialog.Action
+						onclick={() => {
+							toast.promise(deleteSteps(params.project_id), {
+								loading: 'Deleting plan…',
+								success: 'Deletion successful',
+								error: 'An error occurred during deletion'
+							});
+							open = false;
+						}}>Continue</AlertDialog.Action
 					>
 				</AlertDialog.Footer>
 			</AlertDialog.Content>
 		</AlertDialog.Root>
 	</div>
 </div>
-<svelte:boundary>
-	{#snippet pending()}
-		<Loading thing="study plan" />
-	{/snippet}
-	{#if await getStudySteps(params.project_id)}
-		<ul class="space-y-2 overflow-scroll">
-			{#each await getStudySteps(params.project_id) as step (step.id)}
-				<Item.Root variant="outline" class="flex-col items-start gap-2">
-					<Item.Content>
-						<Item.Title
-							>{Intl.DateTimeFormat('en-gb', { dateStyle: 'medium' }).format(step.date)}</Item.Title
-						>
-						<Item.Description>{step.title}</Item.Description>
-					</Item.Content>
-					<Item.Actions>
-						<Dialog.Root>
-							<Dialog.Trigger class={buttonVariants({ variant: 'outline', size: 'sm' })}
-								><Maximize2 />Details</Dialog.Trigger
+<div class="mt-2">
+	<svelte:boundary>
+		{#snippet pending()}
+			<Loading thing="study plan" />
+		{/snippet}
+		{#if await getStudySteps(params.project_id)}
+			<ul class="space-y-2 overflow-scroll">
+				{#each await getStudySteps(params.project_id) as step (step.id)}
+					<Item.Root variant="outline" class="flex-col items-start gap-2">
+						<Item.Content>
+							<Item.Title
+								>{Intl.DateTimeFormat('en-gb', { dateStyle: 'medium' }).format(
+									step.date
+								)}</Item.Title
 							>
-							<Dialog.Content>
-								<Dialog.Header>
-									<Dialog.Title>{step.title}</Dialog.Title>
-									<Dialog.Description>
-										{step.description}
-									</Dialog.Description>
-								</Dialog.Header>
-							</Dialog.Content>
-						</Dialog.Root>
-					</Item.Actions>
-				</Item.Root>
-			{/each}
-		</ul>
-	{:else}
-		<Muted
-			>No study plan generated yet. Prompt the chat to generate one or refresh with the button above</Muted
-		>
-	{/if}
-</svelte:boundary>
+							<Item.Description>{step.title}</Item.Description>
+						</Item.Content>
+						<Item.Actions>
+							<Dialog.Root>
+								<Dialog.Trigger class={buttonVariants({ variant: 'outline', size: 'sm' })}
+									><Maximize2 />Details</Dialog.Trigger
+								>
+								<Dialog.Content>
+									<Dialog.Header>
+										<Dialog.Title>{step.title}</Dialog.Title>
+										<Dialog.Description>
+											{step.description}
+										</Dialog.Description>
+									</Dialog.Header>
+								</Dialog.Content>
+							</Dialog.Root>
+						</Item.Actions>
+					</Item.Root>
+				{/each}
+			</ul>
+		{:else}
+			<Muted
+				>No study plan generated yet. Prompt the chat to generate one or refresh with the button
+				above</Muted
+			>
+		{/if}
+	</svelte:boundary>
+</div>
