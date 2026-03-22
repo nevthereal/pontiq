@@ -4,9 +4,9 @@ import { error } from '@sveltejs/kit';
 import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
 import { createGateway } from '@ai-sdk/gateway';
-import type { RequestHandler } from './$types.js';
+import type { RequestHandler } from './$types';
 import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
-import { autumn } from '$lib/server/autumn.js';
+import { autumn } from '$lib/server/autumn';
 
 const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
