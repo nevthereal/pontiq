@@ -11,7 +11,6 @@
 		MessageCircle,
 		NotebookPen,
 		CreditCard,
-		FileText,
 		Calendar as CalendarIcon
 	} from '@lucide/svelte';
 	import { deleteProject, getProjectDetails } from '$lib/remote/projects.remote';
@@ -19,7 +18,6 @@
 	import { resolve } from '$app/paths';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
-	import Loading from '$lib/components/typography/Loading.svelte';
 	import { Separator } from '$lib/components/ui/separator';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';

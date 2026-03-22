@@ -27,7 +27,7 @@
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/Message.svelte';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit } from '$lib/remote/billing.remote';
+	import { getChatLimit, subscribeToPro } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
 
@@ -85,6 +85,7 @@
 	);
 
 	let hideMessageItem = $state(false);
+	let loading = $state(false);
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-4">
@@ -170,7 +171,16 @@
 							<Button size="sm" variant="secondary" onclick={() => (hideMessageItem = true)}
 								>Dismiss</Button
 							>
-							<Button size="sm">Upgrade</Button>
+							<Button
+								size="sm"
+								onclick={async () => {
+									loading = true;
+									await subscribeToPro().then((url) => {
+										if (url) window.location.href = url;
+									});
+								}}
+								>{#if loading}<Spinner />{/if}Upgrade</Button
+							>
 						</Item.Actions>
 					</Item.Root>
 				</div>

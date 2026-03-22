@@ -7,12 +7,11 @@
 	import { getUser } from '$lib/remote/auth.remote';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Avatar from '$lib/components/ui/avatar';
-	import { Check, ChevronsUpDown, LogOut, MoonIcon, Receipt, SunIcon, User } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LogOut, MoonIcon, SunIcon } from '@lucide/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import { page } from '$app/state';
-	import { customerPortal } from '$lib/remote/billing.remote.js';
+	import { getCustomer } from '$lib/remote/billing.remote';
 
 	let { children, params } = $props();
 
@@ -91,12 +90,6 @@
 								<SunIcon />
 							{/if}
 							Change theme</DropdownMenu.Item
-						>
-						<DropdownMenu.Item
-							onclick={async () =>
-								await customerPortal().then((url) => {
-									window.location.href = url;
-								})}><Receipt /> Customer Portal</DropdownMenu.Item
 						>
 						<DropdownMenu.Item
 							variant="destructive"

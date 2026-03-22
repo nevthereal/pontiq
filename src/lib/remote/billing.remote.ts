@@ -2,13 +2,32 @@ import { command, getRequestEvent, query } from '$app/server';
 import { autumn } from '$lib/server/autumn';
 import { requireAuth } from './auth.remote';
 
-export const subscribe = command(async () => {
+export const subscribeToPro = command(async () => {
 	const user = await requireAuth();
 
-	await autumn.billing.attach({
+	const { url } = getRequestEvent();
+
+	const { paymentUrl } = await autumn.billing.attach({
 		customerId: user.id,
-		planId: 'pontiq_pro'
+		planId: 'pontiq_pro',
+		successUrl: url.href
 	});
+
+	return paymentUrl;
+});
+
+export const getCustomer = query(async () => {
+	const user = await requireAuth();
+	const cus = await autumn.customers.getOrCreate({
+		customerId: user.id,
+		name: user.name,
+		email: user.email,
+		expand: ['subscriptions.plan']
+	});
+
+	const isPro = cus.subscriptions.filter((s) => s.status === 'active')[0].planId === 'pontiq_pro';
+
+	return { ...cus, isPro };
 });
 
 export const customerPortal = command(async () => {
