@@ -5,7 +5,6 @@ import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'a
 import { VERCEL_AI_KEY } from '$env/static/private';
 import { createGateway } from '@ai-sdk/gateway';
 import type { RequestHandler } from './$types.js';
-import { getChatLimit, getProject } from '$lib/remote/projects.remote.js';
 import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
 import { autumn } from '$lib/server/autumn.js';
 
@@ -13,7 +12,7 @@ const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
 });
 
-export const POST: RequestHandler = async ({ request, locals, params }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) error(401, 'No user');
 
 	const { allowed } = await autumn.check({

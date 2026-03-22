@@ -86,7 +86,7 @@ export const getProjectDetails = query(z.string(), async (id) => {
 		...projectWithRelations,
 		fileCount: projectWithRelations.files.length,
 		studyStepCount: allStudySteps.length,
-		flashcardCount: flashcards.length,
+		flashcards,
 		upcomingSteps
 	};
 });

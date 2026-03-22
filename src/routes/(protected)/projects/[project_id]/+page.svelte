@@ -183,7 +183,11 @@
 				<CreditCard class="h-4 w-4" />
 				<span class="text-sm font-medium">Flashcards</span>
 			</div>
-			<span class="text-3xl font-bold">{projectDetails.flashcardCount}</span>
+			<span class="text-3xl font-bold"
+				>{projectDetails.flashcards.filter((f) => f.rating != 'Easy').length}<span
+					class="text-xs text-muted-foreground">/{projectDetails.flashcards.length}</span
+				></span
+			>
 			<Muted>for review</Muted>
 		</a>
 
