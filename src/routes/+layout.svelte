@@ -11,7 +11,7 @@
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import { getCustomer } from '$lib/remote/billing.remote';
+	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
 
 	let { children, params } = $props();
 
