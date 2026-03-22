@@ -115,11 +115,15 @@ export const createProject = form(
 			})
 			.returning();
 
-		await autumn.track({
-			customerId: user.id,
-			featureId: 'projects',
-			value: 1
-		});
+		try {
+			await autumn.track({
+				customerId: user.id,
+				featureId: 'projects',
+				value: 1
+			});
+		} catch (error) {
+			console.error('Failed to track project creation', error);
+		}
 		return redirect(302, `/projects/${id}`);
 	}
 );
@@ -163,11 +167,15 @@ export const deleteProject = command(z.string(), async (id) => {
 
 		await tx.delete(project).where(eq(project.id, qProject.id));
 	});
-	await autumn.track({
-		customerId: user.id,
-		featureId: 'projects',
-		value: -1 // Increases balance when removing a seat
-	});
+	try {
+		await autumn.track({
+			customerId: user.id,
+			featureId: 'projects',
+			value: -1 // Increases balance when removing a seat
+		});
+	} catch (error) {
+		console.error('Failed to track project deletion', error);
+	}
 });
 
 export const editProject = form(

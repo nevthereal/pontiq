@@ -117,11 +117,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 	});
 
-	await autumn.track({
-		customerId: locals.user.id,
-		featureId: 'messages',
-		value: 1
-	});
+	try {
+		await autumn.track({
+			customerId: locals.user.id,
+			featureId: 'messages',
+			value: 1
+		});
+	} catch (error) {
+		console.error('Failed to track chat message usage', error);
+	}
 
 	return result.toUIMessageStreamResponse();
 };
