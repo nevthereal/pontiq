@@ -25,7 +25,7 @@ export const getCustomer = query(async () => {
 		expand: ['subscriptions.plan']
 	});
 
-	const isPro = cus.subscriptions.filter((s) => s.status === 'active')[0].planId === 'pontiq_pro';
+	const isPro = cus.subscriptions.some((s) => s.status === 'active' && s.planId === 'pontiq_pro');
 
 	return { ...cus, isPro };
 });
