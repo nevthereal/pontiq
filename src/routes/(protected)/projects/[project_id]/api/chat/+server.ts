@@ -17,8 +17,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const { allowed } = await autumn.check({
 		customerId: locals.user.id,
-		featureId: 'messages',
-		sendEvent: true
+		featureId: 'messages'
 	});
 
 	if (!allowed) {
@@ -116,6 +115,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				...(config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
 			} satisfies OpenAILanguageModelResponsesOptions
 		}
+	});
+
+	await autumn.track({
+		customerId: locals.user.id,
+		featureId: 'messages',
+		value: 1
 	});
 
 	return result.toUIMessageStreamResponse();

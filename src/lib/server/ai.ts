@@ -106,11 +106,15 @@ const getExamDate = tool({
 	description: 'Retrieve the exam date of the current project',
 	inputSchema: z.object({}),
 	execute: async () => {
-		const { params } = getRequestEvent();
+		const { params, locals } = getRequestEvent();
+
+		if (!locals.user) return error(401, 'Not signed in');
 
 		if (!params.project_id) error(404, 'No project ID');
 
-		const qproject = await db.query.project.findFirst({ where: { id: params.project_id } });
+		const qproject = await db.query.project.findFirst({
+			where: { id: params.project_id, creatorId: locals.user.id }
+		});
 
 		if (!qproject) error(404, 'Project not found');
 
@@ -124,11 +128,15 @@ const setExamDate = tool({
 	description: 'Set the exam date of the current project',
 	inputSchema: z.object({ date: z.iso.date() }),
 	execute: async ({ date }) => {
-		const { params } = getRequestEvent();
+		const { params, locals } = getRequestEvent();
+
+		if (!locals.user) return error(401, 'Not signed in');
 
 		if (!params.project_id) error(404, 'No project ID');
 
-		const qproject = await db.query.project.findFirst({ where: { id: params.project_id } });
+		const qproject = await db.query.project.findFirst({
+			where: { id: params.project_id, creatorId: locals.user.id }
+		});
 
 		if (!qproject) error(404, 'Project not found');
 
