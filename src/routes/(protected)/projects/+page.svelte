@@ -6,13 +6,38 @@
 	import Muted from '$lib/components/typography/Muted.svelte';
 	import CreateDialog from '$lib/components/CreateDialog.svelte';
 	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
+	import { CircleFadingArrowUp } from '@lucide/svelte';
+	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
+
+	let loading = $state(false);
 </script>
 
 <section>
 	<div class="flex justify-between">
 		<SiteHeading>Projects</SiteHeading>
-
-		<CreateDialog />
+		<div class="flex gap-2">
+			<svelte:boundary>
+				{#snippet pending()}{/snippet}
+				{@const cus = await getCustomer()}
+				{#if !cus.isPro}
+					<Button
+						size="sm"
+						onclick={async () => {
+							loading = true;
+							await subscribeToPro().then((url) => {
+								if (url) window.location.href = url;
+							});
+						}}
+						>{#if !loading}<CircleFadingArrowUp />{:else}
+							<Spinner />
+						{/if}Upgrade to pro</Button
+					>
+				{/if}
+			</svelte:boundary>
+			<CreateDialog />
+		</div>
 	</div>
 	<svelte:boundary>
 		{#each await getSubjectsWithProjects() as sub (sub.id)}
