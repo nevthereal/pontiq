@@ -9,11 +9,12 @@
 	import {
 		createProject,
 		createSubject,
-		getProjectBalance,
+		getProjectLimit,
 		getSubjects
 	} from '$lib/remote/projects.remote';
+	import Loading from './typography/Loading.svelte';
 
-	const balance = $derived(await getProjectBalance());
+	const limitPromise = $derived(getProjectLimit());
 
 	let open = $state(false);
 
@@ -21,9 +22,7 @@
 </script>
 
 <Dialog.Root>
-	<Dialog.Trigger disabled={!balance.allowed} class={buttonVariants({ size: 'sm' })}
-		><Plus />Create project</Dialog.Trigger
-	>
+	<Dialog.Trigger class={buttonVariants({ size: 'sm' })}><Plus />Create project</Dialog.Trigger>
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Create a project</Dialog.Title>
@@ -90,9 +89,17 @@
 					</Field.Field>
 				</Field.Set>
 				<Field.Field orientation="horizontal">
-					<Button type="submit" class="mt-2"
-						>Create Project ({balance.balance?.granted} remaining)</Button
-					>
+					<svelte:boundary>
+						{#snippet pending()}
+							<Loading thing="limits" />
+						{/snippet}
+						{@const limit = await limitPromise}
+						<Button disabled={!limit.allowed} type="submit" class="mt-2"
+							>Create Project {#if !limit.balance?.unlimited}<span
+									>({limit.balance?.remaining}/{limit.balance?.granted} remaining)</span
+								>{/if}</Button
+						>
+					</svelte:boundary>
 				</Field.Field>
 			</Field.Group>
 		</form>

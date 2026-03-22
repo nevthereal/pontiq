@@ -91,31 +91,30 @@ export const getProjectDetails = query(z.string(), async (id) => {
 	};
 });
 
-export const getProjectBalance = query(async () => {
+export const getProjectLimit = query(async () => {
 	const user = await requireAuth();
 
-	const balance = await autumn.check({
+	const limit = await autumn.check({
 		customerId: user.id,
 		featureId: 'projects'
 	});
 
-	return balance;
+	return limit;
 });
 
 export const createProject = form(
 	z.object({ name: z.string().min(5), subjectId: z.uuid() }),
-	async ({ name, subjectId }, issue) => {
+	async ({ name, subjectId }) => {
 		const user = await requireAuth();
 
 		const { allowed } = await autumn.check({
 			customerId: user.id,
 			featureId: 'projects',
-			requiredBalance: 1,
-			sendEvent: true
+			requiredBalance: 1
 		});
 
 		if (!allowed) {
-			invalid(issue(`You can only create 1 project per plan`));
+			return error(401, 'No more projects are allowed');
 		}
 
 		const [{ id }] = await db
@@ -126,6 +125,12 @@ export const createProject = form(
 				creatorId: user.id
 			})
 			.returning();
+
+		await autumn.track({
+			customerId: user.id,
+			featureId: 'projects',
+			value: 1
+		});
 		return redirect(302, `/projects/${id}`);
 	}
 );
