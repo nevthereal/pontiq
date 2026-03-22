@@ -73,6 +73,7 @@
 		"marked": "^17.0.4",
 		"marked-katex-extension": "^5.1.7",
 		"mode-watcher": "^1.1.0",
+		"pg": "^8.20.0",
 		"runed": "^0.37.1",
 		"uploadthing": "^7.7.4",
 		"zod": "^4.3.6"
