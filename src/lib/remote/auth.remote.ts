@@ -6,18 +6,7 @@ export const getUser = query(async () => {
 	const { locals } = getRequestEvent();
 	const { user } = locals;
 
-	if (user) {
-		const customer = await autumn.customers.getOrCreate({
-			customerId: user.id,
-			name: user.name,
-			email: user.email,
-			expand: ['subscriptions.plan', 'balances.feature']
-		});
-
-		return { ...user, customer };
-	}
-
-	return null;
+	return user;
 });
 
 export const requireAuth = query(() => {
