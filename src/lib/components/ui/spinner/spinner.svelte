@@ -1,24 +1,32 @@
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
+	import type { IconProps } from '@lucide/svelte';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
-	import type { SVGAttributes } from 'svelte/elements';
+
+	type SpinnerProps = Omit<IconProps, 'name' | 'color'> & {
+		class?: string | null;
+		color?: string | null;
+		stroke?: string | null;
+		role?: string | null;
+		'aria-label'?: string | null;
+	};
 
 	let {
 		class: className,
-		role = 'status',
+		role,
 		// we add color and stroke for compatibility with different icon libraries props
 		color,
 		stroke,
-		'aria-label': ariaLabel = 'Loading',
+		'aria-label': ariaLabel,
 		...restProps
-	}: SVGAttributes<SVGSVGElement> = $props();
+	}: SpinnerProps = $props();
 </script>
 
 <Loader2Icon
-	{role}
-	color={color === null ? undefined : color}
-	stroke={stroke === null ? undefined : stroke}
-	aria-label={ariaLabel}
+	role={role ?? 'status'}
+	color={color ?? undefined}
+	stroke={stroke ?? undefined}
+	aria-label={ariaLabel ?? 'Loading'}
 	class={cn('size-4 animate-spin', className)}
-	{...restProps}
+	{...(restProps as Omit<IconProps, 'name'>)}
 />

@@ -162,12 +162,11 @@ export const deleteProject = command(z.string(), async (id) => {
 		if (!qProject) return error(401, 'Not your project');
 
 		await tx.delete(project).where(eq(project.id, qProject.id));
-
-		await autumn.track({
-			customerId: user.id,
-			featureId: 'projects',
-			value: -1 // Increases balance when removing a seat
-		});
+	});
+	await autumn.track({
+		customerId: user.id,
+		featureId: 'projects',
+		value: -1 // Increases balance when removing a seat
 	});
 });
 

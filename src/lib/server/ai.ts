@@ -19,7 +19,23 @@ const zStudyStep = z.object({
 	type: z.enum(studyStepTypes)
 });
 
-const webSearchTool = webSearch({
+async function requireOwnedProjectId() {
+	const { params, locals } = getRequestEvent();
+
+	if (!locals.user) error(401, 'Not signed in');
+	if (!params.project_id) error(404, 'No project ID');
+
+	const ownedProject = await db.query.project.findFirst({
+		columns: { id: true },
+		where: { id: params.project_id, creatorId: locals.user.id }
+	});
+
+	if (!ownedProject) error(404, 'Project not found');
+
+	return ownedProject.id;
+}
+
+const rawWebSearchTool = webSearch({
 	type: 'auto', // intelligent hybrid search
 	numResults: 3, // return up to 6 results
 	contents: {
@@ -30,20 +46,36 @@ const webSearchTool = webSearch({
 	apiKey: EXA_API_KEY
 });
 
+const webSearchTool = tool({
+	description: rawWebSearchTool.description,
+	inputSchema: z.object({
+		query: z
+			.string()
+			.min(1)
+			.max(500)
+			.describe("The web search query - be specific and clear about what you're looking for")
+	}),
+	execute: async ({ query }, options) => {
+		await requireOwnedProjectId();
+		if (!rawWebSearchTool.execute) {
+			throw new Error('Web search tool is not executable');
+		}
+		return await rawWebSearchTool.execute({ query }, options);
+	}
+});
+
 const studyPlanTool = tool({
 	description:
 		'Creates a study plan for the user at a given date using the context of given files.',
 	inputSchema: zStudyStep,
 	execute: async (args) => {
-		const { params } = getRequestEvent();
-
-		if (!params.project_id) error(404, 'No project ID');
+		const projectId = await requireOwnedProjectId();
 		return await db
 			.insert(studyPlanStep)
 			.values({
 				title: args.title,
 				date: new Date(args.date),
-				projectId: params.project_id,
+				projectId,
 				type: args.type,
 				description: args.description
 			})
@@ -59,15 +91,13 @@ const flashCardTool = tool({
 	}),
 
 	execute: async (args) => {
-		const { params } = getRequestEvent();
-
-		if (!params.project_id) error(404, 'No project ID');
+		const projectId = await requireOwnedProjectId();
 
 		const { definition, term } = args;
 		await db.insert(flashcard).values({
 			term,
 			definition,
-			projectId: params.project_id
+			projectId
 		});
 	}
 });
@@ -77,11 +107,8 @@ const getFlashcardsTool = tool({
 	inputSchema: z.object({}),
 
 	execute: async () => {
-		const { params } = getRequestEvent();
-
-		if (!params.project_id) error(404, 'No project ID');
-
-		return await db.select().from(flashcard).where(eq(flashcard.projectId, params.project_id));
+		const projectId = await requireOwnedProjectId();
+		return await db.select().from(flashcard).where(eq(flashcard.projectId, projectId));
 	}
 });
 
@@ -90,14 +117,12 @@ const getStudyPlanTool = tool({
 	inputSchema: z.object({}),
 
 	execute: async () => {
-		const { params } = getRequestEvent();
-
-		if (!params.project_id) error(404, 'No project ID');
+		const projectId = await requireOwnedProjectId();
 
 		return await db
 			.select()
 			.from(studyPlanStep)
-			.where(eq(studyPlanStep.projectId, params.project_id))
+			.where(eq(studyPlanStep.projectId, projectId))
 			.orderBy(asc(studyPlanStep.date));
 	}
 });
@@ -106,18 +131,10 @@ const getExamDate = tool({
 	description: 'Retrieve the exam date of the current project',
 	inputSchema: z.object({}),
 	execute: async () => {
-		const { params, locals } = getRequestEvent();
+		const projectId = await requireOwnedProjectId();
 
-		if (!locals.user) return error(401, 'Not signed in');
-
-		if (!params.project_id) error(404, 'No project ID');
-
-		const qproject = await db.query.project.findFirst({
-			where: { id: params.project_id, creatorId: locals.user.id }
-		});
-
+		const qproject = await db.query.project.findFirst({ where: { id: projectId } });
 		if (!qproject) error(404, 'Project not found');
-
 		if (!qproject.examDate) return 'Project does not have an exam date yet';
 
 		return qproject.examDate;
@@ -128,22 +145,12 @@ const setExamDate = tool({
 	description: 'Set the exam date of the current project',
 	inputSchema: z.object({ date: z.iso.date() }),
 	execute: async ({ date }) => {
-		const { params, locals } = getRequestEvent();
-
-		if (!locals.user) return error(401, 'Not signed in');
-
-		if (!params.project_id) error(404, 'No project ID');
-
-		const qproject = await db.query.project.findFirst({
-			where: { id: params.project_id, creatorId: locals.user.id }
-		});
-
-		if (!qproject) error(404, 'Project not found');
+		const projectId = await requireOwnedProjectId();
 
 		await db
 			.update(project)
 			.set({ examDate: new Date(date) })
-			.where(eq(project.id, qproject.id));
+			.where(eq(project.id, projectId));
 	}
 });
 
