@@ -95,7 +95,7 @@
 						<DropdownMenu.Item
 							onclick={async () =>
 								await customerPortal().then((url) => {
-									window.location = url;
+									window.location.href = url;
 								})}><Receipt /> Customer Portal</DropdownMenu.Item
 						>
 						<DropdownMenu.Item

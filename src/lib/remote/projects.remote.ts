@@ -1,7 +1,7 @@
 import { command, form, query } from '$app/server';
 import { z } from 'zod';
 import { db } from '$lib/server/db';
-import { error, invalid, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
 import { project, subject } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -89,17 +89,6 @@ export const getProjectDetails = query(z.string(), async (id) => {
 		flashcardCount: flashcards.length,
 		upcomingSteps
 	};
-});
-
-export const getProjectLimit = query(async () => {
-	const user = await requireAuth();
-
-	const limit = await autumn.check({
-		customerId: user.id,
-		featureId: 'projects'
-	});
-
-	return limit;
 });
 
 export const createProject = form(

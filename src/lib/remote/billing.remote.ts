@@ -1,4 +1,4 @@
-import { command, getRequestEvent } from '$app/server';
+import { command, getRequestEvent, query } from '$app/server';
 import { autumn } from '$lib/server/autumn';
 import { requireAuth } from './auth.remote';
 
@@ -22,4 +22,26 @@ export const customerPortal = command(async () => {
 	});
 
 	return url;
+});
+
+export const getChatLimit = query(async () => {
+	const user = await requireAuth();
+
+	const limit = await autumn.check({
+		customerId: user.id,
+		featureId: 'messages'
+	});
+
+	return limit;
+});
+
+export const getProjectLimit = query(async () => {
+	const user = await requireAuth();
+
+	const limit = await autumn.check({
+		customerId: user.id,
+		featureId: 'projects'
+	});
+
+	return limit;
 });

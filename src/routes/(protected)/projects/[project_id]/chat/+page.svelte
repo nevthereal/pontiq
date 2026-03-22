@@ -26,8 +26,12 @@
 	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/Message.svelte';
+	import { fade } from 'svelte/transition';
+	import { getChatLimit } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
+
+	const limitQuery = getChatLimit();
 
 	// Create a single persistent Chat instance with the consistent ID
 	const chat = $derived(
@@ -36,14 +40,16 @@
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
 				})
-			})
+			}),
+			onFinish: async () => {
+				await getChatLimit().refresh();
+			}
 		})
 	);
 
 	let input = $state('');
 
-	async function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
+	async function handleSubmit() {
 		if (chat.status !== 'ready') return;
 		if (!input.trim() && attachments.files.length === 0) return;
 
@@ -77,6 +83,8 @@
 			if (s === 'ready') scroll.scrollToBottom();
 		}
 	);
+
+	let hideMessageItem = $state(false);
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-4">
@@ -137,7 +145,37 @@
 
 {#snippet chatInput()}
 	<div class="mt-4 shrink-0 pb-2">
-		<form onsubmit={handleSubmit} class="absolute bottom-0 w-full backdrop-blur-sm">
+		<form
+			onsubmit={async (e) => {
+				e.preventDefault();
+				if (limitQuery.current && limitQuery.current.allowed) handleSubmit();
+			}}
+			class="absolute bottom-0 w-full backdrop-blur-sm"
+		>
+			{#if !hideMessageItem && limitQuery.current && !limitQuery.current.balance?.unlimited}
+				<div transition:fade={{ duration: 100 }} class="fixed w-full max-w-md -translate-y-full">
+					<Item.Root variant="outline" size="xs" class="mb-2 bg-background">
+						<Item.Content>
+							<Item.Title>Message limits</Item.Title>
+							<Item.Description>
+								{@const { balance } = limitQuery.current}
+								{#if balance}
+									{balance.remaining} remaining. {#if balance.nextResetAt}
+										Resets on {Intl.DateTimeFormat().format(balance.nextResetAt)}
+									{/if}
+								{/if}
+							</Item.Description>
+						</Item.Content>
+						<Item.Actions>
+							<Button size="sm" variant="secondary" onclick={() => (hideMessageItem = true)}
+								>Dismiss</Button
+							>
+							<Button size="sm">Upgrade</Button>
+						</Item.Actions>
+					</Item.Root>
+				</div>
+			{/if}
+
 			<InputGroup.Root class="rounded-xl">
 				<InputGroup.Input
 					bind:value={input}
@@ -215,19 +253,21 @@
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
-					<InputGroup.Button
-						variant="default"
-						class="ml-auto rounded-full"
-						size="icon-xs"
-						disabled={chat.status !== 'ready'}
-					>
-						{#if chat.status === 'ready'}
-							<ArrowUpIcon />
-							<span class="sr-only">Send</span>
-						{:else}
-							<Spinner />
-						{/if}
-					</InputGroup.Button>
+					{#if limitQuery.current}
+						<InputGroup.Button
+							variant="default"
+							class="ml-auto rounded-full"
+							size="icon-xs"
+							disabled={chat.status !== 'ready' || !limitQuery.current.allowed}
+						>
+							{#if chat.status === 'ready'}
+								<ArrowUpIcon />
+								<span class="sr-only">Send</span>
+							{:else}
+								<Spinner />
+							{/if}
+						</InputGroup.Button>
+					{/if}
 				</InputGroup.Addon>
 			</InputGroup.Root>
 		</form>

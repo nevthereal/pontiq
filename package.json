@@ -58,7 +58,7 @@
 		"@ai-sdk/gateway": "^3.0.66",
 		"@ai-sdk/openai": "^3.0.41",
 		"@ai-sdk/svelte": "^4.0.116",
-		"@exalabs/ai-sdk": "^2.0.0",
+		"@exalabs/ai-sdk": "^2.0.1",
 		"@uploadthing/svelte": "^7.3.3",
 		"@upstash/realtime": "^1.0.0",
 		"ai": "^6.0.116",

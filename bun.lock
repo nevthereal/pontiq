@@ -8,7 +8,7 @@
         "@ai-sdk/gateway": "^3.0.66",
         "@ai-sdk/openai": "^3.0.41",
         "@ai-sdk/svelte": "^4.0.116",
-        "@exalabs/ai-sdk": "^2.0.0",
+        "@exalabs/ai-sdk": "^2.0.1",
         "@uploadthing/svelte": "^7.3.3",
         "@upstash/realtime": "^1.0.0",
         "ai": "^6.0.116",
@@ -232,7 +232,7 @@
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.4.1", "", { "dependencies": { "@eslint/core": "^0.17.0", "levn": "^0.4.1" } }, "sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA=="],
 
-    "@exalabs/ai-sdk": ["@exalabs/ai-sdk@2.0.0", "", { "dependencies": { "zod": "^3.22.0" }, "peerDependencies": { "ai": "^6.0.0" } }, "sha512-883EwfpesP37OBp23AQgFMsFYqDAWMeo0i2Kh+Oaz4q9gTj++XCh+K6pJgGC3yMgf6oz116+6MXkerziIut1kg=="],
+    "@exalabs/ai-sdk": ["@exalabs/ai-sdk@2.0.1", "", { "dependencies": { "zod": "^3.22.0" }, "peerDependencies": { "ai": "^6.0.0" } }, "sha512-qrZGJbrrk3MwEFYhhzzJgQarWnica3dBkt86Ex8S8vak2rYNC2EI1hSwVEBmQQeNtLd8tx1J8xSKwQ/5mya6cA=="],
 
     "@exodus/bytes": ["@exodus/bytes@1.15.0", "", { "peerDependencies": { "@noble/hashes": "^1.8.0 || ^2.0.0" }, "optionalPeers": ["@noble/hashes"] }, "sha512-UY0nlA+feH81UGSHv92sLEPLCeZFjXOuHhrIo0HQydScuQc8s0A7kL/UdgwgDq8g8ilksmuoF35YVTNphV2aBQ=="],
 
