@@ -1,17 +1,18 @@
 <script lang="ts" module>
 	import { tv, type VariantProps } from "tailwind-variants";
 
-	const itemVariants = tv({
-		base: "group/item [a]:hover:bg-accent/50 [a]:transition-colors focus-visible:border-ring focus-visible:ring-ring/50 flex flex-wrap items-center rounded-md border border-transparent text-sm outline-none transition-colors duration-100 focus-visible:ring-[3px]",
+	export const itemVariants = tv({
+		base: "[a]:hover:bg-muted rounded-lg border text-sm group/item focus-visible:border-ring focus-visible:ring-ring/50 flex w-full flex-wrap items-center transition-colors duration-100 outline-none focus-visible:ring-[3px] [a]:transition-colors",
 		variants: {
 			variant: {
-				default: "bg-transparent",
+				default: "border-transparent",
 				outline: "border-border",
-				muted: "bg-muted/50",
+				muted: "bg-muted/50 border-transparent",
 			},
 			size: {
-				default: "gap-4 p-4",
-				sm: "gap-2.5 px-4 py-3",
+				default: "gap-2.5 px-3 py-2.5",
+				sm: "gap-2.5 px-3 py-2.5",
+				xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
 			},
 		},
 		defaultVariants: {
@@ -25,26 +26,25 @@
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils.js";
+	import { cn, type WithElementRef } from "$lib/utils.js";
 	import type { HTMLAttributes } from "svelte/elements";
 	import type { Snippet } from "svelte";
 
 	let {
+		ref = $bindable(null),
 		class: className,
 		child,
 		variant,
 		size,
 		...restProps
-	}: HTMLAttributes<HTMLDivElement> & {
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
 		child?: Snippet<[{ props: Record<string, unknown> }]>;
 		variant?: ItemVariant;
 		size?: ItemSize;
 	} = $props();
 
-	const classes = $derived(cn(itemVariants({ variant, size }), className));
-
 	const mergedProps = $derived({
-		class: classes,
+		class: cn(itemVariants({ variant, size }), className),
 		"data-slot": "item",
 		"data-variant": variant,
 		"data-size": size,
@@ -55,7 +55,7 @@
 {#if child}
 	{@render child({ props: mergedProps })}
 {:else}
-	<div {...mergedProps}>
+	<div bind:this={ref} {...mergedProps}>
 		{@render mergedProps.children?.()}
 	</div>
 {/if}

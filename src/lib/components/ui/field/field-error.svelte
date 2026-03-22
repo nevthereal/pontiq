@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { cn } from "$lib/utils.js";
+	import { cn, type WithElementRef } from "$lib/utils.js";
 	import type { HTMLAttributes } from "svelte/elements";
 	import type { Snippet } from "svelte";
 
 	let {
+		ref = $bindable(null),
 		class: className,
 		children,
 		errors,
 		...restProps
-	}: HTMLAttributes<HTMLDivElement> & {
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
 		children?: Snippet;
 		errors?: { message?: string }[];
 	} = $props();
@@ -18,7 +19,7 @@
 		if (children) return true;
 
 		// no errors
-		if (!errors) return false;
+		if (!errors || errors.length === 0) return false;
 
 		// has an error but no message
 		if (errors.length === 1 && !errors[0]?.message) {
@@ -34,6 +35,7 @@
 
 {#if hasContent}
 	<div
+		bind:this={ref}
 		role="alert"
 		data-slot="field-error"
 		class={cn("text-destructive text-sm font-normal", className)}

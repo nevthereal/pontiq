@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { user } from './auth.sql';
 
 export const project = pgTable(
@@ -13,7 +13,7 @@ export const project = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
 		pinned: boolean().notNull().default(false),
-		examDate: timestamp(),
+		examDate: date({ mode: 'date' }),
 		createdAt: timestamp().defaultNow()
 	},
 	(t) => [index('prj_sub_idx').on(t.subjectId), index('prj_creator_idx').on(t.creatorId)]
@@ -28,7 +28,6 @@ export const subject = pgTable(
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
 		active: boolean().default(true).notNull(),
-		pinned: boolean().notNull().default(false),
 		createdAt: timestamp().defaultNow()
 	},
 	(t) => [index('sub_creator_idx').on(t.creatorId)]

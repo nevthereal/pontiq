@@ -7,6 +7,10 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { createProject, createSubject, getSubjects } from '$lib/remote/projects.remote';
+	import Loading from './typography/Loading.svelte';
+	import { getProjectLimit } from '$lib/remote/billing.remote';
+
+	const limitPromise = $derived(getProjectLimit());
 
 	let open = $state(false);
 
@@ -31,7 +35,7 @@
 							{/each}
 						{/if}
 					</Field.Field>
-					<Field.Field class="mt-4">
+					<Field.Field>
 						<Field.Label for="subjectId" class="mb-1">Subject/Class</Field.Label>
 
 						<Select.Root type="single" bind:value name="subjectId">
@@ -81,7 +85,17 @@
 					</Field.Field>
 				</Field.Set>
 				<Field.Field orientation="horizontal">
-					<Button type="submit" class="mt-2">Create Project</Button>
+					<svelte:boundary>
+						{#snippet pending()}
+							<Loading thing="limits" />
+						{/snippet}
+						{@const limit = await limitPromise}
+						<Button disabled={!limit.allowed} type="submit" class="mt-2"
+							>Create Project {#if !limit.balance?.unlimited}<span
+									>({limit.balance?.remaining}/{limit.balance?.granted} remaining)</span
+								>{/if}</Button
+						>
+					</svelte:boundary>
 				</Field.Field>
 			</Field.Group>
 		</form>

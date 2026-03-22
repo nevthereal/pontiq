@@ -5,6 +5,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
 import { project, subject } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { autumn } from '$lib/server/autumn';
 
 export const getSubjectsWithProjects = query(async () => {
 	const user = await requireAuth();
@@ -85,7 +86,7 @@ export const getProjectDetails = query(z.string(), async (id) => {
 		...projectWithRelations,
 		fileCount: projectWithRelations.files.length,
 		studyStepCount: allStudySteps.length,
-		flashcardCount: flashcards.length,
+		flashcards,
 		upcomingSteps
 	};
 });
@@ -95,6 +96,16 @@ export const createProject = form(
 	async ({ name, subjectId }) => {
 		const user = await requireAuth();
 
+		const { allowed } = await autumn.check({
+			customerId: user.id,
+			featureId: 'projects',
+			requiredBalance: 1
+		});
+
+		if (!allowed) {
+			return error(401, 'No more projects are allowed');
+		}
+
 		const [{ id }] = await db
 			.insert(project)
 			.values({
@@ -103,6 +114,16 @@ export const createProject = form(
 				creatorId: user.id
 			})
 			.returning();
+
+		try {
+			await autumn.track({
+				customerId: user.id,
+				featureId: 'projects',
+				value: 1
+			});
+		} catch (error) {
+			console.error('Failed to track project creation', error);
+		}
 		return redirect(302, `/projects/${id}`);
 	}
 );
@@ -146,6 +167,15 @@ export const deleteProject = command(z.string(), async (id) => {
 
 		await tx.delete(project).where(eq(project.id, qProject.id));
 	});
+	try {
+		await autumn.track({
+			customerId: user.id,
+			featureId: 'projects',
+			value: -1 // Increases balance when removing a seat
+		});
+	} catch (error) {
+		console.error('Failed to track project deletion', error);
+	}
 });
 
 export const editProject = form(
@@ -174,7 +204,8 @@ export const setProjectExamDate = form(
 	}),
 	async ({ id, examDate }) => {
 		const user = await requireAuth();
-		const nextExamDate = examDate && examDate.trim().length > 0 ? new Date(`${examDate}T00:00:00`) : null;
+		const nextExamDate =
+			examDate && examDate.trim().length > 0 ? new Date(`${examDate}T00:00:00`) : null;
 
 		await db.transaction(async (tx) => {
 			const qProject = await tx.query.project.findFirst({

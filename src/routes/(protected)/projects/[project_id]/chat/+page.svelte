@@ -6,6 +6,7 @@
 		ChevronDown,
 		Globe,
 		GraduationCap,
+		Paperclip,
 		Plus,
 		Trash2
 	} from '@lucide/svelte';
@@ -25,8 +26,12 @@
 	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/Message.svelte';
+	import { fade } from 'svelte/transition';
+	import { getChatLimit } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
+
+	const limitQuery = getChatLimit();
 
 	// Create a single persistent Chat instance with the consistent ID
 	const chat = $derived(
@@ -35,14 +40,16 @@
 				api: resolve('/(protected)/projects/[project_id]/api/chat', {
 					project_id: params.project_id
 				})
-			})
+			}),
+			onFinish: async () => {
+				await getChatLimit().refresh();
+			}
 		})
 	);
 
 	let input = $state('');
 
-	async function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
+	async function handleSubmit() {
 		if (chat.status !== 'ready') return;
 		if (!input.trim() && attachments.files.length === 0) return;
 
@@ -76,6 +83,8 @@
 			if (s === 'ready') scroll.scrollToBottom();
 		}
 	);
+
+	let hideMessageItem = $state(false);
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-4">
@@ -136,7 +145,37 @@
 
 {#snippet chatInput()}
 	<div class="mt-4 shrink-0 pb-2">
-		<form onsubmit={handleSubmit} class="absolute bottom-0 w-full backdrop-blur-sm">
+		<form
+			onsubmit={async (e) => {
+				e.preventDefault();
+				if (limitQuery.current && limitQuery.current.allowed) handleSubmit();
+			}}
+			class="absolute bottom-0 w-full backdrop-blur-sm"
+		>
+			{#if !hideMessageItem && limitQuery.current && !limitQuery.current.balance?.unlimited}
+				<div transition:fade={{ duration: 100 }} class="fixed w-full max-w-md -translate-y-full">
+					<Item.Root variant="outline" size="xs" class="mb-2 bg-background">
+						<Item.Content>
+							<Item.Title>Message limits</Item.Title>
+							<Item.Description>
+								{@const { balance } = limitQuery.current}
+								{#if balance}
+									{balance.remaining} remaining. {#if balance.nextResetAt}
+										Resets on {Intl.DateTimeFormat().format(balance.nextResetAt)}
+									{/if}
+								{/if}
+							</Item.Description>
+						</Item.Content>
+						<Item.Actions>
+							<Button size="sm" variant="secondary" onclick={() => (hideMessageItem = true)}
+								>Dismiss</Button
+							>
+							<Button size="sm">Upgrade</Button>
+						</Item.Actions>
+					</Item.Root>
+				</div>
+			{/if}
+
 			<InputGroup.Root class="rounded-xl">
 				<InputGroup.Input
 					bind:value={input}
@@ -148,9 +187,7 @@
 				<InputGroup.Addon align="block-start" class="overflow-scroll">
 					{#each attachments.files as att (att.id)}
 						<ButtonGroup.Root class="w-48">
-							<ButtonGroup.Text
-								class="no-scrollbar min-w-0 overflow-x-auto font-mono whitespace-nowrap"
-							>
+							<ButtonGroup.Text class="no-scrollbar min-w-0 truncate overflow-x-auto font-mono">
 								{att.name}
 							</ButtonGroup.Text>
 							<InputGroup.Button
@@ -165,25 +202,39 @@
 				</InputGroup.Addon>
 
 				<InputGroup.Addon align="block-end">
-					<Toggle bind:pressed={chatConfig.current.studyModeEnabled} variant="outline" size="sm"
-						><GraduationCap />Study mode</Toggle
+					<Toggle
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
+						bind:pressed={chatConfig.current.studyModeEnabled}><GraduationCap />Study mode</Toggle
 					>
-					<Toggle bind:pressed={chatConfig.current.enhancedReasoning} variant="outline" size="sm"
+					<Toggle
+						bind:pressed={chatConfig.current.enhancedReasoning}
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
 						><Brain />Reasoning</Toggle
 					>
-					<Toggle bind:pressed={chatConfig.current.webSearch} variant="outline" size="sm"
-						><Globe />Web Search</Toggle
+					<Toggle
+						aria-label="Toggle bookmark"
+						size="sm"
+						variant="outline"
+						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
+						bind:pressed={chatConfig.current.webSearch}><Globe />Web Search</Toggle
 					>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
-							><Plus /></DropdownMenu.Trigger
+							><Paperclip /></DropdownMenu.Trigger
 						>
-						<DropdownMenu.Content>
+						<DropdownMenu.Content class="w-80">
 							<DropdownMenu.Group>
 								<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
 								<DropdownMenu.Separator />
 								{#each await getFiles(params.project_id) as file (file.id)}
 									<DropdownMenu.CheckboxItem
+										class="truncate"
 										closeOnSelect={false}
 										bind:checked={
 											() => attachments.isInChat(file),
@@ -202,20 +253,21 @@
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
-					<InputGroup.Button
-						variant="default"
-						class="ml-auto rounded-full"
-						size="icon-xs"
-						disabled={!(input || (attachments.files && attachments.files.length > 0)) ||
-							chat.status !== 'ready'}
-					>
-						{#if chat.status === 'ready'}
-							<ArrowUpIcon />
-							<span class="sr-only">Send</span>
-						{:else}
-							<Spinner />
-						{/if}
-					</InputGroup.Button>
+					{#if limitQuery.current}
+						<InputGroup.Button
+							variant="default"
+							class="ml-auto rounded-full"
+							size="icon-xs"
+							disabled={chat.status !== 'ready' || !limitQuery.current.allowed}
+						>
+							{#if chat.status === 'ready'}
+								<ArrowUpIcon />
+								<span class="sr-only">Send</span>
+							{:else}
+								<Spinner />
+							{/if}
+						</InputGroup.Button>
+					{/if}
 				</InputGroup.Addon>
 			</InputGroup.Root>
 		</form>

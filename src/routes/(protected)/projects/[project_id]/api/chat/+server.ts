@@ -4,25 +4,31 @@ import { error } from '@sveltejs/kit';
 import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
 import { VERCEL_AI_KEY } from '$env/static/private';
 import { createGateway } from '@ai-sdk/gateway';
-import type { RequestHandler } from './$types.js';
-import { getProject } from '$lib/remote/projects.remote.js';
+import type { RequestHandler } from './$types';
 import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import { autumn } from '$lib/server/autumn';
 
 const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
 });
 
-export const POST: RequestHandler = async ({ request, locals, params }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) error(401, 'No user');
 
-	const { examDate } = await getProject(params.project_id);
+	const { allowed } = await autumn.check({
+		customerId: locals.user.id,
+		featureId: 'messages'
+	});
+
+	if (!allowed) {
+		return error(401, 'No messages left');
+	}
 
 	const DEFAULT_SYS_PROMPT =
 		`You are a friendly study chatbot assistant in a study app called Pontiq` +
 		`You should be answering the questions from the provided files, if given, else answer from your knowledge or search the web.` +
 		`Please answer in the language you were prompted or the language of given files.` +
 		`The user's name is ${locals.user.name} and right now is ${new Date()}.` +
-		(examDate ? `The exam takes place on ${examDate}.` : '') +
 		`Don't explain too heavily what you did in tool calls, since the user can see this in the UI`;
 
 	const STUDY_MODE_PROMPT =
@@ -110,6 +116,16 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 			} satisfies OpenAILanguageModelResponsesOptions
 		}
 	});
+
+	try {
+		await autumn.track({
+			customerId: locals.user.id,
+			featureId: 'messages',
+			value: 1
+		});
+	} catch (error) {
+		console.error('Failed to track chat message usage', error);
+	}
 
 	return result.toUIMessageStreamResponse();
 };
