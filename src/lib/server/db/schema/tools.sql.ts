@@ -53,10 +53,13 @@ export const flashcardReviewState = pgTable(
 		userId: text()
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
-		reviewedFlashcardIds: text().array().notNull().default(sql`'{}'::text[]`),
+		reviewedFlashcardIds: text()
+			.array()
+			.notNull()
+			.default(sql`'{}'::text[]`),
 		updatedAt: timestamp()
 			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.$onUpdate(() => new Date())
 			.notNull()
 	},
 	(t) => [

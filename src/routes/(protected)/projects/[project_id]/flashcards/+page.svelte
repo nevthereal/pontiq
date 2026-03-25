@@ -17,15 +17,7 @@
 	} from '$lib/remote/tools.remote';
 	import { cn } from '$lib/utils';
 	import { ratings } from '$lib/things';
-	import {
-		CreditCard,
-		Frown,
-		Laugh,
-		ListFilter,
-		Meh,
-		RefreshCcw,
-		Smile
-	} from '@lucide/svelte';
+	import { CreditCard, Frown, Laugh, ListFilter, Meh, RefreshCcw, Smile } from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 	import { watch } from 'runed';
@@ -150,7 +142,7 @@
 	<div class="mx-auto my-4 max-w-lg">
 		{#if flashcards != null && currentFlashcard}
 			<p class="my-2 text-center font-bold text-muted-foreground">
-				{reviewedCount + 1} / {filteredFlashcards.length}
+				Card {reviewedCount + 1} of {filteredFlashcards.length}
 			</p>
 			<Flashcard flashcard={currentFlashcard} bind:flipped />
 

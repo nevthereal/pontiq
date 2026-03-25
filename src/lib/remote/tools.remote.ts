@@ -123,30 +123,29 @@ export const markFlashcardReviewed = command(
 
 			if (!flashcardRow) throw error(404, 'Flashcard not found');
 
-			const existingState = await tx.query.flashcardReviewState.findFirst({
-				where: {
-					projectId,
-					userId: user.id
-				}
-			});
-
-			if (!existingState) {
-				await tx.insert(flashcardReviewState).values({
+			await tx
+				.insert(flashcardReviewState)
+				.values({
 					projectId,
 					userId: user.id,
 					reviewedFlashcardIds: [flashcardId]
+				})
+				.onConflictDoNothing({
+					target: [flashcardReviewState.userId, flashcardReviewState.projectId]
 				});
-				return;
-			}
-
-			if (existingState.reviewedFlashcardIds.includes(flashcardId)) return;
 
 			await tx
 				.update(flashcardReviewState)
 				.set({
-					reviewedFlashcardIds: [...existingState.reviewedFlashcardIds, flashcardId]
+					reviewedFlashcardIds: sql`array_append(${flashcardReviewState.reviewedFlashcardIds}, ${flashcardId})`
 				})
-				.where(eq(flashcardReviewState.id, existingState.id));
+				.where(
+					and(
+						eq(flashcardReviewState.projectId, projectId),
+						eq(flashcardReviewState.userId, user.id),
+						sql`not (${flashcardId} = any(${flashcardReviewState.reviewedFlashcardIds}))`
+					)
+				);
 		});
 	}
 );
@@ -158,9 +157,6 @@ export const resetFlashcardReviewState = command(z.string(), async (projectId) =
 	await db
 		.delete(flashcardReviewState)
 		.where(
-			and(
-				eq(flashcardReviewState.projectId, projectId),
-				eq(flashcardReviewState.userId, user.id)
-			)
+			and(eq(flashcardReviewState.projectId, projectId), eq(flashcardReviewState.userId, user.id))
 		);
 });
