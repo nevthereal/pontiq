@@ -31,39 +31,79 @@
 
 	let { message }: { message: MyUIMessage } = $props();
 
-	type ToolType = 'tool-flashcards' | 'tool-study_plan' | 'tool-web_search';
+	type ToolType = `tool-${string}`;
 	type GroupedPart =
 		| { kind: 'text'; content: string }
 		| { kind: 'reasoning'; text: string; state: string | undefined }
 		| { kind: 'tool-group'; toolType: ToolType; items: Array<Record<string, unknown>> };
+	type ToolPart = Extract<MyUIMessage['parts'][number], { type: `tool-${string}` }>;
+
+	type ToolItemDisplay = {
+		title: string;
+		subtitle?: string;
+		description?: string;
+		meta?: {
+			icon?: Component<IconProps>;
+			text: string;
+		};
+		badge?: {
+			icon?: Component<IconProps>;
+			text: string;
+		};
+		itemIcon?: Component<IconProps>;
+	};
+
+	type ToolDisplayConfig = {
+		icon: Component<IconProps>;
+		label?: string;
+		getItemDisplay?: (item: Record<string, unknown>) => ToolItemDisplay;
+	};
+
+	function isToolPart(part: MyUIMessage['parts'][number]): part is ToolPart {
+		return part.type.startsWith('tool-');
+	}
 
 	// Group consecutive tool calls of the same type
 	function groupParts(parts: MyUIMessage['parts']): GroupedPart[] {
 		const result: GroupedPart[] = [];
 		let currentToolGroup: { toolType: ToolType; items: Array<Record<string, unknown>> } | null =
 			null;
+		let currentReasoningGroup: { texts: string[]; states: Array<string | undefined> } | null = null;
+
+		function flushToolGroup() {
+			if (!currentToolGroup) return;
+			result.push({ kind: 'tool-group', ...currentToolGroup });
+			currentToolGroup = null;
+		}
+
+		function flushReasoningGroup() {
+			if (!currentReasoningGroup) return;
+			result.push({
+				kind: 'reasoning',
+				text: currentReasoningGroup.texts.join('\n\n'),
+				state:
+					currentReasoningGroup.states.find((state) => state === 'streaming') ??
+					currentReasoningGroup.states.at(-1)
+			});
+			currentReasoningGroup = null;
+		}
 
 		for (const part of parts) {
 			if (part.type === 'text') {
-				// Flush any pending tool group
-				if (currentToolGroup) {
-					result.push({ kind: 'tool-group', ...currentToolGroup });
-					currentToolGroup = null;
-				}
+				flushToolGroup();
+				flushReasoningGroup();
 				result.push({ kind: 'text', content: part.text });
 			} else if (part.type === 'reasoning') {
-				// Flush any pending tool group
-				if (currentToolGroup) {
-					result.push({ kind: 'tool-group', ...currentToolGroup });
-					currentToolGroup = null;
+				flushToolGroup();
+				if (currentReasoningGroup) {
+					currentReasoningGroup.texts.push(part.text);
+					currentReasoningGroup.states.push(part.state);
+				} else {
+					currentReasoningGroup = { texts: [part.text], states: [part.state] };
 				}
-				result.push({ kind: 'reasoning', text: part.text, state: part.state });
-			} else if (
-				part.type === 'tool-flashcards' ||
-				part.type === 'tool-study_plan' ||
-				part.type === 'tool-web_search'
-			) {
-				const toolType = part.type as ToolType;
+			} else if (isToolPart(part)) {
+				flushReasoningGroup();
+				const toolType = part.type;
 				if (currentToolGroup && currentToolGroup.toolType === toolType) {
 					// Add to existing group
 					currentToolGroup.items.push(part.input ?? {});
@@ -78,10 +118,8 @@
 			}
 		}
 
-		// Flush any remaining tool group
-		if (currentToolGroup) {
-			result.push({ kind: 'tool-group', ...currentToolGroup });
-		}
+		flushToolGroup();
+		flushReasoningGroup();
 
 		return result;
 	}
@@ -113,6 +151,17 @@
 		return expandedState[index] ?? defaultValue;
 	}
 
+	function isReasoningStreaming(part: Extract<GroupedPart, { kind: 'reasoning' }>): boolean {
+		return part.state === 'streaming';
+	}
+
+	function isReasoningExpanded(
+		part: Extract<GroupedPart, { kind: 'reasoning' }>,
+		index: number
+	): boolean {
+		return isReasoningStreaming(part) || isExpanded(index, false);
+	}
+
 	// Study step type configuration with icons
 	type StudyStepType = (typeof studyStepTypes)[number];
 
@@ -139,34 +188,83 @@
 		return studyStepTypeConfig[type as StudyStepType];
 	}
 
-	const toolConfig: Record<
-		ToolType,
-		{
-			icon: Component<IconProps>;
-			label: string;
-			getItemText: (item: Record<string, unknown>) => string;
-			getItemSubtext: (item: Record<string, unknown>) => string | undefined;
+	function getStringValue(item: Record<string, unknown>, keys: string[]): string | undefined {
+		for (const key of keys) {
+			const value = item[key];
+			if (typeof value !== 'string') continue;
+			const trimmed = value.trim();
+			if (trimmed.length) return trimmed;
 		}
-	> = {
+		return undefined;
+	}
+
+	function getFormattedToolLabel(toolType: ToolType): string {
+		return toolType
+			.replace(/^tool-/, '')
+			.split(/[_-]+/)
+			.filter(Boolean)
+			.map((part) => part[0]?.toUpperCase() + part.slice(1))
+			.join(' ');
+	}
+
+	function getDefaultToolItemDisplay(item: Record<string, unknown>): ToolItemDisplay {
+		const title =
+			getStringValue(item, ['title', 'term', 'query', 'name', 'label', 'question', 'prompt']) ??
+			getStringValue(item, Object.keys(item)) ??
+			'Tool item';
+		const subtitle = getStringValue(item, ['definition', 'summary', 'type', 'status', 'url']);
+		const descriptionSource = getStringValue(item, ['description', 'details', 'content']);
+
+		return {
+			title,
+			subtitle,
+			description: descriptionSource !== subtitle ? descriptionSource : undefined,
+			itemIcon: Sparkles
+		};
+	}
+
+	const toolConfig: Record<string, ToolDisplayConfig> = {
 		'tool-flashcards': {
 			icon: Layers,
-			label: 'Flashcards',
-			getItemText: (item) => (item.term as string) ?? '',
-			getItemSubtext: (item) => item.definition as string | undefined
+			label: 'Flashcards'
 		},
 		'tool-study_plan': {
 			icon: Calendar,
 			label: 'Study Plan',
-			getItemText: (item) => (item.title as string) ?? '',
-			getItemSubtext: (item) => item.type as string | undefined
+			getItemDisplay: (item) => {
+				const stepConfig = getStudyStepConfig(item.type as string | undefined);
+				const dateText = getStudyPlanDate(item);
+				return {
+					title: getStringValue(item, ['title']) ?? 'Study step',
+					description: getStudyPlanDescription(item),
+					meta: dateText
+						? {
+								icon: Calendar,
+								text: dateText
+							}
+						: undefined,
+					badge: {
+						icon: stepConfig.icon,
+						text: stepConfig.label
+					},
+					itemIcon: stepConfig.icon
+				};
+			}
 		},
 		'tool-web_search': {
 			icon: Search,
-			label: 'Web Search',
-			getItemText: (item) => (item.query as string) ?? '',
-			getItemSubtext: () => undefined
+			label: 'Web Search'
 		}
 	};
+
+	function getToolDisplayConfig(toolType: ToolType): Required<ToolDisplayConfig> {
+		const config = toolConfig[toolType];
+		return {
+			icon: config?.icon ?? Sparkles,
+			label: config?.label ?? getFormattedToolLabel(toolType),
+			getItemDisplay: config?.getItemDisplay ?? getDefaultToolItemDisplay
+		};
+	}
 
 	const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
 	const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -263,20 +361,23 @@
 		<span class="flex-1 text-muted-foreground">Reasoning</span>
 		<ChevronDown
 			size={14}
-			class="text-muted-foreground transition-transform duration-200 {isExpanded(idx, false)
+			class="text-muted-foreground transition-transform duration-200 {isReasoningExpanded(part, idx)
 				? 'rotate-180'
 				: ''}"
 		/>
 	</button>
-	{#if isExpanded(idx, false)}
+	{#if isReasoningExpanded(part, idx)}
 		<div transition:slide={{ duration: 200 }} class="py-2 pl-6">
-			<pre class="text-xs whitespace-pre-wrap text-muted-foreground">{part.text}</pre>
+			<div class="prose prose-sm max-w-full text-muted-foreground dark:prose-invert">
+				<!-- eslint-disable svelte/no-at-html-tags -->
+				{@html renderMarkdown(part.text)}
+			</div>
 		</div>
 	{/if}
 {/snippet}
 
 {#snippet assistantToolGroup(part: Extract<GroupedPart, { kind: 'tool-group' }>, idx: number)}
-	{@const config = toolConfig[part.toolType]}
+	{@const config = getToolDisplayConfig(part.toolType)}
 	{@const Icon = config.icon}
 	<div class="flex flex-col gap-2">
 		<!-- Collapsible header with label and view all button -->
@@ -314,31 +415,30 @@
 					</Dialog.Header>
 					<div class="max-h-[60vh] space-y-2 overflow-y-auto py-4">
 						{#each part.items as item, itemIdx (itemIdx)}
+							{@const display = config.getItemDisplay(item)}
+							{@const ItemIcon = display.itemIcon ?? Sparkles}
 							<div class="flex flex-col gap-2 rounded-lg border p-3">
 								<div class="flex items-center gap-2">
-									{#if part.toolType === 'tool-study_plan'}
-										{@const stepConfig = getStudyStepConfig(item.type as string)}
-										{@const StepIcon = stepConfig.icon}
-										<StepIcon size={12} class="text-muted-foreground" />
-									{:else}
-										<Sparkles size={12} class="text-muted-foreground" />
-									{/if}
-									<span class="font-medium text-foreground">{config.getItemText(item)}</span>
+									<ItemIcon size={12} class="text-muted-foreground" />
+									<span class="font-medium text-foreground">{display.title}</span>
 								</div>
-								{#if part.toolType === 'tool-study_plan' && getStudyPlanDate(item)}
+								{#if display.meta}
 									<p class="flex items-center gap-1 text-xs text-muted-foreground">
-										<Calendar size={12} />
-										{getStudyPlanDate(item)}
+										{#if display.meta.icon}
+											{@const MetaIcon = display.meta.icon}
+											<MetaIcon size={12} />
+										{/if}
+										{display.meta.text}
 									</p>
 								{/if}
-								{#if part.toolType !== 'tool-study_plan' && config.getItemSubtext(item)}
+								{#if display.subtitle}
 									<p class="pl-5 text-sm text-muted-foreground">
-										{config.getItemSubtext(item)}
+										{display.subtitle}
 									</p>
 								{/if}
-								{#if part.toolType === 'tool-study_plan' && getStudyPlanDescription(item)}
+								{#if display.description}
 									<p class="text-sm text-muted-foreground">
-										{getStudyPlanDescription(item)}
+										{display.description}
 									</p>
 								{/if}
 							</div>
@@ -352,28 +452,31 @@
 		{#if isExpanded(idx, true)}
 			<div transition:slide={{ duration: 200 }} class="-mx-2 flex gap-2 overflow-x-auto px-2 pb-2">
 				{#each part.items as item, itemIdx (itemIdx)}
+					{@const display = config.getItemDisplay(item)}
 					<div class="flex max-w-64 min-w-48 shrink-0 flex-col gap-2 rounded-lg border p-3">
 						<div class="flex items-start gap-2">
-							<span class="line-clamp-2 text-sm font-medium text-foreground"
-								>{config.getItemText(item)}</span
-							>
+							<span class="line-clamp-2 text-sm font-medium text-foreground">{display.title}</span>
 						</div>
-						{#if part.toolType === 'tool-study_plan' && getStudyPlanDate(item)}
+						{#if display.meta}
 							<p class="flex items-center gap-1 text-xs text-muted-foreground">
-								<Calendar size={12} />
-								{getStudyPlanDate(item)}
+								{#if display.meta.icon}
+									{@const MetaIcon = display.meta.icon}
+									<MetaIcon size={12} />
+								{/if}
+								{display.meta.text}
 							</p>
 						{/if}
-						{#if part.toolType === 'tool-study_plan' && config.getItemSubtext(item)}
-							{@const stepConfig = getStudyStepConfig(item.type as string)}
-							{@const StepIcon = stepConfig.icon}
+						{#if display.badge}
 							<Badge>
-								<StepIcon size={10} />
-								{stepConfig.label}
+								{#if display.badge.icon}
+									{@const BadgeIcon = display.badge.icon}
+									<BadgeIcon size={10} />
+								{/if}
+								{display.badge.text}
 							</Badge>
-						{:else if config.getItemSubtext(item)}
+						{:else if display.subtitle}
 							<p class="line-clamp-2 text-xs text-muted-foreground">
-								{config.getItemSubtext(item)}
+								{display.subtitle}
 							</p>
 						{/if}
 					</div>
