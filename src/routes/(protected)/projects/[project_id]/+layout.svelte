@@ -59,7 +59,7 @@
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<CreditCard />
 							</Item.Media>
-							<Item.Content>Flashcards (work in progress)</Item.Content>
+							<Item.Content>Flashcards</Item.Content>
 						</a>
 					{/snippet}
 				</Item.Root>

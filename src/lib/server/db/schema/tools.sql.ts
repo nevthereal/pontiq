@@ -1,5 +1,7 @@
-import { index, pgEnum, pgTable, serial, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { project } from './projects.sql';
+import { user } from './auth.sql';
 import { ratings } from '../../../things';
 
 export const studyStepTypes = [
@@ -41,6 +43,30 @@ export const flashcard = pgTable(
 		rating: ratingEnum().notNull().default('Unrated')
 	},
 	(t) => [index('flashcard_project_idx').on(t.projectId)]
+);
+
+export const flashcardReviewState = pgTable(
+	'flashcard_review_state',
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		projectId,
+		userId: text()
+			.references(() => user.id, { onDelete: 'cascade' })
+			.notNull(),
+		reviewedFlashcardIds: text()
+			.array()
+			.notNull()
+			.default(sql`'{}'::text[]`),
+		updatedAt: timestamp()
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(t) => [
+		index('flashcard_review_state_project_idx').on(t.projectId),
+		index('flashcard_review_state_user_idx').on(t.userId),
+		unique('flashcard_review_state_user_project_unique').on(t.userId, t.projectId)
+	]
 );
 
 export type Flashcard = typeof flashcard.$inferSelect;
