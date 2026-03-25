@@ -24,6 +24,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return error(401, 'No messages left');
 	}
 
+	const { allowed: toolsAllowed } = await autumn.check({
+		customerId: locals.user.id,
+		featureId: 'tool_use'
+	});
+
 	const DEFAULT_SYS_PROMPT =
 		`You are a friendly study chatbot assistant in a study app called Pontiq` +
 		`You should be answering the questions from the provided files, if given, else answer from your knowledge or search the web.` +
@@ -98,21 +103,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		config: typeof chatConfig.current;
 	} = await request.json();
 
+	const effectiveConfig = toolsAllowed
+		? config
+		: {
+				...config,
+				studyModeEnabled: false,
+				enhancedReasoning: false,
+				webSearch: false
+			};
+
 	const result = streamText({
 		model: gateway('openai/gpt-5.4-mini'),
 		messages: await convertToModelMessages(messages),
 		system:
-			(config.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
-			(config.webSearch ? ' Use web search' : ''),
-		tools,
+			(effectiveConfig.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
+			(effectiveConfig.webSearch ? ' Use web search' : ''),
+		...(toolsAllowed ? { tools } : {}),
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
 			chunking: 'word'
 		}),
 		providerOptions: {
 			openai: {
-				reasoningEffort: config.enhancedReasoning ? 'high' : 'none',
-				...(config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
+				reasoningEffort: effectiveConfig.enhancedReasoning ? 'high' : 'none',
+				...(effectiveConfig.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
 			} satisfies OpenAILanguageModelResponsesOptions
 		}
 	});

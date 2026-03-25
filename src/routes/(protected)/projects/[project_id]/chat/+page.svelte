@@ -8,6 +8,7 @@
 		GraduationCap,
 		Paperclip,
 		Plus,
+		SlidersHorizontal,
 		Trash2
 	} from '@lucide/svelte';
 	import { Chat } from '@ai-sdk/svelte';
@@ -22,16 +23,17 @@
 	import * as ButtonGroup from '$lib/components/ui/button-group';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { attachments, chatConfig } from '$lib/chat.svelte';
-	import { Toggle } from '$lib/components/ui/toggle';
 	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/Message.svelte';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, getToolsLimit, subscribeToPro } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
 
-	const limitQuery = getChatLimit();
+	const chatLimitQuery = getChatLimit();
+	const toolsLimitQuery = getToolsLimit();
+	const toolsAllowed = $derived(toolsLimitQuery.current?.allowed ?? false);
 
 	// Create a single persistent Chat instance with the consistent ID
 	const chat = $derived(
@@ -149,19 +151,19 @@
 		<form
 			onsubmit={async (e) => {
 				e.preventDefault();
-				if (limitQuery.current && limitQuery.current.allowed) handleSubmit();
+				if (chatLimitQuery.current && chatLimitQuery.current.allowed) handleSubmit();
 			}}
 			class="absolute bottom-0 w-full backdrop-blur-sm"
 		>
-			{#if !hideMessageItem && limitQuery.current && !limitQuery.current.balance?.unlimited}
+			{#if !hideMessageItem && chatLimitQuery.current && !chatLimitQuery.current.balance?.unlimited}
 				<div transition:fade={{ duration: 100 }} class="fixed w-full max-w-md -translate-y-full">
 					<Item.Root variant="outline" size="xs" class="mb-2 bg-background">
 						<Item.Content>
 							<Item.Title>Message limits</Item.Title>
 							<Item.Description>
-								{@const { balance } = limitQuery.current}
+								{@const { balance } = chatLimitQuery.current}
 								{#if balance}
-									{balance.remaining} remaining. {#if balance.nextResetAt}
+									{balance.remaining || 'No messages'} remaining. {#if balance.nextResetAt}
 										Resets on {Intl.DateTimeFormat().format(balance.nextResetAt)}
 									{/if}
 								{/if}
@@ -212,28 +214,40 @@
 				</InputGroup.Addon>
 
 				<InputGroup.Addon align="block-end">
-					<Toggle
-						aria-label="Toggle bookmark"
-						size="sm"
-						variant="outline"
-						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
-						bind:pressed={chatConfig.current.studyModeEnabled}><GraduationCap />Study mode</Toggle
-					>
-					<Toggle
-						bind:pressed={chatConfig.current.enhancedReasoning}
-						aria-label="Toggle bookmark"
-						size="sm"
-						variant="outline"
-						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
-						><Brain />Reasoning</Toggle
-					>
-					<Toggle
-						aria-label="Toggle bookmark"
-						size="sm"
-						variant="outline"
-						class="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:stroke-blue-500"
-						bind:pressed={chatConfig.current.webSearch}><Globe />Web Search</Toggle
-					>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger class={buttonVariants({ size: 'sm', variant: 'outline' })}
+							><SlidersHorizontal /> Tools</DropdownMenu.Trigger
+						>
+						<DropdownMenu.Content class="w-56" align="end">
+							{#if toolsAllowed}
+								<DropdownMenu.Label>Tool options</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.studyModeEnabled}
+									><GraduationCap /> Study mode</DropdownMenu.CheckboxItem
+								>
+								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.enhancedReasoning}
+									><Brain /> Reasoning</DropdownMenu.CheckboxItem
+								>
+								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.webSearch}
+									><Globe /> Web search</DropdownMenu.CheckboxItem
+								>
+							{:else}
+								<DropdownMenu.Label>Tools</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								<DropdownMenu.Item
+									onclick={async () => {
+										loading = true;
+										await subscribeToPro().then((url) => {
+											if (url) window.location.href = url;
+										});
+									}}><Globe /> Upgrade to Pro to use tools</DropdownMenu.Item
+								>
+								<DropdownMenu.Item disabled><GraduationCap /> Study mode</DropdownMenu.Item>
+								<DropdownMenu.Item disabled><Brain /> Reasoning</DropdownMenu.Item>
+								<DropdownMenu.Item disabled><Globe /> Web search</DropdownMenu.Item>
+							{/if}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
 							><Paperclip /></DropdownMenu.Trigger
@@ -263,12 +277,12 @@
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
-					{#if limitQuery.current}
+					{#if chatLimitQuery.current}
 						<InputGroup.Button
 							variant="default"
 							class="ml-auto rounded-full"
 							size="icon-xs"
-							disabled={chat.status !== 'ready' || !limitQuery.current.allowed}
+							disabled={chat.status !== 'ready' || !chatLimitQuery.current.allowed}
 						>
 							{#if chat.status === 'ready'}
 								<ArrowUpIcon />
