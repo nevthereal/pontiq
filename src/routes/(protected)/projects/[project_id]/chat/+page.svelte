@@ -9,7 +9,8 @@
 		Paperclip,
 		Plus,
 		SlidersHorizontal,
-		Trash2
+		Trash2,
+		Zap
 	} from '@lucide/svelte';
 	import { Chat } from '@ai-sdk/svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
@@ -177,9 +178,13 @@
 								size="sm"
 								onclick={async () => {
 									loading = true;
-									await subscribeToPro().then((url) => {
-										if (url) window.location.href = url;
-									});
+									try {
+										await subscribeToPro().then((url) => {
+											if (url) window.location.href = url;
+										});
+									} finally {
+										loading = false;
+									}
 								}}
 								>{#if loading}<Spinner />{/if}Upgrade</Button
 							>
@@ -237,10 +242,14 @@
 								<DropdownMenu.Item
 									onclick={async () => {
 										loading = true;
-										await subscribeToPro().then((url) => {
-											if (url) window.location.href = url;
-										});
-									}}><Globe /> Upgrade to Pro to use tools</DropdownMenu.Item
+										try {
+											await subscribeToPro().then((url) => {
+												if (url) window.location.href = url;
+											});
+										} finally {
+											loading = false;
+										}
+									}}><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
 								>
 								<DropdownMenu.Item disabled><GraduationCap /> Study mode</DropdownMenu.Item>
 								<DropdownMenu.Item disabled><Brain /> Reasoning</DropdownMenu.Item>
