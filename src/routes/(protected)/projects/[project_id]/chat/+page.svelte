@@ -242,10 +242,6 @@
 								<DropdownMenu.Item
 									onclick={async () => {
 										loading = true;
-										try {
-								<DropdownMenu.Item
-									onclick={async () => {
-										loading = true;
 										await subscribeToPro().then((url) => {
 											if (url) window.location.href = url;
 										});
