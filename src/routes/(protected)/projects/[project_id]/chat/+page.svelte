@@ -36,8 +36,8 @@
 	const customerQuery = getCustomer();
 	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
 
-	$effect(() => {
-		if (!toolsAllowed) {
+	watch(() => toolsAllowed, (allowed) => {
+		if (!allowed) {
 			chatConfig.current.studyModeEnabled = false;
 			chatConfig.current.enhancedReasoning = false;
 			chatConfig.current.webSearch = false;
