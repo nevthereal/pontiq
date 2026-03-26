@@ -28,13 +28,21 @@
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/Message.svelte';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit, getToolsLimit, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
 
 	const chatLimitQuery = getChatLimit();
-	const toolsLimitQuery = getToolsLimit();
-	const toolsAllowed = $derived(toolsLimitQuery.current?.allowed ?? false);
+	const customerQuery = getCustomer();
+	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
+
+	$effect(() => {
+		if (!toolsAllowed) {
+			chatConfig.current.studyModeEnabled = false;
+			chatConfig.current.enhancedReasoning = false;
+			chatConfig.current.webSearch = false;
+		}
+	});
 
 	// Create a single persistent Chat instance with the consistent ID
 	const chat = $derived(
@@ -239,17 +247,21 @@
 							{:else}
 								<DropdownMenu.Label>Tools</DropdownMenu.Label>
 								<DropdownMenu.Separator />
+								<DropdownMenu.Item disabled>
+									Upgrade to Pro to unlock Study mode, Reasoning, and Web search
+								</DropdownMenu.Item>
 								<DropdownMenu.Item
 									onclick={async () => {
 										loading = true;
-										await subscribeToPro().then((url) => {
-											if (url) window.location.href = url;
-										});
+										try {
+											await subscribeToPro().then((url) => {
+												if (url) window.location.href = url;
+											});
+										} finally {
+											loading = false;
+										}
 									}}><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
 								>
-								<DropdownMenu.Item disabled><GraduationCap /> Study mode</DropdownMenu.Item>
-								<DropdownMenu.Item disabled><Brain /> Reasoning</DropdownMenu.Item>
-								<DropdownMenu.Item disabled><Globe /> Web search</DropdownMenu.Item>
 							{/if}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
