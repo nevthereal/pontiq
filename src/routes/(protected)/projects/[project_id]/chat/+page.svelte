@@ -31,6 +31,7 @@
 	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
+	const projectId = params.project_id;
 
 	const chatLimitQuery = getChatLimit();
 	const customerQuery = getCustomer();
@@ -44,19 +45,17 @@
 		}
 	});
 
-	// Create a single persistent Chat instance with the consistent ID
-	const chat = $derived(
-		new Chat<MyUIMessage>({
-			transport: new DefaultChatTransport({
-				api: resolve('/(protected)/projects/[project_id]/api/chat', {
-					project_id: params.project_id
-				})
-			}),
-			onFinish: async () => {
-				await getChatLimit().refresh();
-			}
-		})
-	);
+	// Keep the chat instance stable so query refreshes do not recreate the input subtree.
+	const chat = new Chat<MyUIMessage>({
+		transport: new DefaultChatTransport({
+			api: resolve('/(protected)/projects/[project_id]/api/chat', {
+				project_id: projectId
+			})
+		}),
+		onFinish: async () => {
+			await chatLimitQuery.refresh();
+		}
+	});
 
 	let input = $state('');
 
@@ -273,7 +272,7 @@
 							<DropdownMenu.Group>
 								<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
 								<DropdownMenu.Separator />
-								{#each await getFiles(params.project_id) as file (file.id)}
+								{#each await getFiles(projectId) as file (file.id)}
 									<DropdownMenu.CheckboxItem
 										class="truncate"
 										closeOnSelect={false}
