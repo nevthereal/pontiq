@@ -243,12 +243,12 @@
 									onclick={async () => {
 										loading = true;
 										try {
-											await subscribeToPro().then((url) => {
-												if (url) window.location.href = url;
-											});
-										} finally {
-											loading = false;
-										}
+								<DropdownMenu.Item
+									onclick={async () => {
+										loading = true;
+										await subscribeToPro().then((url) => {
+											if (url) window.location.href = url;
+										});
 									}}><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
 								>
 								<DropdownMenu.Item disabled><GraduationCap /> Study mode</DropdownMenu.Item>
