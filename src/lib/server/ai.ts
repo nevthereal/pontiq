@@ -5,7 +5,7 @@ import { db } from './db';
 import { flashcard, studyPlanStep, studyStepTypes, project } from './db/schema';
 import z from 'zod';
 import { EXA_API_KEY } from '$env/static/private';
-import { eq, asc } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { webSearch } from '@exalabs/ai-sdk';
 
 const zStudyStep = z.object({
@@ -70,14 +70,31 @@ const studyPlanTool = tool({
 	inputSchema: zStudyStep,
 	execute: async (args) => {
 		const projectId = await requireOwnedProjectId();
+		const date = new Date(args.date);
+		const [existingStep] = await db
+			.select()
+			.from(studyPlanStep)
+			.where(
+				and(
+					eq(studyPlanStep.projectId, projectId),
+					eq(studyPlanStep.title, args.title),
+					eq(studyPlanStep.date, date),
+					eq(studyPlanStep.type, args.type)
+				)
+			)
+			.limit(1);
+
+		if (existingStep) return [existingStep];
+
 		return await db
 			.insert(studyPlanStep)
 			.values({
 				title: args.title,
-				date: new Date(args.date),
+				date,
 				projectId,
 				type: args.type,
-				description: args.description
+				description: args.description,
+				source: 'ai'
 			})
 			.returning();
 	}
@@ -94,11 +111,31 @@ const flashCardTool = tool({
 		const projectId = await requireOwnedProjectId();
 
 		const { definition, term } = args;
-		await db.insert(flashcard).values({
-			term,
-			definition,
-			projectId
-		});
+		const [existingFlashcard] = await db
+			.select()
+			.from(flashcard)
+			.where(
+				and(
+					eq(flashcard.projectId, projectId),
+					eq(flashcard.term, term),
+					eq(flashcard.definition, definition)
+				)
+			)
+			.limit(1);
+
+		if (existingFlashcard) return existingFlashcard;
+
+		const [createdFlashcard] = await db
+			.insert(flashcard)
+			.values({
+				term,
+				definition,
+				projectId,
+				source: 'ai'
+			})
+			.returning();
+
+		return createdFlashcard;
 	}
 });
 
@@ -108,7 +145,11 @@ const getFlashcardsTool = tool({
 
 	execute: async () => {
 		const projectId = await requireOwnedProjectId();
-		return await db.select().from(flashcard).where(eq(flashcard.projectId, projectId));
+		return await db
+			.select()
+			.from(flashcard)
+			.where(eq(flashcard.projectId, projectId))
+			.orderBy(asc(flashcard.createdAt), asc(flashcard.id));
 	}
 });
 

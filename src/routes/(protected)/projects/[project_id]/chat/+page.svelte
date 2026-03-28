@@ -37,13 +37,16 @@
 	const customerQuery = getCustomer();
 	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
 
-	watch(() => toolsAllowed, (allowed) => {
-		if (!allowed) {
-			chatConfig.current.studyModeEnabled = false;
-			chatConfig.current.enhancedReasoning = false;
-			chatConfig.current.webSearch = false;
+	watch(
+		() => toolsAllowed,
+		(allowed) => {
+			if (!allowed) {
+				chatConfig.current.studyModeEnabled = false;
+				chatConfig.current.enhancedReasoning = false;
+				chatConfig.current.webSearch = false;
+			}
 		}
-	});
+	);
 
 	// Keep the chat instance stable so query refreshes do not recreate the input subtree.
 	const chat = new Chat<MyUIMessage>({

@@ -1,12 +1,13 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import * as Item from '$lib/components/ui/item/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 
-	import { deleteSteps, getStudySteps } from '$lib/remote/tools.remote';
+	import { deleteAllStudySteps, getStudySteps } from '$lib/remote/tools.remote';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { Maximize2, NotebookPen, RefreshCcw, Trash2 } from '@lucide/svelte';
+	import { Maximize2, NotebookPen, RefreshCcw, Settings2, Trash2 } from '@lucide/svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Loading from '$lib/components/typography/Loading.svelte';
@@ -16,11 +17,21 @@
 	let open = $state(false);
 </script>
 
-<div class="flex justify-between">
-	<ToolHeading>
-		<NotebookPen /> Study Plan
-	</ToolHeading>
+<div class="flex flex-wrap items-center justify-between gap-3">
 	<div>
+		<ToolHeading>
+			<NotebookPen /> Study Plan
+		</ToolHeading>
+		<p class="text-sm text-muted-foreground">Overview and step details for the current plan.</p>
+	</div>
+	<div class="flex items-center gap-2">
+		<a
+			href={resolve('/(protected)/projects/[project_id]/study-plan/manage', params)}
+			class={buttonVariants({ variant: 'outline' })}
+		>
+			<Settings2 />
+			Manage Study Plan
+		</a>
 		<Button
 			variant="outline"
 			size="icon-sm"
@@ -42,7 +53,7 @@
 					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 					<AlertDialog.Action
 						onclick={() => {
-							toast.promise(deleteSteps(params.project_id), {
+							toast.promise(deleteAllStudySteps(params.project_id), {
 								loading: 'Deleting plan…',
 								success: 'Deletion successful',
 								error: 'An error occurred during deletion'

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Flashcard from '$lib/components/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
@@ -17,7 +18,16 @@
 	} from '$lib/remote/tools.remote';
 	import { cn } from '$lib/utils';
 	import { ratings } from '$lib/things';
-	import { CreditCard, Frown, Laugh, ListFilter, Meh, RefreshCcw, Smile } from '@lucide/svelte';
+	import {
+		CreditCard,
+		Frown,
+		Laugh,
+		ListFilter,
+		Meh,
+		RefreshCcw,
+		Settings2,
+		Smile
+	} from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 	import { watch } from 'runed';
@@ -115,6 +125,13 @@
 			<CreditCard /> Flashcards
 		</ToolHeading>
 		<div class="flex flex-wrap items-center gap-2">
+			<a
+				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
+				class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+			>
+				<Settings2 />
+				Manage Flashcards
+			</a>
 			<Popover.Root>
 				<Popover.Trigger openOnHover class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
 					><ListFilter /> Filter</Popover.Trigger

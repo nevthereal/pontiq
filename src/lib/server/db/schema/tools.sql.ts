@@ -15,6 +15,7 @@ export const studyStepTypes = [
 ] as const;
 
 export const typeEnum = pgEnum('study_plan_types', studyStepTypes);
+export const contentSourceEnum = pgEnum('content_source', ['ai', 'manual']);
 
 const projectId = uuid()
 	.references(() => project.id, { onDelete: 'cascade' })
@@ -22,11 +23,18 @@ const projectId = uuid()
 
 export const studyPlanStep = pgTable('study_plan_step', {
 	id: uuid().primaryKey().defaultRandom(),
+	createdAt: timestamp().defaultNow().notNull(),
+	updatedAt: timestamp()
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
 	date: timestamp().notNull(),
 	projectId,
 	title: text().notNull(),
 	description: text().notNull(),
-	type: typeEnum().notNull()
+	type: typeEnum().notNull(),
+	source: contentSourceEnum().notNull().default('ai'),
+	manuallyEditedAt: timestamp()
 });
 
 export const ratingEnum = pgEnum('recall_levels', ratings);
@@ -39,8 +47,13 @@ export const flashcard = pgTable(
 		definition: text().notNull(),
 		projectId,
 		createdAt: timestamp().defaultNow().notNull(),
-		updatedAt: timestamp().defaultNow().notNull(),
-		rating: ratingEnum().notNull().default('Unrated')
+		updatedAt: timestamp()
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+		rating: ratingEnum().notNull().default('Unrated'),
+		source: contentSourceEnum().notNull().default('ai'),
+		manuallyEditedAt: timestamp()
 	},
 	(t) => [index('flashcard_project_idx').on(t.projectId)]
 );
