@@ -22,7 +22,7 @@
 		Coffee,
 		type IconProps
 	} from '@lucide/svelte';
-	import type { studyStepTypes } from '$lib/server/db/schema/tools.sql';
+	import type { StudyStepType } from '$lib/things';
 	import type { Component } from 'svelte';
 	import { marked } from '$lib/things';
 	import { fade, slide } from 'svelte/transition';
@@ -163,8 +163,6 @@
 	}
 
 	// Study step type configuration with icons
-	type StudyStepType = (typeof studyStepTypes)[number];
-
 	const studyStepTypeConfig: Record<
 		StudyStepType,
 		{

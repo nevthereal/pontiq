@@ -6,9 +6,8 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Field from '$lib/components/ui/field';
-	import { studyStepTypes, type studyPlanStep } from '$lib/server/db/schema';
-
-	type StudyPlanStep = typeof studyPlanStep.$inferSelect;
+	import { studyStepTypes, type StudyStepType } from '$lib/things';
+	import type { StudyPlanStep } from '$lib/server/db/schema';
 
 	let {
 		projectId,
@@ -25,7 +24,7 @@
 	let title = $state('');
 	let description = $state('');
 	let date = $state('');
-	let type = $state<(typeof studyStepTypes)[number]>('lesson');
+	let type = $state<StudyStepType>('lesson');
 	let submitting = $state(false);
 
 	function toDateInputValue(value: Date | null | undefined) {

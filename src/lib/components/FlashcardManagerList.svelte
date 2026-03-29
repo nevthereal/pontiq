@@ -32,7 +32,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col rounded-xl border bg-card">
+<div class="flex h-full min-h-0 flex-col rounded-xl border bg-card">
 	<div class="flex flex-col gap-3 border-b p-4">
 		<div class="flex items-center justify-between gap-2">
 			<div>
@@ -49,9 +49,9 @@
 		/>
 	</div>
 
-	<div class="flex-1 p-3">
+	<div class="min-h-0 flex-1 overflow-y-auto p-3">
 		{#if flashcards.length}
-			<ul class="space-y-2 overflow-scroll">
+			<ul class="space-y-2">
 				{#each flashcards as card (card.id)}
 					<li class="flex items-start gap-2">
 						<button

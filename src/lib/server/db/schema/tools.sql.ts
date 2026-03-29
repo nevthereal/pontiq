@@ -2,17 +2,7 @@ import { index, pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-o
 import { sql } from 'drizzle-orm';
 import { project } from './projects.sql';
 import { user } from './auth.sql';
-import { ratings } from '../../../things';
-
-export const studyStepTypes = [
-	'milestone',
-	'lesson',
-	'assignment',
-	'project',
-	'exam',
-	'review',
-	'break'
-] as const;
+import { ratings, studyStepTypes } from '../../../things';
 
 export const typeEnum = pgEnum('study_plan_types', studyStepTypes);
 export const contentSourceEnum = pgEnum('content_source', ['ai', 'manual']);
@@ -83,3 +73,4 @@ export const flashcardReviewState = pgTable(
 );
 
 export type Flashcard = typeof flashcard.$inferSelect;
+export type StudyPlanStep = typeof studyPlanStep.$inferSelect;

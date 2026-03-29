@@ -4,13 +4,12 @@ import { db } from '$lib/server/db';
 import {
 	flashcard,
 	flashcardReviewState,
-	studyPlanStep,
-	studyStepTypes
+	studyPlanStep
 } from '$lib/server/db/schema';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
-import { ratings } from '$lib/things';
+import { ratings, studyStepTypes } from '$lib/things';
 import { autumn } from '$lib/server/autumn';
 
 async function requireOwnedProject(

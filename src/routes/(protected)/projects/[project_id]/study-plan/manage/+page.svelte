@@ -9,9 +9,7 @@
 	import StudyPlanEditorForm from '$lib/components/StudyPlanEditorForm.svelte';
 	import StudyPlanManagerList from '$lib/components/StudyPlanManagerList.svelte';
 	import { deleteAllStudySteps, deleteStudyStep, getStudySteps } from '$lib/remote/tools.remote';
-	import type { studyPlanStep } from '$lib/server/db/schema';
-
-	type StudyPlanStep = typeof studyPlanStep.$inferSelect;
+	import type { StudyPlanStep } from '$lib/server/db/schema';
 
 	let { params } = $props();
 
@@ -187,7 +185,7 @@
 	}
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4 lg:flex lg:min-h-0 lg:flex-col">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<div>
 			<ToolHeading>
@@ -211,7 +209,9 @@
 			<Loading thing="study plan" />
 		{/snippet}
 
-		<div class="grid gap-4 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+		<div
+			class="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:overflow-hidden"
+		>
 			<StudyPlanManagerList
 				steps={filteredSteps}
 				{selectedId}
