@@ -26,7 +26,7 @@
 	import { attachments, chatConfig } from '$lib/chat.svelte';
 	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
-	import Message from '$lib/components/Message.svelte';
+	import Message from '$lib/components/chat/Message.svelte';
 	import { fade } from 'svelte/transition';
 	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
 

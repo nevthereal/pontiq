@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
 	import { CircleCheck } from '@lucide/svelte';
 	import { createStudyStep, updateStudyStep } from '$lib/remote/tools.remote';
@@ -185,16 +186,14 @@
 				</Field.Field>
 				<Field.Field>
 					<Field.Label for="edit-type">Type</Field.Label>
-					<select
-						id="edit-type"
-						name="type"
-						bind:value={type}
-						class="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
-					>
-						{#each studyStepTypes as option (option)}
-							<option value={option}>{option}</option>
-						{/each}
-					</select>
+					<Select.Root name="type" bind:value={type} type="single">
+						<Select.Trigger>{type}</Select.Trigger>
+						<Select.Content id="edit-type">
+							{#each studyStepTypes as option (option)}
+								<Select.Item value={option}>{option}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</Field.Field>
 			</div>
 			<Button type="submit" disabled={submitting}>

@@ -26,7 +26,7 @@
 	import type { Component } from 'svelte';
 	import { marked } from '$lib/things';
 	import { fade, slide } from 'svelte/transition';
-	import Badge from './ui/badge/badge.svelte';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let { message }: { message: MyUIMessage } = $props();

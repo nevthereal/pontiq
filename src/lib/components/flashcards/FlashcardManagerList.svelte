@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Trash2 } from '@lucide/svelte';
+	import * as Item from '$lib/components/ui/item/index.js';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { Button } from '$lib/components/ui/button';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import type { Flashcard } from '$lib/server/db/schema';
-	import { cn } from '$lib/utils';
 
 	let {
 		flashcards,
@@ -54,37 +54,31 @@
 			<ul class="space-y-2">
 				{#each flashcards as card (card.id)}
 					<li class="flex items-start gap-2">
-						<button
-							type="button"
-							class={cn(
-								'flex-1 rounded-lg border p-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/40',
-								selectedId === card.id && 'border-primary bg-primary/5'
-							)}
+						<Item.Root
+							class="select-none"
+							variant={selectedId === card.id ? 'outline' : 'muted'}
 							onclick={() => onSelect(card.id)}
 						>
-							<div class="flex items-start justify-between gap-3">
-								<div class="min-w-0">
-									<p class="truncate font-medium">{card.term}</p>
-									<p class="mt-1 line-clamp-2 text-sm text-muted-foreground">
-										{card.definition}
-									</p>
-								</div>
-								<div class="flex shrink-0 flex-col items-end gap-1 text-xs text-muted-foreground">
-									<span>{getSourceLabel(card.source)}</span>
-									<span>{card.rating}</span>
-								</div>
-							</div>
-						</button>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon-sm"
-							class="mt-1 shrink-0"
-							title={`Delete ${card.term}`}
-							onclick={() => onDelete(card)}
-						>
-							<Trash2 />
-						</Button>
+							<Item.Header>{card.term}</Item.Header>
+							<Item.Content>
+								<Item.Description>
+									{card.definition}
+								</Item.Description>
+							</Item.Content>
+							<Item.Actions>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									class="mt-1 shrink-0"
+									title={`Delete ${card.term}`}
+									onclick={() => onDelete(card)}
+								>
+									<Trash2 />
+								</Button>
+							</Item.Actions>
+							<Item.Footer>{card.rating}, created by {getSourceLabel(card.source)}</Item.Footer>
+						</Item.Root>
 					</li>
 				{/each}
 			</ul>

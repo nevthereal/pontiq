@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Flashcard from '$lib/components/Flashcard.svelte';
+	import Flashcard from '$lib/components/flashcards/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';

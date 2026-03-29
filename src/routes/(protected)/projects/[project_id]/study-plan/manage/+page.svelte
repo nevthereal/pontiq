@@ -6,8 +6,8 @@
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import StudyPlanEditorForm from '$lib/components/StudyPlanEditorForm.svelte';
-	import StudyPlanManagerList from '$lib/components/StudyPlanManagerList.svelte';
+	import StudyPlanEditorForm from '$lib/components/study-plan/StudyPlanEditorForm.svelte';
+	import StudyPlanManagerList from '$lib/components/study-plan/StudyPlanManagerList.svelte';
 	import { deleteAllStudySteps, deleteStudyStep, getStudySteps } from '$lib/remote/tools.remote';
 	import type { StudyPlanStep } from '$lib/server/db/schema';
 
