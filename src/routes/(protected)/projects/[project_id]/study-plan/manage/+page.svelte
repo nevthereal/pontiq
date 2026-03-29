@@ -168,7 +168,7 @@
 	}
 
 	async function handleDeleteAll() {
-		await toast.promise(deleteAllStudySteps(params.project_id), {
+		toast.promise(deleteAllStudySteps(params.project_id), {
 			loading: 'Deleting study plan…',
 			success: 'Study plan deleted',
 			error: 'Failed to delete study plan'
@@ -191,9 +191,6 @@
 			<ToolHeading>
 				<Settings2 /> Manage Study Plan
 			</ToolHeading>
-			<p class="text-sm text-muted-foreground">
-				Create, edit, and remove dated study steps while keeping the overview page read-only.
-			</p>
 		</div>
 		<a
 			href={resolve('/(protected)/projects/[project_id]/study-plan', params)}

@@ -125,15 +125,8 @@
 			<CreditCard /> Flashcards
 		</ToolHeading>
 		<div class="flex flex-wrap items-center gap-2">
-			<a
-				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
-				class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
-			>
-				<Settings2 />
-				Manage Flashcards
-			</a>
 			<Popover.Root>
-				<Popover.Trigger openOnHover class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+				<Popover.Trigger openOnHover class={buttonVariants({ variant: 'outline' })}
 					><ListFilter /> Filter</Popover.Trigger
 				>
 				<Popover.Content align="start" class="flex flex-col gap-1 p-2">
@@ -147,12 +140,20 @@
 							<Label for={r}>{r} ({(flashcards ?? []).filter((f) => f.rating === r).length})</Label>
 						</div>
 					{/each}
+					<Button variant="outline" size="sm" onclick={handleReset}>
+						<RefreshCcw />
+						Reset Progress
+					</Button>
 				</Popover.Content>
 			</Popover.Root>
-			<Button variant="outline" class="my-2" onclick={handleReset}>
-				<RefreshCcw />
-				Reset Progress
-			</Button>
+
+			<a
+				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
+				class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+			>
+				<Settings2 />
+				Manage Flashcards
+			</a>
 		</div>
 	</div>
 

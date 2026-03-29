@@ -188,9 +188,6 @@
 			<ToolHeading>
 				<Settings2 /> Manage Flashcards
 			</ToolHeading>
-			<p class="text-sm text-muted-foreground">
-				Create, edit, and remove flashcards without changing the review-focused study screen.
-			</p>
 		</div>
 		<a
 			href={resolve('/(protected)/projects/[project_id]/flashcards', params)}
