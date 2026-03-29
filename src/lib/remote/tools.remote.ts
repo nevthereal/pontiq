@@ -1,11 +1,7 @@
 import { command, form, query } from '$app/server';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import {
-	flashcard,
-	flashcardReviewState,
-	studyPlanStep
-} from '$lib/server/db/schema';
+import { flashcard, flashcardReviewState, studyPlanStep } from '$lib/server/db/schema';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
@@ -34,7 +30,6 @@ function normalizeDateInput(date: string) {
 		throw error(400, 'Invalid study step date');
 	}
 
-	normalizedDate.setHours(0, 0, 0, 0);
 	return normalizedDate;
 }
 

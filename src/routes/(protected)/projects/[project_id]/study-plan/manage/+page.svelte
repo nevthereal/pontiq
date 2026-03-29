@@ -10,6 +10,7 @@
 	import StudyPlanManagerList from '$lib/components/study-plan/StudyPlanManagerList.svelte';
 	import { deleteAllStudySteps, deleteStudyStep, getStudySteps } from '$lib/remote/tools.remote';
 	import type { StudyPlanStep } from '$lib/server/db/schema';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	let { params } = $props();
 
@@ -21,7 +22,7 @@
 	let selectedId = $state<string | null>(null);
 	let isCreating = $state(false);
 
-	const pendingDeletes = new Map<
+	const pendingDeletes = new SvelteMap<
 		string,
 		{
 			step: StudyPlanStep;
@@ -168,7 +169,7 @@
 	}
 
 	async function handleDeleteAll() {
-		toast.promise(deleteAllStudySteps(params.project_id), {
+		await toast.promise(deleteAllStudySteps(params.project_id), {
 			loading: 'Deleting study plan…',
 			success: 'Study plan deleted',
 			error: 'Failed to delete study plan'
