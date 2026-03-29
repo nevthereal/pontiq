@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Flashcard from '$lib/components/Flashcard.svelte';
+	import { resolve } from '$app/paths';
+	import Flashcard from '$lib/components/flashcards/Flashcard.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -17,7 +18,16 @@
 	} from '$lib/remote/tools.remote';
 	import { cn } from '$lib/utils';
 	import { ratings } from '$lib/things';
-	import { CreditCard, Frown, Laugh, ListFilter, Meh, RefreshCcw, Smile } from '@lucide/svelte';
+	import {
+		CreditCard,
+		Frown,
+		Laugh,
+		ListFilter,
+		Meh,
+		RefreshCcw,
+		Settings2,
+		Smile
+	} from '@lucide/svelte';
 	import { cubicInOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 	import { watch } from 'runed';
@@ -116,7 +126,7 @@
 		</ToolHeading>
 		<div class="flex flex-wrap items-center gap-2">
 			<Popover.Root>
-				<Popover.Trigger openOnHover class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+				<Popover.Trigger openOnHover class={buttonVariants({ variant: 'outline' })}
 					><ListFilter /> Filter</Popover.Trigger
 				>
 				<Popover.Content align="start" class="flex flex-col gap-1 p-2">
@@ -130,12 +140,20 @@
 							<Label for={r}>{r} ({(flashcards ?? []).filter((f) => f.rating === r).length})</Label>
 						</div>
 					{/each}
+					<Button variant="outline" size="sm" onclick={handleReset}>
+						<RefreshCcw />
+						Reset Progress
+					</Button>
 				</Popover.Content>
 			</Popover.Root>
-			<Button variant="outline" class="my-2" onclick={handleReset}>
-				<RefreshCcw />
-				Reset Progress
-			</Button>
+
+			<a
+				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
+				class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+			>
+				<Settings2 />
+				Manage Flashcards
+			</a>
 		</div>
 	</div>
 

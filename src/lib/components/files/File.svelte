@@ -2,7 +2,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import type { File } from '$lib/server/db/schema';
-	import { buttonVariants } from './ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import { CircleFadingPlus, Ellipsis, FileText, SquareArrowUpRight, Trash2 } from '@lucide/svelte';
 	import { attachments } from '$lib/chat.svelte';
 	import { toast } from 'svelte-sonner';

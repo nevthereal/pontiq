@@ -4,7 +4,7 @@
 	import { getFiles } from '$lib/remote/files.remote';
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import Muted from '$lib/components/typography/Muted.svelte';
-	import File from '$lib/components/File.svelte';
+	import File from '$lib/components/files/File.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { resolve } from '$app/paths';
 	import { generateSvelteHelpers, UploadDropzone } from '@uploadthing/svelte';
@@ -42,37 +42,39 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-	<ToolHeading>
-		<Folder /> Files
-	</ToolHeading>
-	<Drawer.Root bind:open>
-		<Drawer.Trigger class={[buttonVariants(), 'mb-2 w-full']}><Upload /> Upload</Drawer.Trigger>
-		<Drawer.Content>
-			<div class="mx-auto mb-6 max-w-2xl">
-				<Drawer.Header>
-					<Drawer.Title>Upload files</Drawer.Title>
-				</Drawer.Header>
-				<UploadDropzone
-					{uploader}
-					class="p-6 ut-allowed-content:text-muted-foreground ut-label:text-foreground"
-				>
-					<i slot="upload-icon">
-						<Upload />
-					</i>
+	<div class="flex justify-between">
+		<ToolHeading>
+			<Folder /> Files
+		</ToolHeading>
+		<Drawer.Root bind:open>
+			<Drawer.Trigger class={[buttonVariants(), 'mb-2 ml-auto']}><Upload /> Upload</Drawer.Trigger>
+			<Drawer.Content>
+				<div class="mx-auto mb-6 max-w-2xl">
+					<Drawer.Header>
+						<Drawer.Title>Upload files</Drawer.Title>
+					</Drawer.Header>
+					<UploadDropzone
+						{uploader}
+						class="p-6 ut-allowed-content:text-muted-foreground ut-label:text-foreground"
+					>
+						<i slot="upload-icon">
+							<Upload />
+						</i>
 
-					<span class={buttonVariants()} slot="button-content" let:state>
-						{state.isUploading ? `Uploading... ${state.uploadProgress}%` : 'Pick files'}
-					</span>
-					<span slot="label" let:state>
-						{state.ready ? 'Drag and drop files here' : 'Loading...'}
-					</span>
-					<span slot="allowed-content" let:state>
-						You can choose between {state.fileTypes.join(', ')} files
-					</span>
-				</UploadDropzone>
-			</div>
-		</Drawer.Content>
-	</Drawer.Root>
+						<span class={buttonVariants()} slot="button-content" let:state>
+							{state.isUploading ? `Uploading... ${state.uploadProgress}%` : 'Pick files'}
+						</span>
+						<span slot="label" let:state>
+							{state.ready ? 'Drag and drop files here' : 'Loading...'}
+						</span>
+						<span slot="allowed-content" let:state>
+							You can choose between {state.fileTypes.join(', ')} files
+						</span>
+					</UploadDropzone>
+				</div>
+			</Drawer.Content>
+		</Drawer.Root>
+	</div>
 	<div class="min-h-0 flex-1 overflow-y-scroll">
 		<svelte:boundary onerror={(e) => console.error(e)}>
 			{#snippet pending()}

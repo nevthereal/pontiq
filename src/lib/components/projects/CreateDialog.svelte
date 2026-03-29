@@ -7,7 +7,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { createProject, createSubject, getSubjects } from '$lib/remote/projects.remote';
-	import Loading from './typography/Loading.svelte';
+	import Loading from '$lib/components/typography/Loading.svelte';
 	import { getProjectLimit } from '$lib/remote/billing.remote';
 
 	const limitPromise = $derived(getProjectLimit());

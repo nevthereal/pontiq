@@ -4,7 +4,7 @@
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import { getSubjectsWithProjects } from '$lib/remote/projects.remote';
 	import Muted from '$lib/components/typography/Muted.svelte';
-	import CreateDialog from '$lib/components/CreateDialog.svelte';
+	import CreateDialog from '$lib/components/projects/CreateDialog.svelte';
 	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { getCustomer, subscribeToPro } from '$lib/remote/billing.remote';

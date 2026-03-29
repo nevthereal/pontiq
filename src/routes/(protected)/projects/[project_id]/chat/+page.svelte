@@ -26,7 +26,7 @@
 	import { attachments, chatConfig } from '$lib/chat.svelte';
 	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
-	import Message from '$lib/components/Message.svelte';
+	import Message from '$lib/components/chat/Message.svelte';
 	import { fade } from 'svelte/transition';
 	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
 
@@ -37,13 +37,16 @@
 	const customerQuery = getCustomer();
 	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
 
-	watch(() => toolsAllowed, (allowed) => {
-		if (!allowed) {
-			chatConfig.current.studyModeEnabled = false;
-			chatConfig.current.enhancedReasoning = false;
-			chatConfig.current.webSearch = false;
+	watch(
+		() => toolsAllowed,
+		(allowed) => {
+			if (!allowed) {
+				chatConfig.current.studyModeEnabled = false;
+				chatConfig.current.enhancedReasoning = false;
+				chatConfig.current.webSearch = false;
+			}
 		}
-	});
+	);
 
 	// Keep the chat instance stable so query refreshes do not recreate the input subtree.
 	const chat = new Chat<MyUIMessage>({
