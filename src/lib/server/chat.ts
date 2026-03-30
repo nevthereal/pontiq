@@ -74,6 +74,66 @@ export async function getRecentChatThreads(input: {
 		.limit(input.limit ?? 5);
 }
 
+export async function renameChatThread(input: {
+	projectId: string;
+	userId: string;
+	threadId: string;
+	title: string;
+}) {
+	const title = input.title.trim();
+	if (!title.length) {
+		throw error(400, 'Chat title is required');
+	}
+
+	await requireOwnedThread({
+		projectId: input.projectId,
+		userId: input.userId,
+		threadId: input.threadId
+	});
+
+	const [thread] = await db
+		.update(chatThread)
+		.set({
+			title,
+			updatedAt: new Date()
+		})
+		.where(eq(chatThread.id, input.threadId))
+		.returning({
+			id: chatThread.id,
+			title: chatThread.title,
+			activeRunId: chatThread.activeRunId,
+			updatedAt: chatThread.updatedAt,
+			createdAt: chatThread.createdAt
+		});
+
+	if (!thread) {
+		throw error(404, 'Chat thread not found');
+	}
+
+	return thread satisfies ChatThreadSummary;
+}
+
+export async function deleteChatThread(input: {
+	projectId: string;
+	userId: string;
+	threadId: string;
+}) {
+	await requireOwnedThread({
+		projectId: input.projectId,
+		userId: input.userId,
+		threadId: input.threadId
+	});
+
+	const [thread] = await db
+		.delete(chatThread)
+		.where(eq(chatThread.id, input.threadId))
+		.returning({ id: chatThread.id });
+
+	if (!thread) {
+		throw error(404, 'Chat thread not found');
+	}
+}
+
 export async function getChatThreadDetail(input: {
 	projectId: string;
 	userId: string;

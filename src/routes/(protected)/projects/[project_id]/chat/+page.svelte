@@ -8,7 +8,7 @@
 	import { tick } from 'svelte';
 	import { WorkflowChatTransport } from '@workflow/ai';
 	import { Chat } from '@ai-sdk/svelte';
-	import { ChevronDown, MessageCircle, Plus } from '@lucide/svelte';
+	import { ArrowLeftRight, ChevronDown, MessageCircle, Plus } from '@lucide/svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import type { MyUIMessage } from '$lib/server/ai';
@@ -60,7 +60,6 @@
 	let currentChatVersion = 0;
 	let currentThreadSelectionVersion = 0;
 
-	const currentTitle = $derived(selectedThread?.title ?? 'New chat');
 	const recentChats = $derived(recentChatsQuery.current ?? []);
 
 	function hasRenderableAssistantContent(message: MyUIMessage) {
@@ -330,8 +329,7 @@
 			<Button onclick={openDraftChat} size="icon"><Plus /></Button>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
-					<span class="truncate">{currentTitle}</span>
-					<ChevronDown />
+					<ArrowLeftRight /> Switch chat
 				</DropdownMenu.Trigger>
 
 				<DropdownMenu.Content align="end" class="w-80">
@@ -339,19 +337,30 @@
 					<DropdownMenu.Separator />
 
 					{#if recentChats.length > 0}
-						{#each recentChats as thread (thread.id)}
-							<DropdownMenu.Item onclick={() => selectThread(thread.id)}>
-								<div class="flex min-w-0 flex-1 flex-col">
-									<span class="truncate">{thread.title}</span>
-									<span class="text-xs text-muted-foreground">
-										{formatUpdatedAt(thread.updatedAt)}
-									</span>
-								</div>
-							</DropdownMenu.Item>
-						{/each}
+						<DropdownMenu.RadioGroup value={selectedThreadId ?? ''}>
+							{#each recentChats as thread (thread.id)}
+								<DropdownMenu.RadioItem value={thread.id} onclick={() => selectThread(thread.id)}>
+									<div class="flex min-w-0 flex-1 flex-col">
+										<span class="truncate">{thread.title}</span>
+										<span class="text-xs text-muted-foreground">
+											{formatUpdatedAt(thread.updatedAt)}
+										</span>
+									</div>
+								</DropdownMenu.RadioItem>
+							{/each}
+						</DropdownMenu.RadioGroup>
 					{:else}
 						<DropdownMenu.Item disabled>No previous chats yet</DropdownMenu.Item>
 					{/if}
+
+					<DropdownMenu.Separator />
+					<a
+						href={resolve('/(protected)/projects/[project_id]/chat/all', {
+							project_id: getProjectId()
+						})}
+					>
+						<DropdownMenu.Item>View all chats</DropdownMenu.Item>
+					</a>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
 		</div>
@@ -369,11 +378,7 @@
 					</p>
 				{:else}
 					{#each chat.messages as message, messageIndex (message.id ?? messageIndex)}
-						{#if !(
-							isWaitingForAssistantContent &&
-							messageIndex === chat.messages.length - 1 &&
-							message.role === 'assistant'
-						)}
+						{#if !(isWaitingForAssistantContent && messageIndex === chat.messages.length - 1 && message.role === 'assistant')}
 							<Message {message} />
 						{/if}
 					{/each}
