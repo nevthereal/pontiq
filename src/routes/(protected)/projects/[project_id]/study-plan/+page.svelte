@@ -17,7 +17,6 @@
 		NotebookPen,
 		Settings2
 	} from '@lucide/svelte';
-	import { SvelteDate } from 'svelte/reactivity';
 
 	let { params } = $props();
 
@@ -37,9 +36,7 @@
 	const nextStudyStep = $derived(upcomingSteps[0] ?? null);
 
 	function startOfDay(date: Date) {
-		const value = new SvelteDate(date);
-		value.setHours(0, 0, 0, 0);
-		return value;
+		return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	}
 
 	function formatDate(date: Date) {
@@ -110,15 +107,6 @@
 											{nextStudyStep.description}
 										</p>
 									</div>
-								</div>
-								<div class="rounded-2xl border bg-muted/30 p-4">
-									<p class="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-										Next up
-									</p>
-									<p class="mt-3 text-lg font-semibold">{formatDate(nextStudyStep.date)}</p>
-									<p class="mt-2 text-sm text-muted-foreground">
-										This is the first step due today or later in your current plan.
-									</p>
 								</div>
 							</div>
 						</section>

@@ -1,4 +1,14 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-orm/pg-core';
+import {
+	index,
+	integer,
+	jsonb,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
+	unique
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { project } from './projects.sql';
 import { user } from './auth.sql';
@@ -72,5 +82,52 @@ export const flashcardReviewState = pgTable(
 	]
 );
 
+export const chatThread = pgTable(
+	'chat_thread',
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		projectId,
+		creatorId: text()
+			.references(() => user.id, { onDelete: 'cascade' })
+			.notNull(),
+		title: text().notNull().default('New chat'),
+		activeRunId: text(),
+		latestRunId: text(),
+		createdAt: timestamp().defaultNow().notNull(),
+		updatedAt: timestamp()
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(t) => [
+		index('chat_thread_project_idx').on(t.projectId),
+		index('chat_thread_creator_idx').on(t.creatorId),
+		index('chat_thread_active_run_idx').on(t.activeRunId),
+		index('chat_thread_latest_run_idx').on(t.latestRunId)
+	]
+);
+
+export const chatMessage = pgTable(
+	'chat_message',
+	{
+		id: uuid().primaryKey().defaultRandom(),
+		threadId: uuid()
+			.references(() => chatThread.id, { onDelete: 'cascade' })
+			.notNull(),
+		sequence: integer().notNull(),
+		uiMessageId: text().notNull(),
+		role: text().notNull(),
+		message: jsonb().notNull(),
+		createdAt: timestamp().defaultNow().notNull()
+	},
+	(t) => [
+		index('chat_message_thread_idx').on(t.threadId),
+		unique('chat_message_thread_sequence_unique').on(t.threadId, t.sequence),
+		unique('chat_message_thread_ui_message_id_unique').on(t.threadId, t.uiMessageId)
+	]
+);
+
 export type Flashcard = typeof flashcard.$inferSelect;
 export type StudyPlanStep = typeof studyPlanStep.$inferSelect;
+export type ChatThread = typeof chatThread.$inferSelect;
+export type ChatMessage = typeof chatMessage.$inferSelect;

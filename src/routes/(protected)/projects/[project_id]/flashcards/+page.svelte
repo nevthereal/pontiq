@@ -149,7 +149,7 @@
 
 			<a
 				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
-				class={cn(buttonVariants({ variant: 'outline' }), 'my-2')}
+				class={buttonVariants({ variant: 'outline' })}
 			>
 				<Settings2 />
 				Manage Flashcards

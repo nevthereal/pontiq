@@ -1,19 +1,29 @@
-import { type MyUIMessage, tools } from '$lib/server/ai';
-import type { chatConfig } from '$lib/chat.svelte';
+import { createUIMessageStreamResponse } from 'ai';
 import { error } from '@sveltejs/kit';
-import { streamText, convertToModelMessages, stepCountIs, smoothStream } from 'ai';
-import { VERCEL_AI_KEY } from '$env/static/private';
-import { createGateway } from '@ai-sdk/gateway';
 import type { RequestHandler } from './$types';
-import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
 import { autumn } from '$lib/server/autumn';
+import {
+	createChatThread,
+	listThreadMessages,
+	appendChatMessage,
+	requireOwnedThread,
+	setChatThreadRunState
+} from '$lib/server/chat';
+import { normalizeChatConfig } from '$lib/chat-config';
+import type { MyUIMessage } from '$lib/server/ai';
+import { generateProjectChatTitle, runProjectChatTurn } from '../../../../../../workflows/chat';
+import { start } from 'workflow/api';
 
-const gateway = createGateway({
-	apiKey: VERCEL_AI_KEY
-});
+type ChatRequestBody = {
+	messages: MyUIMessage[];
+	config?: unknown;
+	threadId?: string | null;
+};
 
-export const POST: RequestHandler = async ({ request, locals }) => {
-	if (!locals.user) error(401, 'No user');
+export const POST: RequestHandler = async ({ request, locals, params }) => {
+	if (!locals.user) {
+		throw error(401, 'No user');
+	}
 
 	const { allowed } = await autumn.check({
 		customerId: locals.user.id,
@@ -21,7 +31,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	if (!allowed) {
-		return error(401, 'No messages left');
+		throw error(402, 'No messages left');
 	}
 
 	const { allowed: toolsAllowed } = await autumn.check({
@@ -29,80 +39,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		featureId: 'tool_use'
 	});
 
-	const DEFAULT_SYS_PROMPT =
-		`You are a friendly study chatbot assistant in a study app called Pontiq` +
-		`You should be answering the questions from the provided files, if given, else answer from your knowledge or search the web.` +
-		`Please answer in the language you were prompted or the language of given files.` +
-		`The user's name is ${locals.user.name} and right now is ${new Date()}.` +
-		`Don't explain too heavily what you did in tool calls, since the user can see this in the UI`;
-
-	const STUDY_MODE_PROMPT =
-		DEFAULT_SYS_PROMPT +
-		`You are acting as an approachable-yet-dynamic teacher who helps the user learn through guided discovery, not by giving answers.
-
-  === STUDY MODE SYSTEM PROMPT ===
-
-  🎯 PURPOSE
-  Help the user learn — not by doing the work for them, but by:
-  - Explaining concepts clearly at their level,
-  - Asking guiding questions,
-  - Building on what they already know,
-  - Checking understanding,
-  - Encouraging active learning.
-
-  🧑‍🎓 1. Get to know the user
-  - Before starting, find out the user's goals or grade level.
-  - If unknown, default to explanations for a 10th-grade student.
-
-  🧱 2. Build on existing knowledge
-  - Connect new ideas to what the user already knows.
-  - Use analogies or familiar examples.
-
-  🗣️ 3. Guide, don’t give answers
-  - Never solve homework directly.
-  - Use Socratic questioning: one small step or question at a time.
-  - Wait for the user’s reply before continuing.
-  - Help the user reason their way to understanding.
-
-  🔁 4. Check and reinforce
-  - After a hard point, confirm understanding by asking the user to explain or apply it.
-  - Use summaries, mnemonics, or short reviews to reinforce.
-
-  🌀 5. Vary the rhythm
-  - Mix explanation, questioning, mini-quizzes, and roleplay.
-  - Keep it conversational and interactive.
-  - Focus on one idea at a time; avoid information overload.
-
-  ⚖️ 6. What’s allowed
-  ✅ Teaching new concepts
-  ✅ Helping with homework through guidance
-  ✅ Running quizzes (one question at a time)
-  ✅ Encouraging reasoning and self-correction
-
-  🚫 What’s not allowed
-  ❌ Giving direct answers to homework/test problems
-  ❌ Solving multi-step problems all at once
-  ❌ Asking multiple questions at once
-  ❌ Writing essay-length responses
-  ❌ Overly casual tone or excessive emojis
-
-  💬 Tone & Approach
-  - Warm, patient, and plain-spoken.
-  - Encourage curiosity.
-  - Be concise and responsive.
-  - Always move logically to the next teaching step.
-
-  END OF STUDY MODE SYSTEM PROMPT
-  `;
-
-	const {
-		messages,
-		config
-	}: {
-		messages: MyUIMessage[];
-		config: typeof chatConfig.current;
-	} = await request.json();
-
+	const body = (await request.json()) as ChatRequestBody;
+	const config = normalizeChatConfig(body.config as Record<string, unknown> | undefined);
 	const effectiveConfig = toolsAllowed
 		? config
 		: {
@@ -112,24 +50,67 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				webSearch: false
 			};
 
-	const result = streamText({
-		model: gateway('openai/gpt-5.4-mini'),
-		messages: await convertToModelMessages(messages),
-		system:
-			(effectiveConfig.studyModeEnabled ? STUDY_MODE_PROMPT : DEFAULT_SYS_PROMPT) +
-			(effectiveConfig.webSearch ? ' Use web search' : ''),
-		...(toolsAllowed ? { tools } : {}),
-		stopWhen: stepCountIs(20),
-		experimental_transform: smoothStream({
-			chunking: 'word'
-		}),
-		providerOptions: {
-			openai: {
-				reasoningEffort: effectiveConfig.enhancedReasoning ? 'high' : 'none',
-				...(effectiveConfig.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
-			} satisfies OpenAILanguageModelResponsesOptions
-		}
+	const messages = body.messages ?? [];
+	const lastMessage = messages.at(-1);
+
+	if (!lastMessage || lastMessage.role !== 'user') {
+		throw error(400, 'A user message is required');
+	}
+
+	let threadId = body.threadId ?? null;
+	let createdThread = false;
+
+	if (threadId) {
+		await requireOwnedThread({
+			projectId: params.project_id,
+			threadId,
+			userId: locals.user.id
+		});
+	} else {
+		const thread = await createChatThread({
+			projectId: params.project_id,
+			userId: locals.user.id
+		});
+
+		threadId = thread.id;
+		createdThread = true;
+	}
+
+	await appendChatMessage({
+		threadId,
+		message: lastMessage
 	});
+
+	const persistedMessages = (await listThreadMessages({
+		threadId
+	})) as MyUIMessage[];
+
+	const run = await start(runProjectChatTurn, [
+		{
+			threadId,
+			projectId: params.project_id,
+			userId: locals.user.id,
+			userName: locals.user.name,
+			config: effectiveConfig,
+			toolsAllowed,
+			messages: persistedMessages
+		}
+	]);
+
+	await setChatThreadRunState({
+		threadId,
+		runId: run.runId,
+		active: true
+	});
+
+	if (createdThread) {
+		await start(generateProjectChatTitle, [
+			{
+				threadId,
+				firstMessage: lastMessage
+			}
+		]);
+	}
 
 	try {
 		await autumn.track({
@@ -137,9 +118,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			featureId: 'messages',
 			value: 1
 		});
-	} catch (error) {
-		console.error('Failed to track chat message usage', error);
+	} catch (trackingError) {
+		console.error('Failed to track chat message usage', trackingError);
 	}
 
-	return result.toUIMessageStreamResponse();
+	return createUIMessageStreamResponse({
+		stream: run.readable,
+		headers: {
+			'x-workflow-run-id': run.runId,
+			'x-chat-thread-id': threadId
+		}
+	});
 };

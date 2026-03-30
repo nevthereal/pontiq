@@ -1,40 +1,41 @@
 <script lang="ts">
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Item from '$lib/components/ui/item/index.js';
-	import {
-		ArrowUpIcon,
-		Brain,
-		ChevronDown,
-		Globe,
-		GraduationCap,
-		Paperclip,
-		Plus,
-		SlidersHorizontal,
-		Trash2,
-		Zap
-	} from '@lucide/svelte';
+	import { browser } from '$app/environment';
+	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { tick } from 'svelte';
+	import { WorkflowChatTransport } from '@workflow/ai';
 	import { Chat } from '@ai-sdk/svelte';
+	import { ChevronDown, MessageCircle, Plus } from '@lucide/svelte';
 	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { DefaultChatTransport } from 'ai';
-	import { resolve } from '$app/paths';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import { MessageCircle } from '@lucide/svelte';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { attachments, chatConfig } from '$lib/chat.svelte';
-	import { getFiles } from '$lib/remote/files.remote';
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/chat/Message.svelte';
-	import { fade } from 'svelte/transition';
-	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, getCustomer } from '$lib/remote/billing.remote';
+	import { getProjectChatThread, getRecentProjectChats } from '$lib/remote/chat.remote';
+	import ChatInput from '$lib/components/chat/ChatInput.svelte';
 
 	let { params } = $props();
-	const projectId = params.project_id;
+
+	function getProjectId() {
+		return params.project_id;
+	}
 
 	const chatLimitQuery = getChatLimit();
 	const customerQuery = getCustomer();
+	const recentChatsQuery = getRecentProjectChats({ projectId: getProjectId() });
+	const initialThreadId = page.url.searchParams.get('thread');
+	const initialThread = initialThreadId
+		? await getProjectChatThread({ projectId: getProjectId(), threadId: initialThreadId })
+		: null;
+
+	type ProjectChatThread = NonNullable<typeof initialThread>;
+
 	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
 
 	watch(
@@ -48,57 +49,276 @@
 		}
 	);
 
-	// Keep the chat instance stable so query refreshes do not recreate the input subtree.
-	const chat = new Chat<MyUIMessage>({
-		transport: new DefaultChatTransport({
-			api: resolve('/(protected)/projects/[project_id]/api/chat', {
-				project_id: projectId
-			})
-		}),
-		onFinish: async () => {
-			await chatLimitQuery.refresh();
-		}
-	});
+	let selectedThreadId = $state<string | null>(initialThread?.id ?? null);
+	let selectedThread = $state.raw<ProjectChatThread | null>(initialThread);
+	let resumableRunId = $state<string | null>(initialThread?.activeRunId ?? null);
+	let activeResponseThreadId = $state<string | null>(
+		initialThread?.activeRunId ? initialThread.id : null
+	);
+	let loadingThread = $state(false);
+	let chatContainer = $state<HTMLElement>();
+	let currentChatVersion = 0;
+	let currentThreadSelectionVersion = 0;
 
-	let input = $state('');
+	const currentTitle = $derived(selectedThread?.title ?? 'New chat');
+	const recentChats = $derived(recentChatsQuery.current ?? []);
 
-	async function handleSubmit() {
-		if (chat.status !== 'ready') return;
-		if (!input.trim() && attachments.files.length === 0) return;
+	function hasRenderableAssistantContent(message: MyUIMessage) {
+		return message.parts.some((part) => {
+			if (part.type === 'text' || part.type === 'reasoning') {
+				return part.text.trim().length > 0;
+			}
 
-		chat.sendMessage(
-			{
-				// refactor to content:
-				text: input,
-				files: attachments.files.map((a) => ({
-					mediaType: a.type,
-					type: 'file',
-					filename: a.name,
-					url: a.utURL
-				}))
-			},
-			{ body: { config: chatConfig.current, attachments } }
-		);
-		input = '';
-		attachments.clear();
+			return true;
+		});
 	}
 
-	let chatContainer = $state<HTMLElement>();
+	async function reconcileFinishedThread(
+		threadId: string,
+		version: number,
+		messages: MyUIMessage[]
+	) {
+		for (const delayMs of [0, 250, 1000]) {
+			if (delayMs > 0) {
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
+
+			if (version !== currentChatVersion || selectedThreadId !== threadId) {
+				return;
+			}
+
+			await recentChatsQuery.refresh();
+
+			if (version !== currentChatVersion || selectedThreadId !== threadId) {
+				return;
+			}
+
+			const recentThread = recentChatsQuery.current?.find((thread) => thread.id === threadId);
+			if (!recentThread || selectedThread?.id !== threadId) {
+				continue;
+			}
+
+			selectedThread = {
+				...selectedThread,
+				title: recentThread.title,
+				updatedAt: recentThread.updatedAt,
+				createdAt: recentThread.createdAt,
+				activeRunId: null,
+				messages
+			};
+
+			if (recentThread.title !== 'New chat' || delayMs === 1000) {
+				return;
+			}
+		}
+	}
+
+	function createChatInstance(thread: ProjectChatThread | null, threadId: string | null) {
+		const version = ++currentChatVersion;
+		const chatId = threadId ?? `draft-${version}`;
+
+		return new Chat<MyUIMessage>({
+			id: chatId,
+			messages: (thread?.messages ?? []) as MyUIMessage[],
+			transport: new WorkflowChatTransport<MyUIMessage>({
+				api: resolve('/(protected)/projects/[project_id]/api/chat', {
+					project_id: getProjectId()
+				}),
+				prepareReconnectToStreamRequest: async (request) => {
+					if (!resumableRunId) {
+						throw new Error('No resumable workflow run available');
+					}
+
+					return {
+						...request,
+						api: resolve('/(protected)/projects/[project_id]/api/chat/[run_id]/stream', {
+							project_id: getProjectId(),
+							run_id: resumableRunId
+						})
+					};
+				},
+				onChatSendMessage: async (response, options) => {
+					if (version !== currentChatVersion) return;
+
+					const threadIdFromResponse = response.headers.get('x-chat-thread-id');
+					const runId = response.headers.get('x-workflow-run-id');
+
+					if (threadIdFromResponse) {
+						selectedThreadId = threadIdFromResponse;
+						selectedThread = {
+							id: threadIdFromResponse,
+							title: selectedThread?.title ?? 'New chat',
+							activeRunId: runId,
+							updatedAt: new Date(),
+							createdAt: selectedThread?.createdAt ?? new Date(),
+							messages: options.messages
+						} as ProjectChatThread;
+						syncThreadUrl(threadIdFromResponse);
+					}
+
+					if (runId) {
+						resumableRunId = runId;
+						activeResponseThreadId = threadIdFromResponse ?? selectedThreadId;
+					}
+
+					await recentChatsQuery.refresh();
+				},
+				onChatEnd: async () => {
+					if (version !== currentChatVersion) return;
+
+					const finishedThreadId = activeResponseThreadId;
+					const finishedMessages = $state.snapshot(chat.messages) as MyUIMessage[];
+					activeResponseThreadId = null;
+					resumableRunId = null;
+
+					if (selectedThread && finishedThreadId && selectedThread.id === finishedThreadId) {
+						selectedThread = {
+							...selectedThread,
+							activeRunId: null,
+							messages: finishedMessages
+						};
+					}
+
+					if (finishedThreadId && selectedThreadId === finishedThreadId) {
+						await reconcileFinishedThread(finishedThreadId, version, finishedMessages);
+					} else {
+						await recentChatsQuery.refresh();
+					}
+				}
+			}),
+			onFinish: async ({ isAbort }) => {
+				if (version !== currentChatVersion) return;
+
+				if (!isAbort) {
+					await chatLimitQuery.refresh();
+				}
+			}
+		});
+	}
+
+	let chat = $state(createChatInstance(initialThread, initialThread?.id ?? null));
+	const lastChatMessage = $derived(chat.messages.at(-1));
+	const isWaitingForAssistantContent = $derived(
+		chat.status !== 'ready' &&
+			lastChatMessage?.role === 'assistant' &&
+			!hasRenderableAssistantContent(lastChatMessage)
+	);
 
 	const scroll = new ScrollState({ element: () => chatContainer, behavior: 'smooth' });
-
-	// Check if content overflows and user is not at bottom
 	const atBottom = $derived(scroll.arrived.bottom);
+
+	async function scrollToLatestMessages() {
+		await tick();
+		scroll.scrollToBottom();
+	}
 
 	watch(
 		() => chat.status,
-		(s) => {
-			if (s === 'ready') scroll.scrollToBottom();
+		(status) => {
+			if (status === 'ready') scroll.scrollToBottom();
 		}
 	);
 
-	let hideMessageItem = $state(false);
-	let loading = $state(false);
+	watch(
+		() => loadingThread,
+		(isLoading) => {
+			if (!isLoading) {
+				void scrollToLatestMessages();
+			}
+		}
+	);
+
+	function syncThreadUrl(threadId: string | null) {
+		const basePath = resolve('/(protected)/projects/[project_id]/chat', {
+			project_id: getProjectId()
+		});
+		const nextPath = threadId ? `${basePath}?thread=${encodeURIComponent(threadId)}` : basePath;
+
+		replaceState(nextPath, page.state);
+	}
+
+	function formatUpdatedAt(date: Date) {
+		return new Intl.DateTimeFormat('en-GB', {
+			day: '2-digit',
+			month: 'short',
+			hour: '2-digit',
+			minute: '2-digit'
+		}).format(date);
+	}
+
+	function replaceChat(thread: ProjectChatThread | null, threadId: string | null) {
+		chat = createChatInstance(thread, threadId);
+	}
+
+	async function refreshThread(
+		threadId: string,
+		options?: { recreateChat?: boolean; selectionVersion?: number }
+	) {
+		const thread = await getProjectChatThread({ projectId: getProjectId(), threadId });
+		if (
+			options?.selectionVersion != null &&
+			options.selectionVersion !== currentThreadSelectionVersion
+		) {
+			return null;
+		}
+
+		selectedThread = thread;
+		resumableRunId = thread.activeRunId;
+
+		if (options?.recreateChat ?? true) {
+			replaceChat(thread, thread.id);
+		} else {
+			chat.messages = thread.messages as MyUIMessage[];
+		}
+
+		return thread;
+	}
+
+	async function openDraftChat() {
+		currentThreadSelectionVersion += 1;
+
+		attachments.clear();
+		selectedThreadId = null;
+		selectedThread = null;
+		resumableRunId = null;
+		activeResponseThreadId = null;
+		replaceChat(null, null);
+		syncThreadUrl(null);
+		void scrollToLatestMessages();
+	}
+
+	async function selectThread(threadId: string) {
+		if (threadId === selectedThreadId) return;
+		const selectionVersion = ++currentThreadSelectionVersion;
+
+		loadingThread = true;
+		attachments.clear();
+
+		try {
+			selectedThreadId = threadId;
+			syncThreadUrl(threadId);
+			const thread = await refreshThread(threadId, { selectionVersion });
+			if (!thread) return;
+
+			if (browser && thread.activeRunId) {
+				activeResponseThreadId = thread.id;
+				void chat.resumeStream();
+			}
+		} finally {
+			if (selectionVersion === currentThreadSelectionVersion) {
+				loadingThread = false;
+			}
+
+			await recentChatsQuery.refresh();
+		}
+	}
+
+	if (browser && initialThread?.activeRunId) {
+		activeResponseThreadId = initialThread.id;
+		queueMicrotask(() => {
+			void chat.resumeStream();
+		});
+	}
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-4">
@@ -106,22 +326,60 @@
 		<ToolHeading>
 			<MessageCircle /> Document Chat
 		</ToolHeading>
-		<Button
-			href={resolve('/(protected)/projects/[project_id]/chat', params)}
-			size="sm"
-			variant="outline"><Plus /> New chat</Button
-		>
+		<div class="flex items-center gap-1">
+			<Button onclick={openDraftChat} size="icon"><Plus /></Button>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
+					<span class="truncate">{currentTitle}</span>
+					<ChevronDown />
+				</DropdownMenu.Trigger>
+
+				<DropdownMenu.Content align="end" class="w-80">
+					<DropdownMenu.Label>Recent chats</DropdownMenu.Label>
+					<DropdownMenu.Separator />
+
+					{#if recentChats.length > 0}
+						{#each recentChats as thread (thread.id)}
+							<DropdownMenu.Item onclick={() => selectThread(thread.id)}>
+								<div class="flex min-w-0 flex-1 flex-col">
+									<span class="truncate">{thread.title}</span>
+									<span class="text-xs text-muted-foreground">
+										{formatUpdatedAt(thread.updatedAt)}
+									</span>
+								</div>
+							</DropdownMenu.Item>
+						{/each}
+					{:else}
+						<DropdownMenu.Item disabled>No previous chats yet</DropdownMenu.Item>
+					{/if}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		</div>
 	</div>
+
 	<div class="flex min-h-0 flex-1 flex-col">
 		<div class="relative no-scrollbar flex h-full min-h-0 flex-col">
 			<ul
 				bind:this={chatContainer}
 				class="flex min-h-0 flex-1 flex-col gap-8 overflow-x-hidden overflow-y-auto pb-48"
 			>
-				{#each chat.messages as message, messageIndex (messageIndex)}
-					<Message {message} />
-				{/each}
-				{#if chat.status === 'submitted'}
+				{#if loadingThread}
+					<p class="flex items-center gap-2 font-medium text-muted-foreground">
+						<Spinner /> Loading chat
+					</p>
+				{:else}
+					{#each chat.messages as message, messageIndex (message.id ?? messageIndex)}
+						{#if !(
+							isWaitingForAssistantContent &&
+							messageIndex === chat.messages.length - 1 &&
+							message.role === 'assistant'
+						)}
+							<Message {message} />
+						{/if}
+					{/each}
+				{/if}
+
+				{#if chat.status === 'submitted' || isWaitingForAssistantContent}
 					<p class="flex items-center gap-2 font-medium text-muted-foreground">
 						<Spinner /> Loading message
 					</p>
@@ -134,12 +392,13 @@
 									{chat.error.name}: {chat.error.message}
 								{:else}
 									Try again later
-								{/if}</Item.Description
-							>
+								{/if}
+							</Item.Description>
 						</Item.Content>
 					</Item.Root>
 				{/if}
 			</ul>
+
 			{#if !atBottom}
 				<Button
 					size="icon-sm"
@@ -152,167 +411,7 @@
 				</Button>
 			{/if}
 
-			{@render chatInput()}
+			<ChatInput projectId={getProjectId()} threadId={selectedThreadId} {chat} />
 		</div>
 	</div>
 </div>
-
-{#snippet chatInput()}
-	<div class="mt-4 shrink-0 pb-2">
-		<form
-			onsubmit={async (e) => {
-				e.preventDefault();
-				if (chatLimitQuery.current && chatLimitQuery.current.allowed) handleSubmit();
-			}}
-			class="absolute bottom-0 w-full backdrop-blur-sm"
-		>
-			{#if !hideMessageItem && chatLimitQuery.current && !chatLimitQuery.current.balance?.unlimited}
-				<div transition:fade={{ duration: 100 }} class="fixed w-full max-w-md -translate-y-full">
-					<Item.Root variant="outline" size="xs" class="mb-2 bg-background">
-						<Item.Content>
-							<Item.Title>Message limits</Item.Title>
-							<Item.Description>
-								{@const { balance } = chatLimitQuery.current}
-								{#if balance}
-									{balance.remaining || 'No messages'} remaining. {#if balance.nextResetAt}
-										Resets on {Intl.DateTimeFormat().format(balance.nextResetAt)}
-									{/if}
-								{/if}
-							</Item.Description>
-						</Item.Content>
-						<Item.Actions>
-							<Button size="sm" variant="secondary" onclick={() => (hideMessageItem = true)}
-								>Dismiss</Button
-							>
-							<Button
-								size="sm"
-								onclick={async () => {
-									loading = true;
-									try {
-										await subscribeToPro().then((url) => {
-											if (url) window.location.href = url;
-										});
-									} finally {
-										loading = false;
-									}
-								}}
-								>{#if loading}<Spinner />{/if}Upgrade</Button
-							>
-						</Item.Actions>
-					</Item.Root>
-				</div>
-			{/if}
-
-			<InputGroup.Root class="rounded-xl">
-				<InputGroup.Input
-					bind:value={input}
-					id="chat-input"
-					name="message"
-					placeholder="Ask, Search or Chat..."
-				/>
-
-				<InputGroup.Addon align="block-start" class="overflow-scroll">
-					{#each attachments.files as att (att.id)}
-						<ButtonGroup.Root class="w-48">
-							<ButtonGroup.Text class="no-scrollbar min-w-0 truncate overflow-x-auto font-mono">
-								{att.name}
-							</ButtonGroup.Text>
-							<InputGroup.Button
-								variant="destructive"
-								size="icon-xs"
-								onclick={() => attachments.remove(att.id)}><Trash2 /></InputGroup.Button
-							>
-						</ButtonGroup.Root>
-					{:else}
-						<InputGroup.Text>No files in Chat</InputGroup.Text>
-					{/each}
-				</InputGroup.Addon>
-
-				<InputGroup.Addon align="block-end">
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger class={buttonVariants({ size: 'sm', variant: 'outline' })}
-							><SlidersHorizontal /> Tools</DropdownMenu.Trigger
-						>
-						<DropdownMenu.Content class="w-56" align="end">
-							{#if toolsAllowed}
-								<DropdownMenu.Label>Tool options</DropdownMenu.Label>
-								<DropdownMenu.Separator />
-								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.studyModeEnabled}
-									><GraduationCap /> Study mode</DropdownMenu.CheckboxItem
-								>
-								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.enhancedReasoning}
-									><Brain /> Reasoning</DropdownMenu.CheckboxItem
-								>
-								<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.webSearch}
-									><Globe /> Web search</DropdownMenu.CheckboxItem
-								>
-							{:else}
-								<DropdownMenu.Label>Tools</DropdownMenu.Label>
-								<DropdownMenu.Separator />
-								<DropdownMenu.Item disabled>
-									Upgrade to Pro to unlock Study mode, Reasoning, and Web search
-								</DropdownMenu.Item>
-								<DropdownMenu.Item
-									onclick={async () => {
-										loading = true;
-										try {
-											await subscribeToPro().then((url) => {
-												if (url) window.location.href = url;
-											});
-										} finally {
-											loading = false;
-										}
-									}}><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
-								>
-							{/if}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
-							><Paperclip /></DropdownMenu.Trigger
-						>
-						<DropdownMenu.Content class="w-80">
-							<DropdownMenu.Group>
-								<DropdownMenu.Label>Select files to add to chat</DropdownMenu.Label>
-								<DropdownMenu.Separator />
-								{#each await getFiles(projectId) as file (file.id)}
-									<DropdownMenu.CheckboxItem
-										class="truncate"
-										closeOnSelect={false}
-										bind:checked={
-											() => attachments.isInChat(file),
-											(checked) => {
-												if (checked) {
-													attachments.add(file);
-												} else {
-													attachments.remove(file.id);
-												}
-											}
-										}>{file.name}</DropdownMenu.CheckboxItem
-									>
-								{:else}
-									<DropdownMenu.Item disabled>No files in knowledge base</DropdownMenu.Item>
-								{/each}
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-					{#if chatLimitQuery.current}
-						<InputGroup.Button
-							variant="default"
-							class="ml-auto rounded-full"
-							size="icon-xs"
-							disabled={chat.status !== 'ready' || !chatLimitQuery.current.allowed}
-						>
-							{#if chat.status === 'ready'}
-								<ArrowUpIcon />
-								<span class="sr-only">Send</span>
-							{:else}
-								<Spinner />
-							{/if}
-						</InputGroup.Button>
-					{/if}
-				</InputGroup.Addon>
-			</InputGroup.Root>
-		</form>
-	</div>
-{/snippet}

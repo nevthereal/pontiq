@@ -1,5 +1,6 @@
 import { PersistedState } from 'runed';
 import type { File } from './server/db/schema';
+import { defaultChatConfig } from './chat-config';
 
 class Attachments {
 	private attachments: File[] = $state([]);
@@ -30,8 +31,4 @@ class Attachments {
 
 export const attachments = new Attachments();
 
-export const chatConfig = new PersistedState('chat-config-2', {
-	studyModeEnabled: false,
-	enhancedReasoning: false,
-	webSearch: false
-});
+export const chatConfig = new PersistedState('chat-config-2', defaultChatConfig);
