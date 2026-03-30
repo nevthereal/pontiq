@@ -38,7 +38,11 @@ export type ChatTitleWorkflowInput = {
 };
 
 function sanitizeTitle(rawTitle: string) {
-	return rawTitle.replace(/^["'\s]+|["'\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 70).trim();
+	return rawTitle
+		.replace(/^["'\s]+|["'\s]+$/g, '')
+		.replace(/\s+/g, ' ')
+		.slice(0, 70)
+		.trim();
 }
 
 function getPlainTextFromMessage(message: MyUIMessage) {
@@ -124,7 +128,7 @@ async function streamChatTurnStep(
 		providerOptions: {
 			openai: {
 				reasoningEffort: input.config.enhancedReasoning ? 'high' : 'none',
-				...(input.config.enhancedReasoning ? { reasoningSummary: 'detailed' } : {})
+				reasoningSummary: 'detailed'
 			} satisfies OpenAILanguageModelResponsesOptions
 		}
 	});

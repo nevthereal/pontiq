@@ -140,13 +140,19 @@
 						{#if toolsAllowed}
 							<DropdownMenu.Label>Tool options</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.studyModeEnabled}
+							<DropdownMenu.CheckboxItem
+								closeOnSelect={false}
+								bind:checked={chatConfig.current.studyModeEnabled}
 								><GraduationCap /> Study mode</DropdownMenu.CheckboxItem
 							>
-							<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.enhancedReasoning}
+							<DropdownMenu.CheckboxItem
+								closeOnSelect={false}
+								bind:checked={chatConfig.current.enhancedReasoning}
 								><Brain /> Reasoning</DropdownMenu.CheckboxItem
 							>
-							<DropdownMenu.CheckboxItem bind:checked={chatConfig.current.webSearch}
+							<DropdownMenu.CheckboxItem
+								closeOnSelect={false}
+								bind:checked={chatConfig.current.webSearch}
 								><Globe /> Web search</DropdownMenu.CheckboxItem
 							>
 						{:else}
@@ -203,7 +209,7 @@
 					<InputGroup.Button
 						variant="default"
 						class="ml-auto rounded-full"
-						size="icon-xs"
+						size="icon-sm"
 						disabled={chat.status !== 'ready' || !chatLimitQuery.current.allowed}
 					>
 						{#if chat.status === 'ready'}

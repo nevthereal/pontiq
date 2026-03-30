@@ -63,6 +63,16 @@
 	const currentTitle = $derived(selectedThread?.title ?? 'New chat');
 	const recentChats = $derived(recentChatsQuery.current ?? []);
 
+	function hasRenderableAssistantContent(message: MyUIMessage) {
+		return message.parts.some((part) => {
+			if (part.type === 'text' || part.type === 'reasoning') {
+				return part.text.trim().length > 0;
+			}
+
+			return true;
+		});
+	}
+
 	async function reconcileFinishedThread(
 		threadId: string,
 		version: number,
@@ -187,6 +197,12 @@
 	}
 
 	let chat = $state(createChatInstance(initialThread, initialThread?.id ?? null));
+	const lastChatMessage = $derived(chat.messages.at(-1));
+	const isWaitingForAssistantContent = $derived(
+		chat.status !== 'ready' &&
+			lastChatMessage?.role === 'assistant' &&
+			!hasRenderableAssistantContent(lastChatMessage)
+	);
 
 	const scroll = new ScrollState({ element: () => chatContainer, behavior: 'smooth' });
 	const atBottom = $derived(scroll.arrived.bottom);
@@ -353,11 +369,17 @@
 					</p>
 				{:else}
 					{#each chat.messages as message, messageIndex (message.id ?? messageIndex)}
-						<Message {message} />
+						{#if !(
+							isWaitingForAssistantContent &&
+							messageIndex === chat.messages.length - 1 &&
+							message.role === 'assistant'
+						)}
+							<Message {message} />
+						{/if}
 					{/each}
 				{/if}
 
-				{#if chat.status === 'submitted'}
+				{#if chat.status === 'submitted' || isWaitingForAssistantContent}
 					<p class="flex items-center gap-2 font-medium text-muted-foreground">
 						<Spinner /> Loading message
 					</p>
