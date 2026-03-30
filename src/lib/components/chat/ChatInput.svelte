@@ -26,9 +26,10 @@
 	interface Props {
 		chat: Chat<MyUIMessage>;
 		projectId: string;
+		threadId: string | null;
 	}
 
-	let { chat, projectId }: Props = $props();
+	let { chat, projectId, threadId }: Props = $props();
 
 	const chatLimitQuery = getChatLimit();
 	const customerQuery = getCustomer();
@@ -45,7 +46,6 @@
 
 		chat.sendMessage(
 			{
-				// refactor to content:
 				text: input,
 				files: attachments.files.map((a) => ({
 					mediaType: a.type,
@@ -54,7 +54,7 @@
 					url: a.utURL
 				}))
 			},
-			{ body: { config: chatConfig.current, attachments } }
+			{ body: { config: chatConfig.current, threadId } }
 		);
 		input = '';
 		attachments.clear();

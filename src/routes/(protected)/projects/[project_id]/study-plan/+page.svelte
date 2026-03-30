@@ -111,15 +111,6 @@
 										</p>
 									</div>
 								</div>
-								<div class="rounded-2xl border bg-muted/30 p-4">
-									<p class="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-										Next up
-									</p>
-									<p class="mt-3 text-lg font-semibold">{formatDate(nextStudyStep.date)}</p>
-									<p class="mt-2 text-sm text-muted-foreground">
-										This is the first step due today or later in your current plan.
-									</p>
-								</div>
 							</div>
 						</section>
 					{:else}
