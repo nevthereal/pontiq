@@ -40,6 +40,16 @@
 
 	let input = $state('');
 
+	async function handleUpgrade() {
+		loading = true;
+		try {
+			const url = await subscribeToPro();
+			if (url) window.location.href = url;
+		} finally {
+			loading = false;
+		}
+	}
+
 	async function handleSubmit() {
 		if (chat.status !== 'ready') return;
 		if (!input.trim() && attachments.files.length === 0) return;
@@ -87,18 +97,7 @@
 						<Button size="sm" variant="secondary" onclick={() => (hideMessageItem = true)}
 							>Dismiss</Button
 						>
-						<Button
-							size="sm"
-							onclick={async () => {
-								loading = true;
-								try {
-									await subscribeToPro().then((url) => {
-										if (url) window.location.href = url;
-									});
-								} finally {
-									loading = false;
-								}
-							}}
+						<Button size="sm" onclick={handleUpgrade}
 							>{#if loading}<Spinner />{/if}Upgrade</Button
 						>
 					</Item.Actions>
@@ -161,17 +160,8 @@
 							<DropdownMenu.Item disabled>
 								Upgrade to Pro to unlock Study mode, Reasoning, and Web search
 							</DropdownMenu.Item>
-							<DropdownMenu.Item
-								onclick={async () => {
-									loading = true;
-									try {
-										await subscribeToPro().then((url) => {
-											if (url) window.location.href = url;
-										});
-									} finally {
-										loading = false;
-									}
-								}}><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
+							<DropdownMenu.Item onclick={handleUpgrade}
+								><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
 							>
 						{/if}
 					</DropdownMenu.Content>

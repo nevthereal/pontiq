@@ -17,7 +17,6 @@
 		NotebookPen,
 		Settings2
 	} from '@lucide/svelte';
-	import { SvelteDate } from 'svelte/reactivity';
 
 	let { params } = $props();
 
@@ -37,9 +36,7 @@
 	const nextStudyStep = $derived(upcomingSteps[0] ?? null);
 
 	function startOfDay(date: Date) {
-		const value = new SvelteDate(date);
-		value.setHours(0, 0, 0, 0);
-		return value;
+		return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 	}
 
 	function formatDate(date: Date) {

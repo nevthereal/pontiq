@@ -31,7 +31,7 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 	});
 
 	if (!allowed) {
-		throw error(401, 'No messages left');
+		throw error(402, 'No messages left');
 	}
 
 	const { allowed: toolsAllowed } = await autumn.check({

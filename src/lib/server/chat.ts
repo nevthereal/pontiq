@@ -119,36 +119,55 @@ export async function listThreadMessages(input: { threadId: string }) {
 }
 
 export async function appendChatMessage(input: { threadId: string; message: StoredChatMessage }) {
-	const sequenceResult = await db
-		.select({
-			value: sql<number>`coalesce(max(${chatMessage.sequence}), 0)`
-		})
-		.from(chatMessage)
-		.where(eq(chatMessage.threadId, input.threadId));
+	return await db.transaction(async (tx) => {
+		// Serialize appends per thread so sequence assignment stays unique under concurrency.
+		await tx.execute(
+			sql`select 1 from ${chatThread} where ${chatThread.id} = ${input.threadId} for update`
+		);
 
-	const nextSequence = (sequenceResult[0]?.value ?? 0) + 1;
+		const existingMessage = await tx.query.chatMessage.findFirst({
+			where: {
+				threadId: input.threadId,
+				uiMessageId: input.message.id
+			}
+		});
 
-	const [inserted] = await db
-		.insert(chatMessage)
-		.values({
-			threadId: input.threadId,
-			sequence: nextSequence,
-			uiMessageId: input.message.id,
-			role: input.message.role,
-			message: input.message
-		})
-		.onConflictDoUpdate({
-			target: [chatMessage.threadId, chatMessage.uiMessageId],
-			set: {
+		const sequenceResult = await tx
+			.select({
+				value: sql<number>`coalesce(max(${chatMessage.sequence}), 0)`
+			})
+			.from(chatMessage)
+			.where(eq(chatMessage.threadId, input.threadId));
+
+		const nextSequence = existingMessage?.sequence ?? (sequenceResult[0]?.value ?? 0) + 1;
+
+		const [inserted] = await tx
+			.insert(chatMessage)
+			.values({
+				threadId: input.threadId,
+				sequence: nextSequence,
+				uiMessageId: input.message.id,
 				role: input.message.role,
 				message: input.message
-			}
-		})
-		.returning();
+			})
+			.onConflictDoUpdate({
+				target: [chatMessage.threadId, chatMessage.uiMessageId],
+				set: {
+					role: input.message.role,
+					message: input.message
+				}
+			})
+			.returning();
 
-	await touchChatThread(input.threadId);
+		await tx
+			.update(chatThread)
+			.set({
+				updatedAt: new Date()
+			})
+			.where(eq(chatThread.id, input.threadId));
 
-	return inserted ?? null;
+		return inserted ?? null;
+	});
 }
 
 export async function touchChatThread(threadId: string) {
