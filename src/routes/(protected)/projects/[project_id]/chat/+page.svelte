@@ -13,10 +13,10 @@
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import { attachments, chatConfig } from '$lib/chat.svelte';
+	import { attachments } from '$lib/chat.svelte';
 	import { ScrollState, watch } from 'runed';
 	import Message from '$lib/components/chat/Message.svelte';
-	import { getChatLimit, getCustomer } from '$lib/remote/billing.remote';
+	import { getChatLimit } from '$lib/remote/billing.remote';
 	import { getProjectChatThread, getRecentProjectChats } from '$lib/remote/chat.remote';
 	import ChatInput from '$lib/components/chat/ChatInput.svelte';
 
@@ -27,7 +27,6 @@
 	}
 
 	const chatLimitQuery = getChatLimit();
-	const customerQuery = getCustomer();
 	const recentChatsQuery = getRecentProjectChats({ projectId: getProjectId() });
 	const initialThreadId = page.url.searchParams.get('thread');
 	const initialThread = initialThreadId
@@ -35,19 +34,6 @@
 		: null;
 
 	type ProjectChatThread = NonNullable<typeof initialThread>;
-
-	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
-
-	watch(
-		() => toolsAllowed,
-		(allowed) => {
-			if (!allowed) {
-				chatConfig.current.studyModeEnabled = false;
-				chatConfig.current.enhancedReasoning = false;
-				chatConfig.current.webSearch = false;
-			}
-		}
-	);
 
 	let selectedThreadId = $state<string | null>(initialThread?.id ?? null);
 	let selectedThread = $state.raw<ProjectChatThread | null>(initialThread);
@@ -228,12 +214,12 @@
 	);
 
 	function syncThreadUrl(threadId: string | null) {
-		const basePath = resolve('/(protected)/projects/[project_id]/chat', {
-			project_id: getProjectId()
-		});
-		const nextPath = threadId ? `${basePath}?thread=${encodeURIComponent(threadId)}` : basePath;
-
-		replaceState(nextPath, page.state);
+		replaceState(
+			resolve('/(protected)/projects/[project_id]/chat', {
+				project_id: getProjectId()
+			}) + (threadId ? `?thread=${encodeURIComponent(threadId)}` : ''),
+			page.state
+		);
 	}
 
 	function formatUpdatedAt(date: Date) {

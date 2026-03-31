@@ -6,8 +6,7 @@
 		GraduationCap,
 		Paperclip,
 		SlidersHorizontal,
-		Trash2,
-		Zap
+		Trash2
 	} from '@lucide/svelte';
 	import * as InputGroup from '$lib/components/ui/input-group';
 	import * as ButtonGroup from '$lib/components/ui/button-group';
@@ -16,7 +15,7 @@
 	import { buttonVariants } from '../ui/button';
 	import { getFiles } from '$lib/remote/files.remote';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit, getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, subscribeToPro } from '$lib/remote/billing.remote';
 	import type { Chat } from '@ai-sdk/svelte';
 	import type { MyUIMessage } from '$lib/server/ai';
 	import { attachments, chatConfig } from '$lib/chat.svelte';
@@ -32,8 +31,6 @@
 	let { chat, projectId, threadId }: Props = $props();
 
 	const chatLimitQuery = getChatLimit();
-	const customerQuery = getCustomer();
-	const toolsAllowed = $derived(customerQuery.current?.isPro ?? false);
 
 	let hideMessageItem = $state(false);
 	let loading = $state(false);
@@ -136,34 +133,23 @@
 						><SlidersHorizontal /> Tools</DropdownMenu.Trigger
 					>
 					<DropdownMenu.Content class="w-56" align="end">
-						{#if toolsAllowed}
-							<DropdownMenu.Label>Tool options</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.CheckboxItem
-								closeOnSelect={false}
-								bind:checked={chatConfig.current.studyModeEnabled}
-								><GraduationCap /> Study mode</DropdownMenu.CheckboxItem
-							>
-							<DropdownMenu.CheckboxItem
-								closeOnSelect={false}
-								bind:checked={chatConfig.current.enhancedReasoning}
-								><Brain /> Reasoning</DropdownMenu.CheckboxItem
-							>
-							<DropdownMenu.CheckboxItem
-								closeOnSelect={false}
-								bind:checked={chatConfig.current.webSearch}
-								><Globe /> Web search</DropdownMenu.CheckboxItem
-							>
-						{:else}
-							<DropdownMenu.Label>Tools</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item disabled>
-								Upgrade to Pro to unlock Study mode, Reasoning, and Web search
-							</DropdownMenu.Item>
-							<DropdownMenu.Item onclick={handleUpgrade}
-								><Zap /> Upgrade to Pro to use tools</DropdownMenu.Item
-							>
-						{/if}
+						<DropdownMenu.Label>Tool options</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						<DropdownMenu.CheckboxItem
+							closeOnSelect={false}
+							bind:checked={chatConfig.current.studyModeEnabled}
+							><GraduationCap /> Study mode</DropdownMenu.CheckboxItem
+						>
+						<DropdownMenu.CheckboxItem
+							closeOnSelect={false}
+							bind:checked={chatConfig.current.enhancedReasoning}
+							><Brain /> Reasoning</DropdownMenu.CheckboxItem
+						>
+						<DropdownMenu.CheckboxItem
+							closeOnSelect={false}
+							bind:checked={chatConfig.current.webSearch}
+							><Globe /> Web search</DropdownMenu.CheckboxItem
+						>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 				<DropdownMenu.Root>

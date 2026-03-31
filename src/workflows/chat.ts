@@ -28,7 +28,6 @@ export type ChatWorkflowInput = {
 	userId: string;
 	userName: string;
 	config: ChatConfig;
-	toolsAllowed: boolean;
 	messages: MyUIMessage[];
 };
 
@@ -113,14 +112,10 @@ async function streamChatTurnStep(
 			now: new Date(),
 			config: input.config
 		}),
-		...(input.toolsAllowed
-			? {
-					tools: createChatTools({
-						projectId: input.projectId,
-						userId: input.userId
-					})
-				}
-			: {}),
+		tools: createChatTools({
+			projectId: input.projectId,
+			userId: input.userId
+		}),
 		stopWhen: stepCountIs(20),
 		experimental_transform: smoothStream({
 			chunking: 'word'

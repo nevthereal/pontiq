@@ -64,14 +64,3 @@ export const getProjectLimit = query(async () => {
 
 	return limit;
 });
-
-export const getToolsLimit = query(async () => {
-	const user = await requireAuth();
-
-	const limit = await autumn.check({
-		customerId: user.id,
-		featureId: 'tool_use'
-	});
-
-	return limit;
-});
