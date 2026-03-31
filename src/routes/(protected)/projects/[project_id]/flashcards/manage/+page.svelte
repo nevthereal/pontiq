@@ -10,7 +10,6 @@
 	import FlashcardManagerList from '$lib/components/flashcards/FlashcardManagerList.svelte';
 	import { deleteAllFlashcards, deleteFlashcard, getFlashCards } from '$lib/remote/tools.remote';
 	import type { Flashcard } from '$lib/server/db/schema';
-	import { SvelteMap } from 'svelte/reactivity';
 
 	let { params } = $props();
 
@@ -21,16 +20,6 @@
 	let flashcards = $state<Flashcard[]>([]);
 	let selectedId = $state<string | null>(null);
 	let isCreating = $state(false);
-
-	const pendingDeletes = new SvelteMap<
-		string,
-		{
-			flashcard: Flashcard;
-			index: number;
-			timer: ReturnType<typeof setTimeout>;
-			toastId: string | number;
-		}
-	>();
 
 	const filteredFlashcards = $derived(
 		flashcards.filter((card) => {
@@ -47,7 +36,7 @@
 	const preferredFlashcardId = $derived(page.url.searchParams.get('flashcard'));
 
 	$effect(() => {
-		const nextFlashcards = (flashcardsResult ?? []).filter((card) => !pendingDeletes.has(card.id));
+		const nextFlashcards = flashcardsResult ?? [];
 		flashcards = nextFlashcards;
 
 		if (selectedId && nextFlashcards.some((card) => card.id === selectedId)) return;
@@ -61,16 +50,6 @@
 		isCreating = selectedId == null;
 	});
 
-	function sortFlashcards(nextFlashcards: Flashcard[]) {
-		return [...nextFlashcards].sort((left, right) => {
-			if (left.createdAt.getTime() !== right.createdAt.getTime()) {
-				return left.createdAt.getTime() - right.createdAt.getTime();
-			}
-
-			return left.id.localeCompare(right.id);
-		});
-	}
-
 	function selectFlashcard(id: string) {
 		selectedId = id;
 		isCreating = false;
@@ -82,7 +61,13 @@
 	}
 
 	function handleCreated(flashcard: Flashcard) {
-		flashcards = sortFlashcards([...flashcards, flashcard]);
+		flashcards = [...flashcards, flashcard].sort((left, right) => {
+			if (left.createdAt.getTime() !== right.createdAt.getTime()) {
+				return left.createdAt.getTime() - right.createdAt.getTime();
+			}
+
+			return left.id.localeCompare(right.id);
+		});
 		selectedId = flashcard.id;
 		isCreating = false;
 	}
@@ -93,17 +78,6 @@
 		);
 		selectedId = updatedFlashcard.id;
 		isCreating = false;
-	}
-
-	function restoreFlashcard(flashcard: Flashcard, index: number) {
-		const nextFlashcards = [...flashcards];
-		nextFlashcards.splice(Math.min(index, nextFlashcards.length), 0, flashcard);
-		flashcards = sortFlashcards(nextFlashcards);
-
-		if (!selectedId || isCreating) {
-			selectedId = flashcard.id;
-			isCreating = false;
-		}
 	}
 
 	function selectNeighborAfterDelete(currentId: string) {
@@ -120,48 +94,21 @@
 		isCreating = true;
 	}
 
-	function undoDelete(id: string) {
-		const pendingDelete = pendingDeletes.get(id);
-		if (!pendingDelete) return;
-
-		clearTimeout(pendingDelete.timer);
-		pendingDeletes.delete(id);
-		toast.dismiss(pendingDelete.toastId);
-		restoreFlashcard(pendingDelete.flashcard, pendingDelete.index);
-	}
-
-	function queueDelete(flashcard: Flashcard) {
-		const index = flashcards.findIndex((card) => card.id === flashcard.id);
-		if (index < 0) return;
-
-		flashcards = flashcards.filter((card) => card.id !== flashcard.id);
-
+	async function handleDelete(flashcard: Flashcard) {
 		if (selectedId === flashcard.id) {
 			selectNeighborAfterDelete(flashcard.id);
 		}
 
-		const toastId = toast.message('Flashcard scheduled for deletion', {
-			description: 'Undo within 5 seconds to keep it.',
-			duration: 5000,
-			action: {
-				label: 'Undo',
-				onClick: () => undoDelete(flashcard.id)
-			}
-		});
-
-		const timer = setTimeout(async () => {
-			pendingDeletes.delete(flashcard.id);
-
-			try {
-				await deleteFlashcard({ id: flashcard.id, projectId: params.project_id });
-			} catch (deleteError) {
-				console.error(deleteError);
-				restoreFlashcard(flashcard, index);
-				toast.error('Failed to delete flashcard');
-			}
-		}, 5000);
-
-		pendingDeletes.set(flashcard.id, { flashcard, index, timer, toastId });
+		try {
+			await deleteFlashcard({ id: flashcard.id, projectId: params.project_id }).updates(
+				flashcardsQuery.withOverride((currentFlashcards) =>
+					currentFlashcards.filter((card) => card.id !== flashcard.id)
+				)
+			);
+		} catch (deleteError) {
+			console.error(deleteError);
+			toast.error('Failed to delete flashcard');
+		}
 	}
 
 	async function handleDeleteAll() {
@@ -171,11 +118,6 @@
 			error: 'Failed to delete flashcards'
 		});
 
-		for (const pendingDelete of pendingDeletes.values()) {
-			clearTimeout(pendingDelete.timer);
-		}
-
-		pendingDeletes.clear();
 		flashcards = [];
 		selectedId = null;
 		isCreating = true;
@@ -213,7 +155,7 @@
 				onSearchChange={(value) => (search = value)}
 				onSelect={selectFlashcard}
 				onCreateNew={openCreateForm}
-				onDelete={queueDelete}
+				onDelete={handleDelete}
 				onDeleteAll={handleDeleteAll}
 			/>
 			<FlashcardEditorForm

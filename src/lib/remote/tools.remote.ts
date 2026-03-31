@@ -6,7 +6,6 @@ import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
 import { ratings, studyStepTypes } from '$lib/things';
-import { autumn } from '$lib/server/autumn';
 
 async function requireOwnedProject(
 	database: Pick<typeof db, 'query'>,
@@ -153,16 +152,6 @@ export const deleteStudyStep = command(
 		getStudySteps(projectId).refresh();
 	}
 );
-
-export const checkFlashcard = query(async () => {
-	const user = await requireAuth();
-	const { allowed } = await autumn.check({
-		customerId: user.id,
-		featureId: 'flashcards'
-	});
-
-	return allowed;
-});
 
 export const getFlashCards = query(z.string(), async (projectId) => {
 	const user = await requireAuth();

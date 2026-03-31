@@ -34,21 +34,8 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 		throw error(402, 'No messages left');
 	}
 
-	const { allowed: toolsAllowed } = await autumn.check({
-		customerId: locals.user.id,
-		featureId: 'tool_use'
-	});
-
 	const body = (await request.json()) as ChatRequestBody;
 	const config = normalizeChatConfig(body.config as Record<string, unknown> | undefined);
-	const effectiveConfig = toolsAllowed
-		? config
-		: {
-				...config,
-				studyModeEnabled: false,
-				enhancedReasoning: false,
-				webSearch: false
-			};
 
 	const messages = body.messages ?? [];
 	const lastMessage = messages.at(-1);
@@ -91,8 +78,7 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 			projectId: params.project_id,
 			userId: locals.user.id,
 			userName: locals.user.name,
-			config: effectiveConfig,
-			toolsAllowed,
+			config,
 			messages: persistedMessages
 		}
 	]);

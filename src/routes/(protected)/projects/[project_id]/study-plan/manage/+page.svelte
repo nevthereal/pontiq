@@ -10,7 +10,6 @@
 	import StudyPlanManagerList from '$lib/components/study-plan/StudyPlanManagerList.svelte';
 	import { deleteAllStudySteps, deleteStudyStep, getStudySteps } from '$lib/remote/tools.remote';
 	import type { StudyPlanStep } from '$lib/server/db/schema';
-	import { SvelteMap } from 'svelte/reactivity';
 
 	let { params } = $props();
 
@@ -21,16 +20,6 @@
 	let steps = $state<StudyPlanStep[]>([]);
 	let selectedId = $state<string | null>(null);
 	let isCreating = $state(false);
-
-	const pendingDeletes = new SvelteMap<
-		string,
-		{
-			step: StudyPlanStep;
-			index: number;
-			timer: ReturnType<typeof setTimeout>;
-			toastId: string | number;
-		}
-	>();
 
 	const filteredSteps = $derived(
 		steps.filter((step) => {
@@ -61,9 +50,7 @@
 	}
 
 	$effect(() => {
-		const nextSteps = sortSteps(
-			(studyStepsResult ?? []).filter((step) => !pendingDeletes.has(step.id))
-		);
+		const nextSteps = sortSteps(studyStepsResult ?? []);
 		steps = nextSteps;
 
 		if (selectedId && nextSteps.some((step) => step.id === selectedId)) return;
@@ -99,17 +86,6 @@
 		isCreating = false;
 	}
 
-	function restoreStep(step: StudyPlanStep, index: number) {
-		const nextSteps = [...steps];
-		nextSteps.splice(Math.min(index, nextSteps.length), 0, step);
-		steps = sortSteps(nextSteps);
-
-		if (!selectedId || isCreating) {
-			selectedId = step.id;
-			isCreating = false;
-		}
-	}
-
 	function selectNeighborAfterDelete(currentId: string) {
 		const currentIndex = steps.findIndex((step) => step.id === currentId);
 		const nextStep = steps[currentIndex + 1] ?? steps[currentIndex - 1] ?? null;
@@ -124,48 +100,21 @@
 		isCreating = true;
 	}
 
-	function undoDelete(id: string) {
-		const pendingDelete = pendingDeletes.get(id);
-		if (!pendingDelete) return;
-
-		clearTimeout(pendingDelete.timer);
-		pendingDeletes.delete(id);
-		toast.dismiss(pendingDelete.toastId);
-		restoreStep(pendingDelete.step, pendingDelete.index);
-	}
-
-	function queueDelete(step: StudyPlanStep) {
-		const index = steps.findIndex((entry) => entry.id === step.id);
-		if (index < 0) return;
-
-		steps = steps.filter((entry) => entry.id !== step.id);
-
+	async function handleDelete(step: StudyPlanStep) {
 		if (selectedId === step.id) {
 			selectNeighborAfterDelete(step.id);
 		}
 
-		const toastId = toast.message('Study step scheduled for deletion', {
-			description: 'Undo within 5 seconds to keep it.',
-			duration: 5000,
-			action: {
-				label: 'Undo',
-				onClick: () => undoDelete(step.id)
-			}
-		});
-
-		const timer = setTimeout(async () => {
-			pendingDeletes.delete(step.id);
-
-			try {
-				await deleteStudyStep({ id: step.id, projectId: params.project_id });
-			} catch (deleteError) {
-				console.error(deleteError);
-				restoreStep(step, index);
-				toast.error('Failed to delete study step');
-			}
-		}, 5000);
-
-		pendingDeletes.set(step.id, { step, index, timer, toastId });
+		try {
+			await deleteStudyStep({ id: step.id, projectId: params.project_id }).updates(
+				studyStepsQuery.withOverride((currentSteps) =>
+					(currentSteps ?? []).filter((entry) => entry.id !== step.id)
+				)
+			);
+		} catch (deleteError) {
+			console.error(deleteError);
+			toast.error('Failed to delete study step');
+		}
 	}
 
 	async function handleDeleteAll() {
@@ -175,11 +124,6 @@
 			error: 'Failed to delete study plan'
 		});
 
-		for (const pendingDelete of pendingDeletes.values()) {
-			clearTimeout(pendingDelete.timer);
-		}
-
-		pendingDeletes.clear();
 		steps = [];
 		selectedId = null;
 		isCreating = true;
@@ -217,7 +161,7 @@
 				onSearchChange={(value) => (search = value)}
 				onSelect={selectStep}
 				onCreateNew={openCreateForm}
-				onDelete={queueDelete}
+				onDelete={handleDelete}
 				onDeleteAll={handleDeleteAll}
 			/>
 			<StudyPlanEditorForm
