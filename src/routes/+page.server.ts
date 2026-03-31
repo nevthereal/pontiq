@@ -3,5 +3,5 @@ import type { PageServerLoad } from './$types';
 import { resolve } from '$app/paths';
 
 export const load: PageServerLoad = ({ locals }) => {
-	if (locals.user) redirect(302, resolve('/(protected)/projects'));
+	if (locals.user) redirect(302, resolve('/app'));
 };

@@ -18,14 +18,14 @@
 		<!-- Sidebar!! -->
 		<div class="flex min-w-sm flex-col rounded-2xl border p-6">
 			<a
-				href={resolve('/(protected)/projects/[project_id]', { project_id: params.project_id })}
+				href={resolve('/app/project/[project_id]', { project_id: params.project_id })}
 				class="flex items-center gap-2 border-b pb-2 text-2xl font-semibold"
 				>Project: {project.name}</a
 			>
 			<Item.Group class="mt-4">
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/chat', params)} {...props}>
+						<a href={resolve('/app/project/[project_id]/chat', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<MessageCircle />
 							</Item.Media>
@@ -35,7 +35,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/files', params)} {...props}>
+						<a href={resolve('/app/project/[project_id]/files', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<Workflow />
 							</Item.Media>
@@ -45,7 +45,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/study-plan', params)} {...props}>
+						<a href={resolve('/app/project/[project_id]/study-plan', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<NotebookPen />
 							</Item.Media>
@@ -55,7 +55,7 @@
 				</Item.Root>
 				<Item.Root variant="outline">
 					{#snippet child({ props })}
-						<a href={resolve('/(protected)/projects/[project_id]/flashcards', params)} {...props}>
+						<a href={resolve('/app/project/[project_id]/flashcards', params)} {...props}>
 							<Item.Media class="max-lg:hidden" variant="icon">
 								<CreditCard />
 							</Item.Media>

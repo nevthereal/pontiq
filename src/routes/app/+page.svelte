@@ -48,7 +48,7 @@
 						<Item.Root variant="outline">
 							{#snippet child({ props })}
 								<a
-									href={resolve(`/(protected)/projects/[project_id]`, { project_id: prj.id })}
+									href={resolve('/app/project/[project_id]', { project_id: prj.id })}
 									{...props}
 								>
 									<Item.Title>

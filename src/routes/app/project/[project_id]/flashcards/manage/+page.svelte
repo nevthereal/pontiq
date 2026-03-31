@@ -132,7 +132,7 @@
 			</ToolHeading>
 		</div>
 		<a
-			href={resolve('/(protected)/projects/[project_id]/flashcards', params)}
+			href={resolve('/app/project/[project_id]/flashcards', params)}
 			class={buttonVariants({ variant: 'outline' })}
 		>
 			<ArrowLeft />

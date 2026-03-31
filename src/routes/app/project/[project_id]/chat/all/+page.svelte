@@ -125,7 +125,7 @@
 				<Muted class="mt-1">Open, rename or delete a saved chat thread.</Muted>
 			</div>
 			<a
-				href={resolve('/(protected)/projects/[project_id]/chat', {
+				href={resolve('/app/project/[project_id]/chat', {
 					project_id: getProjectId()
 				})}
 				class={buttonVariants({ variant: 'outline' })}
@@ -147,7 +147,7 @@
 						{#each chats as thread (thread.id)}
 							<Item.Root variant="outline">
 								<a
-									href={`${resolve('/(protected)/projects/[project_id]/chat', {
+									href={`${resolve('/app/project/[project_id]/chat', {
 										project_id: getProjectId()
 									})}?thread=${encodeURIComponent(thread.id)}`}
 									class="min-w-0 flex-1"
