@@ -1,4 +1,4 @@
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
 import { defineRelations } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
