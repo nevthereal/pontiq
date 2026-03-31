@@ -106,7 +106,7 @@
 			id: chatId,
 			messages: (thread?.messages ?? []) as MyUIMessage[],
 			transport: new WorkflowChatTransport<MyUIMessage>({
-				api: resolve('/(protected)/projects/[project_id]/api/chat', {
+				api: resolve('/app/project/[project_id]/api/chat', {
 					project_id: getProjectId()
 				}),
 				prepareReconnectToStreamRequest: async (request) => {
@@ -116,7 +116,7 @@
 
 					return {
 						...request,
-						api: resolve('/(protected)/projects/[project_id]/api/chat/[run_id]/stream', {
+						api: resolve('/app/project/[project_id]/api/chat/[run_id]/stream', {
 							project_id: getProjectId(),
 							run_id: resumableRunId
 						})
@@ -214,10 +214,12 @@
 	);
 
 	function syncThreadUrl(threadId: string | null) {
+		const baseChatPath = resolve('/app/project/[project_id]/chat', {
+			project_id: getProjectId()
+		});
+
 		replaceState(
-			resolve('/(protected)/projects/[project_id]/chat', {
-				project_id: getProjectId()
-			}) + (threadId ? `?thread=${encodeURIComponent(threadId)}` : ''),
+			threadId ? `${baseChatPath}?thread=${encodeURIComponent(threadId)}` : baseChatPath,
 			page.state
 		);
 	}
@@ -341,7 +343,7 @@
 
 					<DropdownMenu.Separator />
 					<a
-						href={resolve('/(protected)/projects/[project_id]/chat/all', {
+						href={resolve('/app/project/[project_id]/chat/all', {
 							project_id: getProjectId()
 						})}
 					>

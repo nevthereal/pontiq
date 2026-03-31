@@ -69,7 +69,7 @@
 			</ToolHeading>
 		</div>
 		<a
-			href={resolve('/(protected)/projects/[project_id]/study-plan/manage', params)}
+			href={resolve('/app/project/[project_id]/study-plan/manage', params)}
 			class={buttonVariants({ variant: 'outline' })}
 		>
 			<Settings2 />

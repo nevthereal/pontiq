@@ -46,7 +46,7 @@
 								<DropdownMenu.Label>{sub.title}:</DropdownMenu.Label>
 								{#each sub.projects as project (project.id)}
 									<a
-										href={resolve('/(protected)/projects/[project_id]', { project_id: project.id })}
+										href={resolve('/app/project/[project_id]', { project_id: project.id })}
 										><DropdownMenu.Item
 											>{project.name}
 											{#if params.project_id === project.id}

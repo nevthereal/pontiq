@@ -124,7 +124,7 @@ export const createProject = form(
 		} catch (error) {
 			console.error('Failed to track project creation', error);
 		}
-		return redirect(302, `/projects/${id}`);
+		return redirect(302, `/app/project/${id}`);
 	}
 );
 

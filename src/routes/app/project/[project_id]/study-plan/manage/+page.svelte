@@ -138,7 +138,7 @@
 			</ToolHeading>
 		</div>
 		<a
-			href={resolve('/(protected)/projects/[project_id]/study-plan', params)}
+			href={resolve('/app/project/[project_id]/study-plan', params)}
 			class={buttonVariants({ variant: 'outline' })}
 		>
 			<ArrowLeft />

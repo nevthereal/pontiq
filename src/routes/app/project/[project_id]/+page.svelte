@@ -162,7 +162,7 @@
 		</Dialog.Root>
 
 		<a
-			href={resolve('/(protected)/projects/[project_id]/study-plan', params)}
+			href={resolve('/app/project/[project_id]/study-plan', params)}
 			class="group flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
 		>
 			<div class="flex items-center gap-2 text-muted-foreground">
@@ -174,7 +174,7 @@
 		</a>
 
 		<a
-			href={resolve('/(protected)/projects/[project_id]/flashcards', params)}
+			href={resolve('/app/project/[project_id]/flashcards', params)}
 			class="group flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
 		>
 			<div class="flex items-center gap-2 text-muted-foreground">
@@ -190,7 +190,7 @@
 		</a>
 
 		<a
-			href={resolve('/(protected)/projects/[project_id]/chat', params)}
+			href={resolve('/app/project/[project_id]/chat', params)}
 			class="group flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50"
 		>
 			<div class="flex items-center gap-2 text-muted-foreground">
@@ -208,7 +208,7 @@
 			<h2 class="text-lg font-semibold">Upcoming Study Steps</h2>
 			{#if projectDetails.studyStepCount > 0}
 				<a
-					href={resolve('/(protected)/projects/[project_id]/study-plan', params)}
+					href={resolve('/app/project/[project_id]/study-plan', params)}
 					class="text-sm text-muted-foreground hover:underline"
 				>
 					View all
@@ -275,7 +275,7 @@
 					<AlertDialog.Action
 						onclick={() =>
 							toast.promise(
-								deleteProject(params.project_id).then(() => goto(resolve('/'))),
+								deleteProject(params.project_id).then(() => goto(resolve('/app'))),
 								{
 									loading: 'Deleting project...',
 									success: 'Project deleted',

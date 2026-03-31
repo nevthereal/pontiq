@@ -148,7 +148,7 @@
 			</Popover.Root>
 
 			<a
-				href={resolve('/(protected)/projects/[project_id]/flashcards/manage', params)}
+				href={resolve('/app/project/[project_id]/flashcards/manage', params)}
 				class={buttonVariants({ variant: 'outline' })}
 			>
 				<Settings2 />

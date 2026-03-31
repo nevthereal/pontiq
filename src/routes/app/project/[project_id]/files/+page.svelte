@@ -34,7 +34,7 @@
 				toast.error(e.message);
 			},
 			config: { cn: twMerge },
-			url: resolve('/(protected)/projects/[project_id]/api/upload', {
+			url: resolve('/app/project/[project_id]/api/upload', {
 				project_id: params.project_id
 			})
 		})
