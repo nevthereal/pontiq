@@ -30,6 +30,9 @@ export const auth = betterAuth({
 				});
 			}
 		})
+	},
+	baseURL: {
+		allowedHosts: ['pontiq.app', 'www.pontiq.app', 'localhost:5173', '*.vercel.app']
 	}
 });
 
