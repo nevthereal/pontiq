@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import { getStudySteps } from '$lib/remote/tools.remote';
 	import Loading from '$lib/components/typography/Loading.svelte';
-	import Muted from '$lib/components/typography/Muted.svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import {
+		AlarmClockOff,
 		CalendarDays,
 		ChevronDown,
 		Clock,
@@ -257,12 +258,15 @@
 					</div>
 				</div>
 			{:else}
-				<div class="rounded-2xl border border-dashed p-6">
-					<Muted>
-						No study plan generated yet. Prompt the chat to generate one or create steps in the
-						manager.
-					</Muted>
-				</div>
+				<Empty.Root class="border border-dashed">
+					<Empty.Header>
+						<Empty.Media variant="icon">
+							<AlarmClockOff />
+						</Empty.Media>
+						<Empty.Title>No study plan...</Empty.Title>
+						<Empty.Description>Yet! Prompt the chat assistant to generate one</Empty.Description>
+					</Empty.Header>
+				</Empty.Root>
 			{/if}
 		</svelte:boundary>
 	</div>

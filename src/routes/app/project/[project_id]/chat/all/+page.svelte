@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
-	import { ArrowLeft, Settings2 } from '@lucide/svelte';
+	import { ArrowLeft, MessageSquareX, Settings2 } from '@lucide/svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Item from '$lib/components/ui/item/index.js';
-	import Muted from '$lib/components/typography/Muted.svelte';
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import {
 		deleteProjectChatThread,
@@ -16,22 +16,9 @@
 
 	let { params } = $props();
 
-	function getProjectId() {
-		return params.project_id;
-	}
+	let renameDialogThreadId = $state<string | null>(null);
 
-	const chatsQuery = getProjectChatThreads({ projectId: getProjectId() });
-	const initialChats = (await chatsQuery) ?? [];
-
-	type ProjectChatSummary = (typeof initialChats)[number];
-
-	let chats = $derived(sortChats(chatsQuery.current ?? initialChats));
-	let renameDialogOpen = $state(false);
-	let renameThreadId = $state<string | null>(null);
-	let renameValue = $state('');
-	const trimmedRenameValue = $derived(renameValue.trim());
-	let savingRename = $state(false);
-	let deletingThreadId = $state<string | null>(null);
+	let chats = $derived(await getProjectChatThreads({ projectId: params.project_id }));
 
 	function formatDate(date: Date) {
 		return new Intl.DateTimeFormat('en-GB', {
@@ -39,175 +26,145 @@
 			timeStyle: 'short'
 		}).format(date);
 	}
-
-	function sortChats(nextChats: ProjectChatSummary[]) {
-		return [...nextChats].sort((left, right) => {
-			const updatedDifference = right.updatedAt.getTime() - left.updatedAt.getTime();
-			if (updatedDifference !== 0) return updatedDifference;
-
-			return right.createdAt.getTime() - left.createdAt.getTime();
-		});
-	}
-
-	async function refreshChats() {
-		await chatsQuery.refresh();
-	}
-
-	function openRenameDialog(thread: ProjectChatSummary) {
-		renameThreadId = thread.id;
-		renameValue = thread.title;
-		renameDialogOpen = true;
-	}
-
-	async function handleRename(event: SubmitEvent) {
-		event.preventDefault();
-
-		if (!renameThreadId || !trimmedRenameValue.length) return;
-
-		savingRename = true;
-
-		try {
-			const updatedThread = await renameProjectChatThread({
-				projectId: getProjectId(),
-				threadId: renameThreadId,
-				title: trimmedRenameValue
-			});
-
-			chats = sortChats(
-				chats.map((thread) => (thread.id === updatedThread.id ? updatedThread : thread))
-			);
-			renameDialogOpen = false;
-			renameThreadId = null;
-			renameValue = '';
-			toast.success('Chat renamed');
-		} catch (error) {
-			console.error(error);
-			toast.error('Failed to rename chat');
-		} finally {
-			savingRename = false;
-		}
-	}
-
-	async function handleDelete(threadId: string) {
-		deletingThreadId = threadId;
-
-		try {
-			await deleteProjectChatThread({
-				projectId: getProjectId(),
-				threadId
-			});
-
-			await refreshChats();
-
-			if (renameThreadId === threadId) {
-				renameDialogOpen = false;
-				renameThreadId = null;
-				renameValue = '';
-			}
-
-			toast.success('Chat deleted');
-		} catch (error) {
-			console.error(error);
-			toast.error('Failed to delete chat');
-		} finally {
-			deletingThreadId = null;
-		}
-	}
 </script>
 
-<Dialog.Root bind:open={renameDialogOpen}>
-	<div class="space-y-4">
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<div>
-				<ToolHeading>
-					<Settings2 /> All Chats
-				</ToolHeading>
-				<Muted class="mt-1">Open, rename or delete a saved chat thread.</Muted>
-			</div>
-			<a
-				href={resolve('/app/project/[project_id]/chat', {
-					project_id: getProjectId()
-				})}
-				class={buttonVariants({ variant: 'outline' })}
-			>
-				<ArrowLeft />
-				Back To Chat
-			</a>
+<div class="space-y-4">
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<div>
+			<ToolHeading>
+				<Settings2 /> All Chats
+			</ToolHeading>
 		</div>
-
-		<section class="rounded-xl border bg-card">
-			<div class="border-b p-4">
-				<h2 class="font-semibold">Threads</h2>
-				<p class="text-sm text-muted-foreground">{chats.length} total</p>
-			</div>
-
-			<div class="p-3">
-				{#if chats.length}
-					<Item.Group class="space-y-2">
-						{#each chats as thread (thread.id)}
-							<Item.Root variant="outline">
-								<a
-									href={`${resolve('/app/project/[project_id]/chat', {
-										project_id: getProjectId()
-									})}?thread=${encodeURIComponent(thread.id)}`}
-									class="min-w-0 flex-1"
-								>
-									<Item.Content>
-										<Item.Title>{thread.title}</Item.Title>
-										<Item.Description>
-											Updated {formatDate(thread.updatedAt)}
-										</Item.Description>
-									</Item.Content>
-								</a>
-								<Item.Actions>
-									<Button size="sm" variant="outline" onclick={() => openRenameDialog(thread)}>
-										Rename
-									</Button>
-									<Button
-										size="sm"
-										variant="destructive"
-										disabled={deletingThreadId === thread.id}
-										onclick={() => void handleDelete(thread.id)}
-									>
-										Delete
-									</Button>
-								</Item.Actions>
-							</Item.Root>
-						{/each}
-					</Item.Group>
-				{:else}
-					<div class="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-						No saved chats yet.
-					</div>
-				{/if}
-			</div>
-		</section>
+		<a
+			href={resolve('/app/project/[project_id]/chat', params)}
+			class={buttonVariants({ variant: 'outline' })}
+		>
+			<ArrowLeft />
+			Back To Chat
+		</a>
 	</div>
 
-	<Dialog.Content class="sm:max-w-md">
-		<Dialog.Header>
-			<Dialog.Title>Rename chat</Dialog.Title>
-			<Dialog.Description>Choose a new title for this thread.</Dialog.Description>
-		</Dialog.Header>
+	<div>
+		<Item.Group>
+			{#each chats as thread (thread.id)}
+				{@const renameForm = renameProjectChatThread.for(thread.id)}
+				{@const deleteForm = deleteProjectChatThread.for(thread.id)}
+				<Item.Root variant="outline">
+					<a
+						href={`${resolve('/app/project/[project_id]/chat', {
+							project_id: params.project_id
+						})}?thread=${encodeURIComponent(thread.id)}`}
+						class="group min-w-0 flex-1"
+					>
+						<Item.Content>
+							<Item.Title class="group-hover:underline">{thread.title}</Item.Title>
+							<Item.Description>
+								Updated {formatDate(thread.updatedAt)}
+							</Item.Description>
+						</Item.Content>
+					</a>
+					<Item.Actions>
+						<Dialog.Root
+							bind:open={
+								() => renameDialogThreadId === thread.id,
+								(open) => {
+									renameDialogThreadId = open ? thread.id : null;
+								}
+							}
+						>
+							<Dialog.Trigger class={buttonVariants({ variant: 'outline', size: 'sm' })}>
+								Rename
+							</Dialog.Trigger>
+							<Dialog.Content class="sm:max-w-md">
+								<Dialog.Header>
+									<Dialog.Title>Rename chat</Dialog.Title>
+									<Dialog.Description>Choose a new title for this thread.</Dialog.Description>
+								</Dialog.Header>
+								<form
+									class="flex flex-col gap-3"
+									{...renameForm.enhance(async ({ submit, data }) => {
+										const toastId = `rename-chat-${thread.id}`;
+										toast.loading('Renaming chat...', { id: toastId });
 
-		<form class="flex flex-col gap-3" onsubmit={handleRename}>
-			<Input
-				type="text"
-				bind:value={renameValue}
-				placeholder="Chat title"
-				maxlength={120}
-				aria-label="Chat title"
-			/>
-			<Dialog.Footer>
-				<Dialog.Close>
-					{#snippet child({ props })}
-						<Button {...props} type="button" variant="ghost">Cancel</Button>
-					{/snippet}
-				</Dialog.Close>
-				<Button type="submit" disabled={!trimmedRenameValue.length || savingRename}>
-					{savingRename ? 'Saving…' : 'Save'}
-				</Button>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
+										try {
+											await submit();
+
+											const issues = renameForm.fields.allIssues();
+											if (issues?.length) {
+												toast.error(issues[0].message, { id: toastId });
+												return;
+											}
+
+											toast.success(`Renamed to ${data.title}`, { id: toastId });
+										} catch {
+											toast.error('Failed to rename chat', { id: toastId });
+											return;
+										}
+
+										renameDialogThreadId = null;
+									})}
+								>
+									<input type="hidden" name="projectId" value={params.project_id} />
+									<Input
+										{...renameForm.fields.title.as('text')}
+										value={thread.title}
+										placeholder="Chat title"
+										aria-label="Chat title"
+									/>
+									{#if renameForm.fields.title.issues()}
+										{#each renameForm.fields.title.issues() as issue, idx (idx)}
+											<p class="text-sm text-destructive">{issue.message}</p>
+										{/each}
+									{/if}
+									<Dialog.Footer>
+										<Dialog.Close>
+											{#snippet child({ props })}
+												<Button {...props} type="button" variant="ghost">Cancel</Button>
+											{/snippet}
+										</Dialog.Close>
+										<Button type="submit" disabled={renameForm.pending > 0}>
+											{renameForm.pending > 0 ? 'Saving…' : 'Save'}
+										</Button>
+									</Dialog.Footer>
+								</form>
+							</Dialog.Content>
+						</Dialog.Root>
+
+						<form
+							{...deleteForm.enhance(async ({ submit }) => {
+								await toast.promise(submit(), {
+									loading: 'Deleting chat...',
+									success: 'Chat deleted',
+									error: 'Failed to delete chat'
+								});
+							})}
+						>
+							<input type="hidden" name="projectId" value={params.project_id} />
+							<Button
+								size="sm"
+								variant="destructive"
+								type="submit"
+								disabled={deleteForm.pending > 0}
+							>
+								{deleteForm.pending > 0 ? 'Deleting…' : 'Delete'}
+							</Button>
+						</form>
+					</Item.Actions>
+				</Item.Root>
+			{:else}
+				<Empty.Root class="border border-dashed">
+					<Empty.Header>
+						<Empty.Media variant="icon">
+							<MessageSquareX />
+						</Empty.Media>
+						<Empty.Title>No chats</Empty.Title>
+						<Empty.Description>You seem to not have created a chat yet.</Empty.Description>
+					</Empty.Header>
+					<Empty.Content>
+						<Button href={resolve('/app/project/[project_id]/chat', params)}>Start chat</Button>
+					</Empty.Content>
+				</Empty.Root>
+			{/each}
+		</Item.Group>
+	</div>
+</div>

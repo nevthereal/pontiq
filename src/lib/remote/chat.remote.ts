@@ -1,4 +1,4 @@
-import { query } from '$app/server';
+import { form, query } from '$app/server';
 import z from 'zod';
 import { requireAuth } from './auth.remote';
 import {
@@ -7,7 +7,6 @@ import {
 	getRecentChatThreads,
 	renameChatThread
 } from '$lib/server/chat';
-import { command } from '$app/server';
 
 const zProjectInput = z.object({
 	projectId: z.uuid()
@@ -18,7 +17,12 @@ const zThreadInput = z.object({
 	threadId: z.uuid()
 });
 
-const zRenameThreadInput = zThreadInput.extend({
+const zThreadFormInput = z.object({
+	projectId: z.uuid(),
+	id: z.uuid()
+});
+
+const zRenameThreadFormInput = zThreadFormInput.extend({
 	title: z.string().trim().min(1).max(120)
 });
 
@@ -37,13 +41,13 @@ export const getProjectChatThread = query(zThreadInput, async ({ projectId, thre
 	return await getChatThreadDetail({ projectId, threadId, userId: user.id });
 });
 
-export const renameProjectChatThread = command(
-	zRenameThreadInput,
-	async ({ projectId, threadId, title }) => {
+export const renameProjectChatThread = form(
+	zRenameThreadFormInput,
+	async ({ projectId, id, title }) => {
 		const user = await requireAuth();
 		const thread = await renameChatThread({
 			projectId,
-			threadId,
+			threadId: id,
 			title,
 			userId: user.id
 		});
@@ -51,16 +55,16 @@ export const renameProjectChatThread = command(
 		await Promise.all([
 			getProjectChatThreads({ projectId }).refresh(),
 			getRecentProjectChats({ projectId }).refresh(),
-			getProjectChatThread({ projectId, threadId }).refresh()
+			getProjectChatThread({ projectId, threadId: id }).refresh()
 		]);
 
 		return thread;
 	}
 );
 
-export const deleteProjectChatThread = command(zThreadInput, async ({ projectId, threadId }) => {
+export const deleteProjectChatThread = form(zThreadFormInput, async ({ projectId, id }) => {
 	const user = await requireAuth();
-	await deleteChatThread({ projectId, threadId, userId: user.id });
+	await deleteChatThread({ projectId, threadId: id, userId: user.id });
 
 	await Promise.all([
 		getProjectChatThreads({ projectId }).refresh(),
