@@ -4,6 +4,7 @@
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
 	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import * as Empty from '$lib/components/ui/empty/index.js';
 
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Switch } from '$lib/components/ui/switch';
@@ -19,6 +20,8 @@
 	import { cn } from '$lib/utils';
 	import { ratings } from '$lib/things';
 	import {
+		Copy,
+		CopyX,
 		CreditCard,
 		Frown,
 		Laugh,
@@ -122,7 +125,7 @@
 <div>
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<ToolHeading>
-			<CreditCard /> Flashcards
+			<Copy /> Flashcards
 		</ToolHeading>
 		<div class="flex flex-wrap items-center gap-2">
 			<Popover.Root>
@@ -208,11 +211,19 @@
 				</Button>
 			</div>
 		{:else if flashcards != null}
-			<p class="my-6 text-center text-muted-foreground">
-				{flashcards.length === 0
-					? 'No cards due right now.'
-					: 'No cards match the selected filters.'}
-			</p>
+			<Empty.Root class="border border-dashed">
+				<Empty.Header>
+					<Empty.Media variant="icon">
+						<CopyX />
+					</Empty.Media>
+					<Empty.Title>No flashcards</Empty.Title>
+					<Empty.Description
+						>{flashcards.length === 0
+							? 'No cards due right now.'
+							: 'No cards match the selected filters.'}</Empty.Description
+					>
+				</Empty.Header>
+			</Empty.Root>
 		{/if}
 	</div>
 </div>
