@@ -4,6 +4,8 @@ import { error } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
 import { db } from '$lib/server/db';
 import { file } from '$lib/server/db/schema';
+import { getFileLimit } from './billing.remote';
+import { refundProjectFileUpload } from '$lib/server/file-upload-limits';
 import z from 'zod';
 import { utapi } from '$lib/server/uploadthing';
 import { DrizzleError } from 'drizzle-orm/errors';
@@ -53,8 +55,20 @@ export const deleteFile = command(z.uuid(), async (fileId) => {
 		// 3) Delete DB row
 		await db.delete(file).where(eq(file.id, fileId));
 
+		try {
+			await refundProjectFileUpload({
+				customerId: user.id,
+				projectId: f.projectId
+			});
+		} catch (trackingError) {
+			console.error('Failed to refund file upload usage', trackingError);
+		}
+
 		// 4) Refresh cache
-		await getFiles(f.projectId).refresh();
+		await Promise.all([
+			getFiles(f.projectId).refresh(),
+			getFileLimit({ projectId: f.projectId }).refresh()
+		]);
 	} catch (err) {
 		if (err instanceof DrizzleError) throw error(500, err.message);
 		if (err instanceof UploadThingError) throw error(500, err.message);

@@ -1,11 +1,13 @@
 <script lang="ts">
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import * as Empty from '$lib/components/ui/empty/index.js';
+	import * as Item from '$lib/components/ui/item/index.js';
 
 	import { getFiles } from '$lib/remote/files.remote';
 	import Loading from '$lib/components/typography/Loading.svelte';
 	import File from '$lib/components/files/File.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { resolve } from '$app/paths';
 	import { generateSvelteHelpers, UploadDropzone } from '@uploadthing/svelte';
 	import { toast } from 'svelte-sonner';
@@ -14,20 +16,24 @@
 	import { twMerge } from 'tailwind-merge';
 	import { settled, tick } from 'svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
+	import { getFileLimit, subscribeToPro } from '$lib/remote/billing.remote';
 
 	let { params } = $props();
 	let open = $state(false);
+	let upgrading = $state(false);
+
+	const fileLimitQuery = $derived(getFileLimit({ projectId: params.project_id }));
 
 	const { createUploader } = generateSvelteHelpers<MyRouter>();
 
 	const uploader = $derived(
 		createUploader('uploader', {
-			uploadProgressGranularity: 'coarse',
+			uploadProgressGranularity: 'fine',
 			onClientUploadComplete: async () => {
 				await tick();
 				toast.success('Upload Completed');
-				getFiles(params.project_id).refresh();
+				await Promise.all([getFiles(params.project_id).refresh(), fileLimitQuery.refresh()]);
 				await settled();
 				open = false;
 			},
@@ -40,6 +46,16 @@
 			})
 		})
 	);
+
+	async function handleUpgrade() {
+		upgrading = true;
+		try {
+			const url = await subscribeToPro();
+			if (url) window.location.href = url;
+		} finally {
+			upgrading = false;
+		}
+	}
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
@@ -92,24 +108,71 @@
 				<Drawer.Header>
 					<Drawer.Title>Upload files</Drawer.Title>
 				</Drawer.Header>
-				<UploadDropzone
-					{uploader}
-					class="p-6 ut-allowed-content:text-muted-foreground ut-label:text-foreground"
-				>
-					<i slot="upload-icon">
-						<Upload />
-					</i>
+				<svelte:boundary>
+					{#snippet pending()}
+						<Loading thing="upload limits" />
+					{/snippet}
+					{@const limit = await fileLimitQuery}
+					{#if !limit.balance?.unlimited}
+						<Item.Root variant="outline" size="sm" class="mb-4 bg-background">
+							<Item.Content>
+								<Item.Title>File upload limits</Item.Title>
+								<Item.Description>
+									{limit.balance?.remaining ?? 0}/{limit.balance?.granted ?? 0} uploads remaining for
+									this project.
+									{#if limit.balance?.nextResetAt}
+										Resets on {Intl.DateTimeFormat().format(limit.balance.nextResetAt)}.
+									{/if}
+								</Item.Description>
+							</Item.Content>
+							<Item.Actions>
+								<Button size="sm" onclick={handleUpgrade}>
+									{#if upgrading}
+										<Spinner />
+									{/if}
+									Upgrade
+								</Button>
+							</Item.Actions>
+						</Item.Root>
+					{/if}
+					<UploadDropzone
+						{uploader}
+						disabled={!limit.allowed}
+						class="p-6 ut-allowed-content:text-muted-foreground ut-label:text-foreground"
+					>
+						<i slot="upload-icon">
+							<Upload />
+						</i>
 
-					<span class={buttonVariants()} slot="button-content" let:state>
-						{state.isUploading ? `Uploading... ${state.uploadProgress}%` : 'Pick files'}
-					</span>
-					<span slot="label" let:state>
-						{state.ready ? 'Drag and drop files here' : 'Loading...'}
-					</span>
-					<span slot="allowed-content" let:state>
-						You can choose between {state.fileTypes.join(', ')} files
-					</span>
-				</UploadDropzone>
+						<span class={buttonVariants()} slot="button-content" let:state>
+							{#if !state.ready}
+								Loading...
+							{:else if state.isUploading}
+								<Spinner /> Uploading... ({state.uploadProgress}%)
+							{:else if !limit.allowed}
+								Upgrade to upload
+							{:else}
+								Pick a file
+							{/if}
+						</span>
+						<span slot="label" let:state>
+							{#if !state.ready}
+								Loading...
+							{:else if !limit.allowed}
+								This project has reached its file upload limit
+							{:else}
+								Drag and drop files here
+							{/if}
+						</span>
+						<span slot="allowed-content" let:state>
+							{#if !limit.allowed}
+								Upgrade to upload more files to this project
+							{:else}
+								You can choose between {state.fileTypes.join(', ')} files
+							{/if}
+						</span>
+					</UploadDropzone>
+				</svelte:boundary>
 			</div>
 		</Drawer.Content>
 	</Drawer.Root>

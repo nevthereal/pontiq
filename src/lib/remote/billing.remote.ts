@@ -1,5 +1,7 @@
 import { command, getRequestEvent, query } from '$app/server';
 import { autumn } from '$lib/server/autumn';
+import { getProjectFileUploadLimit } from '$lib/server/file-upload-limits';
+import z from 'zod';
 import { requireAuth } from './auth.remote';
 
 export const subscribeToPro = command(async () => {
@@ -63,4 +65,13 @@ export const getProjectLimit = query(async () => {
 	});
 
 	return limit;
+});
+
+export const getFileLimit = query(z.object({ projectId: z.uuid() }), async ({ projectId }) => {
+	const user = await requireAuth();
+
+	return getProjectFileUploadLimit({
+		customerId: user.id,
+		projectId
+	});
 });
