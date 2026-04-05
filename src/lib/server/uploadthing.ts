@@ -1,4 +1,4 @@
-import { UTApi } from 'uploadthing/server';
+import { UploadThingError, UTApi } from 'uploadthing/server';
 import { requireAuth } from '$lib/remote/auth.remote';
 import { file } from './db/schema';
 import { error } from '@sveltejs/kit';
@@ -7,6 +7,7 @@ import type { FileRouter } from 'uploadthing/server';
 import { db } from './db';
 import { getRequestEvent } from '$app/server';
 import { UPLOADTHING_TOKEN } from '$env/static/private';
+import { autumn } from './autumn';
 
 const f = createUploadthing();
 
@@ -29,7 +30,7 @@ export const myRouter = {
 		text: { maxFileCount: 10 }
 	})
 		// Set permissions and file types for this FileRoute
-		.middleware(async () => {
+		.middleware(async ({ files }) => {
 			// This code runs on your server before upload
 			const user = await requireAuth();
 			const event = getRequestEvent();
@@ -37,7 +38,10 @@ export const myRouter = {
 			const { project_id } = event.params;
 
 			// If you throw, the user will not be able to upload
-			if (!project_id) error(404, 'Project not found');
+			if (!project_id) throw new UploadThingError('Project not found');
+
+			if (!allowed)
+				throw new UploadThingError(`You cannot upload more files ${balance?.remaining}`);
 
 			// Whatever is returned here is accessible in onUploadComplete as `metadata`
 			return { userId: user.id, prjId: project_id };

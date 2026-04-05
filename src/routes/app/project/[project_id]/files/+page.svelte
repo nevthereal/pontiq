@@ -14,7 +14,7 @@
 	import { twMerge } from 'tailwind-merge';
 	import { settled, tick } from 'svelte';
 	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { getFileLimit } from '$lib/remote/billing.remote.js';
 
 	let { params } = $props();
 	let open = $state(false);
@@ -23,7 +23,7 @@
 
 	const uploader = $derived(
 		createUploader('uploader', {
-			uploadProgressGranularity: 'coarse',
+			uploadProgressGranularity: 'all',
 			onClientUploadComplete: async () => {
 				await tick();
 				toast.success('Upload Completed');
@@ -34,7 +34,7 @@
 			onUploadError: (e) => {
 				toast.error(e.message);
 			},
-			config: { cn: twMerge },
+			config: { cn: twMerge, mode: 'manual' },
 			url: resolve('/app/project/[project_id]/api/upload', {
 				project_id: params.project_id
 			})
@@ -93,6 +93,7 @@
 					<Drawer.Title>Upload files</Drawer.Title>
 				</Drawer.Header>
 				<UploadDropzone
+					onChange={(f) => console.log(f)}
 					{uploader}
 					class="p-6 ut-allowed-content:text-muted-foreground ut-label:text-foreground"
 				>
@@ -101,7 +102,7 @@
 					</i>
 
 					<span class={buttonVariants()} slot="button-content" let:state>
-						{state.isUploading ? `Uploading... ${state.uploadProgress}%` : 'Pick files'}
+						{state.files.length ? `Uploading... ${state.uploadProgress}%` : 'Pick files'}
 					</span>
 					<span slot="label" let:state>
 						{state.ready ? 'Drag and drop files here' : 'Loading...'}
