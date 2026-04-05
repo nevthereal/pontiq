@@ -6,6 +6,7 @@ import { requireAuth } from './auth.remote';
 import { project, subject } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { autumn } from '$lib/server/autumn';
+import { deleteProjectEntity, ensureProjectEntityExists } from '$lib/server/project-entities';
 
 export const getSubjectsWithProjects = query(async () => {
 	const user = await requireAuth();
@@ -116,13 +117,13 @@ export const createProject = form(
 			.returning();
 
 		try {
-			await autumn.track({
+			await ensureProjectEntityExists({
 				customerId: user.id,
-				featureId: 'projects',
-				value: 1
+				projectId: id,
+				projectName: name
 			});
-		} catch (error) {
-			console.error('Failed to track project creation', error);
+		} catch (entityError) {
+			console.error('Failed to create Autumn project entity', entityError);
 		}
 		return redirect(302, `/app/project/${id}`);
 	}
@@ -168,13 +169,32 @@ export const deleteProject = command(z.string(), async (id) => {
 		await tx.delete(project).where(eq(project.id, qProject.id));
 	});
 	try {
-		await autumn.track({
+		await deleteProjectEntity({
 			customerId: user.id,
-			featureId: 'projects',
-			value: -1 // Increases balance when removing a seat
+			projectId: id
 		});
 	} catch (error) {
-		console.error('Failed to track project deletion', error);
+		if (
+			error &&
+			typeof error === 'object' &&
+			'body' in error &&
+			typeof error.body === 'string' &&
+			error.body.includes('"code":"entity_not_found"')
+		) {
+			try {
+				await autumn.track({
+					customerId: user.id,
+					featureId: 'projects',
+					value: -1
+				});
+			} catch (trackingError) {
+				console.error('Failed to track legacy project deletion', trackingError);
+			}
+
+			return;
+		}
+
+		console.error('Failed to delete Autumn project entity', error);
 	}
 });
 
