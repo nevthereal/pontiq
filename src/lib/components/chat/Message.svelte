@@ -28,6 +28,8 @@
 	import { fade, slide } from 'svelte/transition';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import MathVisualization from '$lib/components/math/MathVisualization.svelte';
+	import { parseMathVizSegments } from '$lib/math-viz';
 
 	let { message }: { message: MyUIMessage } = $props();
 
@@ -128,12 +130,39 @@
 
 	const markdownCache = new SvelteMap<string, string>();
 
+	function normalizeCompactFractions(math: string) {
+		return math.replace(
+			/\\frac\s*([+-]?\d+(?:\.\d+)?)\s*([a-zA-Z]|\d+(?:\.\d+)?)/g,
+			'\\frac{$1}{$2}'
+		);
+	}
+
+	function normalizeMathDelimiters(text: string) {
+		const withDisplayBlocks = text.replace(
+			/(^|\n)\s*\[\s*([\s\S]*?\\(?:frac|sqrt|sum|int|lim|begin|cdot|times)[\s\S]*?)\s*\]\s*(?=\n|$)/g,
+			(_match, prefix: string, math: string) => {
+				return `${prefix}\n$$\n${normalizeCompactFractions(math.trim())}\n$$\n`;
+			}
+		);
+
+		return withDisplayBlocks.replace(
+			/(^|\n)(\s*(?:[-*+]|\d+\.)\s+)\(;(.+?)\)\s*(?=\n|$)/g,
+			(_match, prefix: string, marker: string, math: string) => {
+				return `${prefix}${marker}$${normalizeCompactFractions(math.trim())}$`;
+			}
+		);
+	}
+
 	function renderMarkdown(text: string): string {
 		const cached = markdownCache.get(text);
 		if (cached) return cached;
-		const html = DOMPurify.sanitize(String(marked.parse(text)));
+		const html = DOMPurify.sanitize(String(marked.parse(normalizeMathDelimiters(text))));
 		markdownCache.set(text, html);
 		return html;
+	}
+
+	function getTextSegments(text: string) {
+		return parseMathVizSegments(text);
 	}
 
 	// Track expanded state (collapsed by default for reasoning, expanded for tools)
@@ -319,10 +348,7 @@
 			<!-- Text content below files -->
 			{#each message.parts as part, partIndex (partIndex)}
 				{#if part.type === 'text'}
-					<div class="prose dark:prose-invert">
-						<!-- eslint-disable svelte/no-at-html-tags -->
-						{@html renderMarkdown(part.text)}
-					</div>
+					{@render richText(part.text)}
 				{/if}
 			{/each}
 		</Item.Content>
@@ -344,9 +370,23 @@
 {/snippet}
 
 {#snippet assistantText(part: Extract<GroupedPart, { kind: 'text' }>)}
-	<div class="prose max-w-full dark:prose-invert">
-		<!-- eslint-disable svelte/no-at-html-tags -->
-		{@html renderMarkdown(part.content)}
+	{@render richText(part.content)}
+{/snippet}
+
+{#snippet richText(text: string)}
+	<div class="flex max-w-full flex-col gap-2">
+		{#each getTextSegments(text) as segment, segmentIndex (segmentIndex)}
+			{#if segment.kind === 'markdown'}
+				{#if segment.text.trim()}
+					<div class="prose max-w-full dark:prose-invert">
+						<!-- eslint-disable svelte/no-at-html-tags -->
+						{@html renderMarkdown(segment.text)}
+					</div>
+				{/if}
+			{:else}
+				<MathVisualization spec={segment.spec} />
+			{/if}
+		{/each}
 	</div>
 {/snippet}
 
