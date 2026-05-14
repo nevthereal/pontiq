@@ -16,6 +16,12 @@ export type BinomialPlotSpec = {
 	title?: string;
 	xLabel?: string;
 	yLabel?: string;
+	observed?: number;
+	rejectLte?: number;
+	rejectGte?: number;
+	alternativeP?: number;
+	nullLabel?: string;
+	alternativeLabel?: string;
 };
 
 export type MathVizSpec = FunctionPlotSpec | BinomialPlotSpec;
@@ -88,6 +94,17 @@ function getString(attrs: Record<string, string>, keys: string[]) {
 	return undefined;
 }
 
+function getOptionalNumber(attrs: Record<string, string>, keys: string[]) {
+	for (const key of keys) {
+		const raw = attrs[key];
+		if (raw == null) continue;
+		const value = Number(raw);
+		if (Number.isFinite(value)) return value;
+	}
+
+	return undefined;
+}
+
 function parseAnnotationPoints(raw: string | undefined): FunctionAnnotationPoint[] | undefined {
 	if (!raw) return undefined;
 
@@ -140,14 +157,38 @@ function parseVizAttributes(source: string): MathVizSpec | null {
 		const n = Math.round(getNumber(attrs, ['n', 'trials'], Number.NaN));
 		const p = getNumber(attrs, ['p', 'probability'], Number.NaN);
 		if (!Number.isFinite(n) || !Number.isFinite(p)) return null;
+		const clampedN = clamp(n, 1, 1000);
+		const observed = getOptionalNumber(attrs, ['observed', 'x', 'value', 'sample']);
+		const rejectLte = getOptionalNumber(attrs, [
+			'reject-lte',
+			'reject-at-most',
+			'critical-lte',
+			'lower-critical'
+		]);
+		const rejectGte = getOptionalNumber(attrs, [
+			'reject-gte',
+			'reject-at-least',
+			'critical-gte',
+			'upper-critical'
+		]);
+		const alternativeP = getOptionalNumber(attrs, ['alternative-p', 'alt-p', 'p1']);
 
 		return {
 			kind: 'binomial',
-			n: clamp(n, 1, 120),
+			n: clampedN,
 			p: clamp(p, 0, 1),
 			title: getString(attrs, ['title']),
 			xLabel: getString(attrs, ['x-label', 'xlabel']),
-			yLabel: getString(attrs, ['y-label', 'ylabel'])
+			yLabel: getString(attrs, ['y-label', 'ylabel']),
+			observed:
+				observed == null ? undefined : Math.round(clamp(observed, 0, clampedN)),
+			rejectLte:
+				rejectLte == null ? undefined : Math.round(clamp(rejectLte, 0, clampedN)),
+			rejectGte:
+				rejectGte == null ? undefined : Math.round(clamp(rejectGte, 0, clampedN)),
+			alternativeP: alternativeP == null ? undefined : clamp(alternativeP, 0, 1),
+			nullLabel: getString(attrs, ['null-label', 'h0-label']),
+			alternativeLabel: getString(attrs, ['alternative-label', 'h1-label', 'alt-label'])
 		};
 	}
 
@@ -279,17 +320,49 @@ export function sampleFunctionPlot(spec: FunctionPlotSpec, samples = 160) {
 	return points;
 }
 
-function binomialCoefficient(n: number, k: number) {
-	let result = 1;
-	for (let i = 1; i <= k; i += 1) {
-		result = (result * (n - i + 1)) / i;
+const logFactorialCache = [0];
+
+function logFactorial(n: number) {
+	for (let i = logFactorialCache.length; i <= n; i += 1) {
+		logFactorialCache[i] = logFactorialCache[i - 1] + Math.log(i);
 	}
-	return result;
+
+	return logFactorialCache[n];
+}
+
+function binomialProbability(n: number, k: number, p: number) {
+	if (k < 0 || k > n) return 0;
+	if (p === 0) return k === 0 ? 1 : 0;
+	if (p === 1) return k === n ? 1 : 0;
+
+	const logProbability =
+		logFactorial(n) -
+		logFactorial(k) -
+		logFactorial(n - k) +
+		k * Math.log(p) +
+		(n - k) * Math.log1p(-p);
+	return Math.exp(logProbability);
 }
 
 export function sampleBinomialPlot(spec: BinomialPlotSpec) {
 	return Array.from({ length: spec.n + 1 }, (_, k) => ({
 		x: k,
-		y: binomialCoefficient(spec.n, k) * spec.p ** k * (1 - spec.p) ** (spec.n - k)
+		y: binomialProbability(spec.n, k, spec.p)
 	}));
+}
+
+export function binomialCdf(n: number, p: number, to: number) {
+	const upper = Math.min(n, Math.max(0, Math.floor(to)));
+	let total = 0;
+	for (let k = 0; k <= upper; k += 1) total += binomialProbability(n, k, p);
+	return total;
+}
+
+export function binomialRangeProbability(n: number, p: number, from: number, to: number) {
+	const lower = Math.max(0, Math.ceil(from));
+	const upper = Math.min(n, Math.floor(to));
+	if (lower > upper) return 0;
+	let total = 0;
+	for (let k = lower; k <= upper; k += 1) total += binomialProbability(n, k, p);
+	return total;
 }

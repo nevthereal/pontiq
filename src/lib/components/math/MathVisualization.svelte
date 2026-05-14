@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Minus, Move, Plus, RotateCcw } from '@lucide/svelte';
 	import {
+		binomialRangeProbability,
 		evaluateFunctionExpression,
 		sampleBinomialPlot,
 		sampleFunctionPlot,
@@ -179,8 +180,36 @@
 
 	const svgId = $derived(`math-viz-${title.replace(/\W+/g, '-').toLowerCase()}`);
 	const clipId = $derived(`${svgId}-clip`);
-	const barGradientId = $derived(`${svgId}-bar`);
 	const annotationShadowId = $derived(`${svgId}-annotation-shadow`);
+
+	const binomialTestSummary = $derived.by(() => {
+		if (spec.kind !== 'binomial') return { alphaLabel: '', betaLabel: '' };
+
+		const hasLower = spec.rejectLte != null;
+		const hasUpper = spec.rejectGte != null;
+		if (!hasLower && !hasUpper) return { alphaLabel: '', betaLabel: '' };
+
+		const lowerAlpha = hasLower
+			? binomialRangeProbability(spec.n, spec.p, 0, spec.rejectLte!)
+			: 0;
+		const upperAlpha = hasUpper
+			? binomialRangeProbability(spec.n, spec.p, spec.rejectGte!, spec.n)
+			: 0;
+		const alpha = lowerAlpha + upperAlpha;
+
+		let betaLabel = '';
+		if (spec.alternativeP != null) {
+			const acceptanceFrom = hasLower ? spec.rejectLte! + 1 : 0;
+			const acceptanceTo = hasUpper ? spec.rejectGte! - 1 : spec.n;
+			const beta = binomialRangeProbability(spec.n, spec.alternativeP, acceptanceFrom, acceptanceTo);
+			betaLabel = `beta ${niceNumber(beta)}`;
+		}
+
+		return {
+			alphaLabel: `alpha ${niceNumber(alpha)}`,
+			betaLabel
+		};
+	});
 
 	const subtitle = $derived.by(() => {
 		if (spec.kind === 'function') {
@@ -189,7 +218,14 @@
 
 		const mean = spec.n * spec.p;
 		const variance = spec.n * spec.p * (1 - spec.p);
-		return `mean ${niceNumber(mean)} · variance ${niceNumber(variance)}`;
+		const testParts = binomialTestSummary;
+		return [
+			`mean ${niceNumber(mean)} · variance ${niceNumber(variance)}`,
+			testParts.alphaLabel,
+			testParts.betaLabel
+		]
+			.filter(Boolean)
+			.join(' · ');
 	});
 
 	const hasError = $derived(
@@ -234,6 +270,30 @@
 		} catch {
 			return point.y;
 		}
+	}
+
+	function getBinomialBarClass(x: number) {
+		if (spec.kind !== 'binomial') return '';
+		if (
+			(spec.rejectLte != null && x <= spec.rejectLte) ||
+			(spec.rejectGte != null && x >= spec.rejectGte)
+		) {
+			return 'binomial-bar--reject';
+		}
+		return 'binomial-bar--accept';
+	}
+
+	function getBinomialBarLabel(x: number, y: number | null) {
+		const value = niceNumber(y ?? 0);
+		const parts = [`x = ${x}`, `P = ${value}`];
+		if (spec.kind === 'binomial' && spec.observed === x) parts.push('observed');
+		if (spec.kind === 'binomial' && spec.rejectLte != null && x <= spec.rejectLte) {
+			parts.push('reject H0');
+		}
+		if (spec.kind === 'binomial' && spec.rejectGte != null && x >= spec.rejectGte) {
+			parts.push('reject H0');
+		}
+		return parts.join(', ');
 	}
 
 	function handleAnnotationPointerDown(event: PointerEvent) {
@@ -429,10 +489,6 @@
 					<clipPath id={clipId}>
 						<rect x={margin.left} y={margin.top} width={plotWidth} height={plotHeight} rx="12" />
 					</clipPath>
-					<linearGradient id={barGradientId} x1="0" x2="0" y1="0" y2="1">
-						<stop offset="0%" stop-color="oklch(0.78 0.17 165)" />
-						<stop offset="100%" stop-color="oklch(0.56 0.15 176)" />
-					</linearGradient>
 					<filter id={annotationShadowId} x="-20%" y="-40%" width="140%" height="180%">
 						<feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="black" flood-opacity="0.28" />
 					</filter>
@@ -519,8 +575,8 @@
 							<path d={path} class="function-line" />
 						{/each}
 					{:else}
-						{@const barGap = 4}
-						{@const barWidth = Math.max(4, plotWidth / (spec.n + 1) - barGap)}
+						{@const barGap = spec.n > 160 ? 0.35 : 4}
+						{@const barWidth = Math.max(spec.n > 160 ? 1 : 4, plotWidth / (spec.n + 1) - barGap)}
 						{#each data as point (point.x)}
 							{@const barHeight = Math.max(1, yScale(0) - yScale(point.y ?? 0))}
 							<rect
@@ -528,12 +584,70 @@
 								y={yScale(point.y ?? 0)}
 								width={barWidth}
 								height={barHeight}
-								rx="7"
-								fill={`url(#${barGradientId})`}
+								rx={spec.n > 160 ? 1 : 7}
+								class={`binomial-bar ${getBinomialBarClass(point.x)}`}
+								aria-label={getBinomialBarLabel(point.x, point.y)}
 							/>
 						{/each}
 					{/if}
 				</g>
+
+				{#if spec.kind === 'binomial'}
+					{#if spec.rejectLte != null}
+						{@const lowerX = xScale(spec.rejectLte)}
+						<line
+							x1={lowerX}
+							x2={lowerX}
+							y1={margin.top}
+							y2={height - margin.bottom}
+							class="critical-line"
+						/>
+						<text x={lowerX - 8} y={margin.top + 18} text-anchor="end" class="critical-label">
+							reject H0: x &lt;= {spec.rejectLte}
+						</text>
+					{/if}
+					{#if spec.rejectGte != null}
+						{@const upperX = xScale(spec.rejectGte)}
+						<line
+							x1={upperX}
+							x2={upperX}
+							y1={margin.top}
+							y2={height - margin.bottom}
+							class="critical-line"
+						/>
+						<text x={upperX + 8} y={margin.top + 18} class="critical-label">
+							reject H0: x &gt;= {spec.rejectGte}
+						</text>
+					{/if}
+					{#if spec.observed != null}
+						{@const observedX = xScale(spec.observed)}
+						<line
+							x1={observedX}
+							x2={observedX}
+							y1={margin.top - 8}
+							y2={height - margin.bottom}
+							class="observed-line"
+						/>
+						<circle cx={observedX} cy={margin.top - 8} r="5" class="observed-dot" />
+						<text x={observedX + 9} y={margin.top - 12} class="observed-label">
+							observed x = {spec.observed}
+						</text>
+					{/if}
+					<g class="binomial-legend" transform={`translate(${margin.left + 12} ${height - 18})`}>
+						<rect x="0" y="-10" width="10" height="10" rx="2" class="legend-accept" />
+						<text x="16" y="-1">do not reject H0</text>
+						<rect x="142" y="-10" width="10" height="10" rx="2" class="legend-reject" />
+						<text x="158" y="-1">reject H0</text>
+						{#if spec.alternativeP != null}
+							<text x="250" y="-1">
+								{spec.nullLabel ?? `H0: p = ${niceNumber(spec.p)}`} ·
+								{spec.alternativeLabel ?? `p1 = ${niceNumber(spec.alternativeP)}`}
+							</text>
+						{:else if spec.nullLabel}
+							<text x="250" y="-1">{spec.nullLabel}</text>
+						{/if}
+					</g>
+				{/if}
 
 				{#if spec.kind === 'function'}
 					{#each visibleAnnotationPoints as point (point.index)}
@@ -733,6 +847,53 @@
 	.function-line--halo {
 		stroke: color-mix(in oklab, oklch(0.72 0.14 214) 28%, transparent);
 		stroke-width: 8;
+	}
+
+	.binomial-bar--accept {
+		fill: color-mix(in oklab, oklch(0.66 0.14 176) 92%, var(--card));
+	}
+
+	.binomial-bar--reject {
+		fill: color-mix(in oklab, oklch(0.68 0.19 32) 90%, var(--card));
+	}
+
+	.critical-line {
+		stroke: color-mix(in oklab, oklch(0.68 0.19 32) 76%, var(--foreground));
+		stroke-dasharray: 5 5;
+		stroke-linecap: round;
+		stroke-width: 1.6;
+	}
+
+	.critical-label,
+	.observed-label {
+		fill: color-mix(in oklab, var(--foreground) 92%, var(--card));
+		font-size: 11px;
+		font-weight: 720;
+	}
+
+	.observed-line {
+		stroke: color-mix(in oklab, oklch(0.78 0.16 88) 76%, var(--foreground));
+		stroke-width: 2;
+	}
+
+	.observed-dot {
+		fill: oklch(0.82 0.17 88);
+		stroke: color-mix(in oklab, var(--card) 92%, black);
+		stroke-width: 1.5;
+	}
+
+	.binomial-legend text {
+		fill: var(--muted-foreground);
+		font-size: 10.5px;
+		font-weight: 650;
+	}
+
+	.legend-accept {
+		fill: color-mix(in oklab, oklch(0.66 0.14 176) 92%, var(--card));
+	}
+
+	.legend-reject {
+		fill: color-mix(in oklab, oklch(0.68 0.19 32) 90%, var(--card));
 	}
 
 	.annotation-point {
