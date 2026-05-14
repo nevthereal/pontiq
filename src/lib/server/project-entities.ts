@@ -3,16 +3,23 @@ import { db } from './db';
 
 const PROJECTS_FEATURE_ID = 'projects';
 
-const isAutumnErrorCode = (error: unknown, code: string) => {
+export const isAutumnErrorCode = (error: unknown, code: string) => {
 	if (!error || typeof error !== 'object') return false;
 
 	const maybeError = error as {
+		code?: unknown;
 		body?: string;
 	};
 
+	if (maybeError.code === code) return true;
 	if (typeof maybeError.body !== 'string') return false;
 
-	return maybeError.body.includes(`"code":"${code}"`);
+	try {
+		const parsed = JSON.parse(maybeError.body) as { code?: unknown };
+		return parsed.code === code;
+	} catch {
+		return maybeError.body.includes(`"code":"${code}"`);
+	}
 };
 
 export const ensureProjectEntityExists = async ({
@@ -87,8 +94,8 @@ export const deleteProjectEntity = async ({
 }: {
 	customerId: string;
 	projectId: string;
-}) => {
-	return autumn.entities.delete({
+}): Promise<void> => {
+	await autumn.entities.delete({
 		customerId,
 		entityId: projectId
 	});

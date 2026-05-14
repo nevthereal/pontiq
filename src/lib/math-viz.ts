@@ -117,7 +117,11 @@ function parseAnnotationPoints(raw: string | undefined): FunctionAnnotationPoint
 		const [labelSource, coordinateSource] = trimmed.includes(':')
 			? trimmed.split(/:(.+)/, 2)
 			: ['', trimmed];
+		if (!coordinateSource) continue;
+
 		const [xSource, ySource] = coordinateSource.split(',').map((value) => value.trim());
+		if (!xSource || !ySource) continue;
+
 		const x = Number(xSource);
 		const y = Number(ySource);
 		if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
@@ -180,12 +184,9 @@ function parseVizAttributes(source: string): MathVizSpec | null {
 			title: getString(attrs, ['title']),
 			xLabel: getString(attrs, ['x-label', 'xlabel']),
 			yLabel: getString(attrs, ['y-label', 'ylabel']),
-			observed:
-				observed == null ? undefined : Math.round(clamp(observed, 0, clampedN)),
-			rejectLte:
-				rejectLte == null ? undefined : Math.round(clamp(rejectLte, 0, clampedN)),
-			rejectGte:
-				rejectGte == null ? undefined : Math.round(clamp(rejectGte, 0, clampedN)),
+			observed: observed == null ? undefined : Math.round(clamp(observed, 0, clampedN)),
+			rejectLte: rejectLte == null ? undefined : Math.round(clamp(rejectLte, 0, clampedN)),
+			rejectGte: rejectGte == null ? undefined : Math.round(clamp(rejectGte, 0, clampedN)),
 			alternativeP: alternativeP == null ? undefined : clamp(alternativeP, 0, 1),
 			nullLabel: getString(attrs, ['null-label', 'h0-label']),
 			alternativeLabel: getString(attrs, ['alternative-label', 'h1-label', 'alt-label'])

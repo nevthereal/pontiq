@@ -52,6 +52,8 @@
 		try {
 			const url = await subscribeToPro();
 			if (url) window.location.href = url;
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : 'Failed to start upgrade');
 		} finally {
 			upgrading = false;
 		}
@@ -118,8 +120,7 @@
 							<Item.Content>
 								<Item.Title>File upload limits</Item.Title>
 								<Item.Description>
-									{limit.balance?.remaining ?? 0}/{limit.balance?.granted ?? 0} uploads remaining for
-									this project.
+									{limit.balance?.remaining ?? 0} uploads remaining for this project.
 									{#if limit.balance?.nextResetAt}
 										Resets on {Intl.DateTimeFormat().format(limit.balance.nextResetAt)}.
 									{/if}

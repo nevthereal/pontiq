@@ -189,9 +189,7 @@
 		const hasUpper = spec.rejectGte != null;
 		if (!hasLower && !hasUpper) return { alphaLabel: '', betaLabel: '' };
 
-		const lowerAlpha = hasLower
-			? binomialRangeProbability(spec.n, spec.p, 0, spec.rejectLte!)
-			: 0;
+		const lowerAlpha = hasLower ? binomialRangeProbability(spec.n, spec.p, 0, spec.rejectLte!) : 0;
 		const upperAlpha = hasUpper
 			? binomialRangeProbability(spec.n, spec.p, spec.rejectGte!, spec.n)
 			: 0;
@@ -201,7 +199,12 @@
 		if (spec.alternativeP != null) {
 			const acceptanceFrom = hasLower ? spec.rejectLte! + 1 : 0;
 			const acceptanceTo = hasUpper ? spec.rejectGte! - 1 : spec.n;
-			const beta = binomialRangeProbability(spec.n, spec.alternativeP, acceptanceFrom, acceptanceTo);
+			const beta = binomialRangeProbability(
+				spec.n,
+				spec.alternativeP,
+				acceptanceFrom,
+				acceptanceTo
+			);
 			betaLabel = `beta ${niceNumber(beta)}`;
 		}
 
@@ -511,7 +514,7 @@
 					{xAxisLabel}
 				</text>
 
-				{#each yTicks as tick (tick.label)}
+				{#each yTicks as tick, tickIndex (tickIndex)}
 					<line
 						x1={margin.left}
 						x2={width - margin.right}
@@ -524,7 +527,7 @@
 					>
 				{/each}
 
-				{#each xTicks as tick (tick.label)}
+				{#each xTicks as tick, tickIndex (tickIndex)}
 					<line
 						x1={tick.x}
 						x2={tick.x}

@@ -6,7 +6,11 @@ import { requireAuth } from './auth.remote';
 import { project, subject } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { autumn } from '$lib/server/autumn';
-import { deleteProjectEntity, ensureProjectEntityExists } from '$lib/server/project-entities';
+import {
+	deleteProjectEntity,
+	ensureProjectEntityExists,
+	isAutumnErrorCode
+} from '$lib/server/project-entities';
 
 export const getSubjectsWithProjects = query(async () => {
 	const user = await requireAuth();
@@ -173,14 +177,8 @@ export const deleteProject = command(z.string(), async (id) => {
 			customerId: user.id,
 			projectId: id
 		});
-	} catch (error) {
-		if (
-			error &&
-			typeof error === 'object' &&
-			'body' in error &&
-			typeof error.body === 'string' &&
-			error.body.includes('"code":"entity_not_found"')
-		) {
+	} catch (entityError) {
+		if (isAutumnErrorCode(entityError, 'entity_not_found')) {
 			try {
 				await autumn.track({
 					customerId: user.id,
@@ -194,7 +192,7 @@ export const deleteProject = command(z.string(), async (id) => {
 			return;
 		}
 
-		console.error('Failed to delete Autumn project entity', error);
+		console.error('Failed to delete Autumn project entity', entityError);
 	}
 });
 
