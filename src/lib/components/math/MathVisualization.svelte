@@ -180,6 +180,7 @@
 	const svgId = $derived(`math-viz-${title.replace(/\W+/g, '-').toLowerCase()}`);
 	const clipId = $derived(`${svgId}-clip`);
 	const barGradientId = $derived(`${svgId}-bar`);
+	const annotationShadowId = $derived(`${svgId}-annotation-shadow`);
 
 	const subtitle = $derived.by(() => {
 		if (spec.kind === 'function') {
@@ -198,12 +199,17 @@
 	const visibleAnnotationPoints = $derived.by(() => {
 		if (spec.kind !== 'function') return [];
 		return (spec.points ?? [])
-			.map((point, index) => ({
-				...point,
-				index,
-				screenX: xScale(point.x),
-				screenY: yScale(point.y)
-			}))
+			.map((point, index) => {
+				const y = getAnnotationY(point);
+
+				return {
+					...point,
+					y,
+					index,
+					screenX: xScale(point.x),
+					screenY: yScale(y)
+				};
+			})
 			.filter((point) => {
 				return (
 					point.x >= xDomain[0] &&
@@ -218,6 +224,16 @@
 		return point.label
 			? `${point.label}: (${niceNumber(point.x)}, ${niceNumber(point.y)})`
 			: `(${niceNumber(point.x)}, ${niceNumber(point.y)})`;
+	}
+
+	function getAnnotationY(point: FunctionAnnotationPoint) {
+		if (spec.kind !== 'function') return point.y;
+
+		try {
+			return evaluateFunctionExpression(spec.expr, point.x) ?? point.y;
+		} catch {
+			return point.y;
+		}
 	}
 
 	function handleAnnotationPointerDown(event: PointerEvent) {
@@ -417,6 +433,9 @@
 						<stop offset="0%" stop-color="oklch(0.78 0.17 165)" />
 						<stop offset="100%" stop-color="oklch(0.56 0.15 176)" />
 					</linearGradient>
+					<filter id={annotationShadowId} x="-20%" y="-40%" width="140%" height="180%">
+						<feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="black" flood-opacity="0.28" />
+					</filter>
 				</defs>
 				<rect
 					x={margin.left}
@@ -557,16 +576,18 @@
 									y={tooltipY}
 									width={tooltipWidth}
 									height="26"
-									rx="8"
+									rx="7"
+									filter={`url(#${annotationShadowId})`}
 									class="annotation-tooltip-bg"
 								/>
 								<text x={tooltipX + 10} y={tooltipY + 17} class="annotation-tooltip-text">
 									{getAnnotationLabel(point)}
 								</text>
 							{/if}
-							<circle cx={point.screenX} cy={point.screenY} r="14" class="annotation-hit" />
-							<circle cx={point.screenX} cy={point.screenY} r="4.5" class="annotation-dot" />
-							<circle cx={point.screenX} cy={point.screenY} r="8.5" class="annotation-ring" />
+							<circle cx={point.screenX} cy={point.screenY} r="16" class="annotation-hit" />
+							<circle cx={point.screenX} cy={point.screenY} r="9" class="annotation-halo" />
+							<circle cx={point.screenX} cy={point.screenY} r="5.8" class="annotation-ring" />
+							<circle cx={point.screenX} cy={point.screenY} r="3.6" class="annotation-dot" />
 						</g>
 					{/each}
 				{/if}
@@ -725,38 +746,65 @@
 	}
 
 	.annotation-dot {
-		fill: oklch(0.82 0.17 88);
-		stroke: color-mix(in oklab, var(--card) 80%, black);
-		stroke-width: 1.5;
+		fill: color-mix(in oklab, oklch(0.82 0.17 88) 48%, var(--card));
+		stroke: color-mix(in oklab, var(--foreground) 18%, var(--card));
+		stroke-width: 1.2;
+		transition:
+			fill 140ms ease,
+			stroke 140ms ease;
+	}
+
+	.annotation-halo {
+		fill: color-mix(in oklab, oklch(0.82 0.17 88) 18%, transparent);
+		opacity: 0;
+		transition: opacity 140ms ease;
 	}
 
 	.annotation-ring {
 		fill: none;
-		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 72%, transparent);
-		stroke-width: 2;
+		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 58%, transparent);
+		stroke-width: 1.5;
+		opacity: 0.42;
+		transition:
+			opacity 140ms ease,
+			stroke-width 140ms ease;
+	}
+
+	.annotation-point--active .annotation-dot,
+	.annotation-point:focus-visible .annotation-dot {
+		fill: oklch(0.84 0.18 86);
+		stroke: color-mix(in oklab, var(--card) 86%, black);
+	}
+
+	.annotation-point--active .annotation-halo,
+	.annotation-point:focus-visible .annotation-halo {
+		opacity: 1;
 	}
 
 	.annotation-point--active .annotation-ring,
 	.annotation-point:focus-visible .annotation-ring {
-		stroke-width: 3;
+		opacity: 0.94;
+		stroke-width: 2;
 	}
 
 	.annotation-guide {
-		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 46%, transparent);
-		stroke-dasharray: 4 6;
+		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 31%, transparent);
+		stroke-dasharray: 3 8;
+		stroke-linecap: round;
 		stroke-width: 1;
 	}
 
 	.annotation-tooltip-bg {
-		fill: color-mix(in oklab, var(--card) 82%, black);
-		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 48%, var(--border));
+		fill: color-mix(in oklab, var(--card) 94%, black);
+		stroke: color-mix(in oklab, oklch(0.82 0.17 88) 34%, var(--border));
 		stroke-width: 1;
 	}
 
 	.annotation-tooltip-text {
-		fill: var(--foreground);
-		font-size: 11px;
-		font-weight: 650;
+		fill: color-mix(in oklab, var(--foreground) 94%, oklch(0.82 0.17 88));
+		font-size: 10.5px;
+		font-weight: 620;
+		letter-spacing: 0.01em;
 	}
 
 	.axis-label {
