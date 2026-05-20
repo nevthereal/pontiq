@@ -11,6 +11,7 @@
 	import { authClient } from '$lib/auth-client';
 	import { resolve } from '$app/paths';
 	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
+	import { getCustomer } from '$lib/remote/billing.remote';
 
 	let { children, params } = $props();
 
@@ -45,8 +46,7 @@
 							{#each await getSubjectsWithProjects() as sub (sub.id)}
 								<DropdownMenu.Label>{sub.title}:</DropdownMenu.Label>
 								{#each sub.projects as project (project.id)}
-									<a
-										href={resolve('/app/project/[project_id]', { project_id: project.id })}
+									<a href={resolve('/app/project/[project_id]', { project_id: project.id })}
 										><DropdownMenu.Item
 											>{project.name}
 											{#if params.project_id === project.id}
@@ -75,7 +75,12 @@
 					<div class="grid flex-1 text-left text-sm leading-tight">
 						<span class="truncate font-medium">{user.name}</span>
 						<span class="truncate text-xs text-muted-foreground">
-							{user.email}
+							<svelte:boundary>
+								{#snippet pending()}
+									Loading plan{/snippet}
+								{@const cus = await getCustomer()}
+								{cus.subscriptions.find((s) => s.status === 'active')?.plan?.name}
+							</svelte:boundary>
 						</span>
 					</div>
 				</DropdownMenu.Trigger>

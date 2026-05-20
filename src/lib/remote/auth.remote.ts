@@ -1,5 +1,4 @@
 import { getRequestEvent, query } from '$app/server';
-import { autumn } from '$lib/server/autumn';
 import { redirect } from '@sveltejs/kit';
 
 export const getUser = query(async () => {
