@@ -1,12 +1,12 @@
 <script lang="ts">
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import type { File } from '$lib/server/db/schema';
-	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import type { File } from '#lib/server/db/schema/index.ts';
+	import { buttonVariants } from '#lib/components/ui/button/index.ts';
 	import { CircleFadingPlus, Ellipsis, FileText, SquareArrowUpRight, Trash2 } from '@lucide/svelte';
-	import { attachments } from '$lib/chat.svelte';
+	import { attachments } from '#lib/chat.svelte.ts';
 	import { toast } from 'svelte-sonner';
-	import { deleteFile } from '$lib/remote/files.remote';
+	import { deleteFile } from '#lib/remote/files.remote.ts';
 
 	let { file }: { file: File } = $props();
 

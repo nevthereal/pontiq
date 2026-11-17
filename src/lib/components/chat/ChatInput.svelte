@@ -8,17 +8,17 @@
 		SlidersHorizontal,
 		Trash2
 	} from '@lucide/svelte';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Item from '$lib/components/ui/item';
+	import * as InputGroup from '#lib/components/ui/input-group/index.ts';
+	import * as ButtonGroup from '#lib/components/ui/button-group/index.ts';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.ts';
+	import * as Item from '#lib/components/ui/item/index.ts';
 	import { buttonVariants } from '../ui/button';
-	import { getFiles } from '$lib/remote/files.remote';
+	import { getFiles } from '#lib/remote/files.remote.ts';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, subscribeToPro } from '#lib/remote/billing.remote.ts';
 	import type { Chat } from '@ai-sdk/svelte';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import { attachments, chatConfig } from '$lib/chat.svelte';
+	import type { MyUIMessage } from '#lib/server/ai.ts';
+	import { attachments, chatConfig } from '#lib/chat.svelte.ts';
 	import { Spinner } from '../ui/spinner';
 	import Button from '../ui/button/button.svelte';
 

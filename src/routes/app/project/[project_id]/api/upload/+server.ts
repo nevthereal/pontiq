@@ -1,5 +1,5 @@
-import { UPLOADTHING_TOKEN } from '$env/static/private';
-import { myRouter } from '$lib/server/uploadthing';
+import { UPLOADTHING_TOKEN } from '$app/env/private';
+import { myRouter } from '#lib/server/uploadthing.ts';
 
 import { createRouteHandler } from 'uploadthing/server';
 

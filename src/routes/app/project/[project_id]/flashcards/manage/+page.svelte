@@ -3,13 +3,13 @@
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { ArrowLeft, Settings2 } from '@lucide/svelte';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import FlashcardEditorForm from '$lib/components/flashcards/FlashcardEditorForm.svelte';
-	import FlashcardManagerList from '$lib/components/flashcards/FlashcardManagerList.svelte';
-	import { deleteAllFlashcards, deleteFlashcard, getFlashCards } from '$lib/remote/tools.remote';
-	import type { Flashcard } from '$lib/server/db/schema';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import { buttonVariants } from '#lib/components/ui/button/index.ts';
+	import FlashcardEditorForm from '#lib/components/flashcards/FlashcardEditorForm.svelte';
+	import FlashcardManagerList from '#lib/components/flashcards/FlashcardManagerList.svelte';
+	import { deleteAllFlashcards, deleteFlashcard, getFlashCards } from '#lib/remote/tools.remote.ts';
+	import type { Flashcard } from '#lib/server/db/schema/index.ts';
 
 	let { params } = $props();
 

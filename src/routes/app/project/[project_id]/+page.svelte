@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/button.svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import {
@@ -13,17 +13,17 @@
 		CreditCard,
 		Calendar as CalendarIcon
 	} from '@lucide/svelte';
-	import { deleteProject, getProjectDetails } from '$lib/remote/projects.remote';
-	import { setProjectExamDate } from '$lib/remote/projects.remote';
+	import { deleteProject, getProjectDetails } from '#lib/remote/projects.remote.ts';
+	import { setProjectExamDate } from '#lib/remote/projects.remote.ts';
 	import { resolve } from '$app/paths';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Muted from '$lib/components/typography/Muted.svelte';
-	import { Separator } from '$lib/components/ui/separator';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
+	import Muted from '#lib/components/typography/Muted.svelte';
+	import { Separator } from '#lib/components/ui/separator/index.ts';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
+	import Button from '#lib/components/ui/button/button.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
+	import { Calendar } from '#lib/components/ui/calendar/index.js';
 	import { CalendarDate, DateFormatter, getLocalTimeZone } from '@internationalized/date';
 
 	let { params } = $props();
@@ -59,9 +59,9 @@
 			{projectDetails.name}
 		</ToolHeading>
 		{#if projectDetails.subject}
-			<Muted class="mt-1">
-				{projectDetails.subject.title} &middot; Created {formatDate(projectDetails.createdAt)}
-			</Muted>
+			<Muted class="mt-1"
+				>{projectDetails.subject.title} · Created {formatDate(projectDetails.createdAt)}</Muted
+			>
 		{:else}
 			<Muted class="mt-1">In no subject</Muted>
 		{/if}
@@ -107,7 +107,8 @@
 					</Dialog.Description>
 				</Dialog.Header>
 				<form
-					{...setProjectExamDate.for(projectDetails.id).enhance(async ({ submit, data }) => {
+					{...setProjectExamDate.for(projectDetails.id).enhance(async ({ submit, fields }) => {
+						const data = fields.value();
 						const savePromise = submit().updates(getProjectDetails(projectDetails.id));
 						toast.promise(savePromise, {
 							loading: 'Saving exam date...',
@@ -118,10 +119,10 @@
 				>
 					<div class="flex flex-col gap-3 py-3">
 						<input
-							type="hidden"
 							id="{projectDetails.id}-date"
-							name="examDate"
-							value={examDateValue?.toString() ?? ''}
+							{...setProjectExamDate
+								.for(projectDetails.id)
+								.fields.examDate.as('hidden', examDateValue?.toString() ?? '')}
 						/>
 						<Popover.Root bind:open={examDateOpen}>
 							<Popover.Trigger id="examDate">
@@ -275,7 +276,7 @@
 					<AlertDialog.Action
 						onclick={() =>
 							toast.promise(
-								deleteProject(params.project_id).then(() => goto(resolve('/app'))),
+								deleteProject(params.project_id).then(() => goto(resolve('app'))),
 								{
 									loading: 'Deleting project...',
 									success: 'Project deleted',

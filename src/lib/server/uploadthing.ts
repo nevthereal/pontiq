@@ -3,7 +3,7 @@ import { file } from './db/schema';
 import { createUploadthing } from 'uploadthing/server';
 import type { FileRouter } from 'uploadthing/server';
 import { db } from './db';
-import { UPLOADTHING_TOKEN } from '$env/static/private';
+import { UPLOADTHING_TOKEN } from '$app/env/private';
 import {
 	consumeProjectFileUpload,
 	getFileUploadLimitErrorMessage,
@@ -47,8 +47,7 @@ export const myRouter = {
 			maxFileCount: 10
 		},
 		text: { maxFileCount: 10 }
-	})
-		// Set permissions and file types for this FileRoute
+	}) // Set permissions and file types for this FileRoute
 		.middleware(async ({ files, req }) => {
 			// This code runs on your server before upload
 			try {

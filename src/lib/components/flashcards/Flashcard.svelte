@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Flashcard } from '$lib/server/db/schema';
-	import { cn } from '$lib/utils';
+	import type { Flashcard } from '#lib/server/db/schema/index.ts';
+	import { cn } from '#lib/utils.ts';
 	import { PressedKeys } from 'runed';
 
 	type Props = {
@@ -80,7 +80,7 @@
 				'rounded-2xl border bg-card text-card-foreground',
 				'shadow-sm',
 				'p-6 sm:p-8',
-				'flex items-center justify-center text-center',
+				'flex items-center justify-center overflow-y-auto text-center',
 				'backface-hidden'
 			)}
 		>
@@ -92,6 +92,13 @@
 				<div class="mt-2 text-2xl font-semibold sm:text-3xl">
 					{flashcard.term}
 				</div>
+				{#if flashcard.termImageUrl}
+					<img
+						src={flashcard.termImageUrl}
+						alt="{flashcard.term} — term image"
+						class="mx-auto mt-3 max-h-48 max-w-full rounded-lg object-contain"
+					/>
+				{/if}
 
 				<div class="mt-6 text-xs">Click to flip</div>
 			</div>
@@ -104,7 +111,7 @@
 				'rounded-2xl',
 				'shadow-sm',
 				'p-6 sm:p-8',
-				'flex items-center justify-center text-center',
+				'flex items-center justify-center overflow-y-auto text-center',
 				'border bg-card text-card-foreground',
 				'backface-hidden',
 				'transform-[rotateY(180deg)]'
@@ -116,6 +123,13 @@
 				<div class="mt-2 text-lg leading-relaxed sm:text-xl">
 					{flashcard.definition}
 				</div>
+				{#if flashcard.definitionImageUrl}
+					<img
+						src={flashcard.definitionImageUrl}
+						alt="{flashcard.term} — definition image"
+						class="mx-auto mt-3 max-h-48 max-w-full rounded-lg object-contain"
+					/>
+				{/if}
 
 				<div class="mt-6 text-xs">Click to flip back</div>
 			</div>

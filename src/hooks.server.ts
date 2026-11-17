@@ -1,7 +1,7 @@
-import { auth } from '$lib/server/auth';
+import type { Handle } from '@sveltejs/kit/hooks';
+import { auth } from '#lib/server/auth.ts';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
-import { building } from '$app/environment';
-import type { Handle } from '@sveltejs/kit';
+import { building } from '$app/env';
 
 const WORKFLOW_ABORT_GUARD = Symbol.for('ai-study.workflow-abort-guard');
 
@@ -14,6 +14,7 @@ function isIgnorableUnhandledRejection(reason: unknown) {
 		}
 
 		const message = reason.message.toLowerCase();
+
 		return (
 			message.includes('aborted') ||
 			message.includes('request aborted') ||

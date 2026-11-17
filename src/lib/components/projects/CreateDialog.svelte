@@ -1,14 +1,14 @@
 <script>
-	import * as Select from '$lib/components/ui/select/index.js';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import { buttonVariants } from '#lib/components/ui/button/button.svelte';
 	import { Plus } from '@lucide/svelte';
-	import * as Field from '$lib/components/ui/field/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Button } from '$lib/components/ui/button';
-	import { createProject, createSubject, getSubjects } from '$lib/remote/projects.remote';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import { getProjectLimit } from '$lib/remote/billing.remote';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { createProject, createSubject, getSubjects } from '#lib/remote/projects.remote.ts';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import { getProjectLimit } from '#lib/remote/billing.remote.ts';
 
 	const limitPromise = $derived(getProjectLimit());
 
@@ -28,7 +28,7 @@
 				<Field.Set>
 					<Field.Field>
 						<Field.Label for="name" class="mb-1">Name</Field.Label>
-						<Input placeholder="eg. Redox Chemistry" name="name" />
+						<Input placeholder="eg. Redox Chemistry" {...createProject.fields.name.as('text')} />
 						{#if createProject.fields.name.issues()}
 							{#each createProject.fields.name.issues() as i, idx (idx)}
 								<Field.Error>{i.message}</Field.Error>
@@ -38,7 +38,11 @@
 					<Field.Field>
 						<Field.Label for="subjectId" class="mb-1">Subject/Class</Field.Label>
 
-						<Select.Root type="single" bind:value name="subjectId">
+						<Select.Root
+							type="single"
+							bind:value
+							name={createProject.fields.subjectId.as('select').name}
+						>
 							<Select.Trigger class="w-full"
 								>{(await getSubjects()).find((s) => s.id === value)?.title ??
 									'Select a subject'}</Select.Trigger
@@ -69,7 +73,7 @@
 														<Field.Field>
 															<Field.Label for="title" class="mb-2">Name</Field.Label>
 															<div class="flex gap-2">
-																<Input name="title" type="text" />
+																<Input {...createSubject.fields.title.as('text')} />
 																<Button type="submit">Add</Button>
 															</div>
 														</Field.Field>

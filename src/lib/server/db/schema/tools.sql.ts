@@ -45,6 +45,8 @@ export const flashcard = pgTable(
 		id: uuid().primaryKey().defaultRandom(),
 		term: text().notNull(),
 		definition: text().notNull(),
+		termImageUrl: text(),
+		definitionImageUrl: text(),
 		projectId,
 		createdAt: timestamp().defaultNow().notNull(),
 		updatedAt: timestamp()
@@ -66,6 +68,11 @@ export const flashcardReviewState = pgTable(
 		userId: text()
 			.references(() => user.id, { onDelete: 'cascade' })
 			.notNull(),
+		sessionDay: text().notNull().default(''),
+		retryFlashcardIds: text()
+			.array()
+			.notNull()
+			.default(sql`'{}'::text[]`),
 		reviewedFlashcardIds: text()
 			.array()
 			.notNull()
@@ -80,6 +87,23 @@ export const flashcardReviewState = pgTable(
 		index('flashcard_review_state_user_idx').on(t.userId),
 		unique('flashcard_review_state_user_project_unique').on(t.userId, t.projectId)
 	]
+);
+
+export const flashcardReview = pgTable(
+	'flashcard_review',
+	{
+		id: uuid().primaryKey(),
+		flashcardId: uuid()
+			.notNull()
+			.references(() => flashcard.id, { onDelete: 'cascade' }),
+		projectId,
+		userId: text()
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		rating: ratingEnum().notNull(),
+		reviewedAt: timestamp().notNull().defaultNow()
+	},
+	(t) => [index('flashcard_review_card_idx').on(t.flashcardId, t.reviewedAt)]
 );
 
 export const chatThread = pgTable(

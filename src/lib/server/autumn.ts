@@ -1,4 +1,4 @@
-import { AUTUMN_SECRET_KEY } from '$env/static/private';
+import { AUTUMN_SECRET_KEY } from '$app/env/private';
 import { Autumn } from 'autumn-js';
 
 export const autumn = new Autumn({

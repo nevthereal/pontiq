@@ -8,3 +8,7 @@ bun.lockb
 # Miscellaneous
 /static/
 /drizzle/
+
+# Dependency references and generated Workflow routes
+opensrc/
+src/routes/.well-known/workflow/

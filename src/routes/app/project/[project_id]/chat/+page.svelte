@@ -1,24 +1,24 @@
 <script lang="ts">
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import { browser } from '$app/environment';
-	import { replaceState } from '$app/navigation';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.ts';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import { browser } from '$app/env';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { tick } from 'svelte';
 	import { WorkflowChatTransport } from '@workflow/ai';
 	import { Chat } from '@ai-sdk/svelte';
 	import { ArrowLeftRight, ChevronDown, MessageCircle, Plus } from '@lucide/svelte';
-	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import { attachments } from '$lib/chat.svelte';
+	import Spinner from '#lib/components/ui/spinner/spinner.svelte';
+	import Button, { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import type { MyUIMessage } from '#lib/server/ai.ts';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
+	import { attachments } from '#lib/chat.svelte.ts';
 	import { ScrollState, watch } from 'runed';
-	import Message from '$lib/components/chat/Message.svelte';
-	import { getChatLimit } from '$lib/remote/billing.remote';
-	import { getProjectChatThread, getRecentProjectChats } from '$lib/remote/chat.remote';
-	import ChatInput from '$lib/components/chat/ChatInput.svelte';
+	import Message from '#lib/components/chat/Message.svelte';
+	import { getChatLimit } from '#lib/remote/billing.remote.ts';
+	import { getProjectChatThread, getRecentProjectChats } from '#lib/remote/chat.remote.ts';
+	import ChatInput from '#lib/components/chat/ChatInput.svelte';
 
 	let { params } = $props();
 
@@ -218,10 +218,11 @@
 			project_id: getProjectId()
 		});
 
-		replaceState(
-			threadId ? `${baseChatPath}?thread=${encodeURIComponent(threadId)}` : baseChatPath,
-			page.state
-		);
+		goto(threadId ? `${baseChatPath}?thread=${encodeURIComponent(threadId)}` : baseChatPath, {
+			shallow: true,
+			replace: true,
+			state: page.state
+		});
 	}
 
 	function formatUpdatedAt(date: Date) {

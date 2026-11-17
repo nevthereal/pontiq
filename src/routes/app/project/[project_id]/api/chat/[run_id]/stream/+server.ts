@@ -1,7 +1,7 @@
 import { createUIMessageStreamResponse } from 'ai';
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { findThreadByLatestRun } from '$lib/server/chat';
+import { findThreadByLatestRun } from '#lib/server/chat.ts';
 import { getRun } from 'workflow/api';
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {

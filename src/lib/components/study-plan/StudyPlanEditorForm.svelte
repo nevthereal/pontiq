@@ -1,14 +1,14 @@
 <script lang="ts">
-	import * as Select from '$lib/components/ui/select/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
 	import { toast } from 'svelte-sonner';
 	import { CircleCheck } from '@lucide/svelte';
-	import { createStudyStep, updateStudyStep } from '$lib/remote/tools.remote';
-	import { Button } from '$lib/components/ui/button';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Field from '$lib/components/ui/field';
-	import { studyStepTypes, type StudyStepType } from '$lib/things';
-	import type { StudyPlanStep } from '$lib/server/db/schema';
+	import { createStudyStep, updateStudyStep } from '#lib/remote/tools.remote.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import { Textarea } from '#lib/components/ui/textarea/index.ts';
+	import * as Field from '#lib/components/ui/field/index.ts';
+	import { studyStepTypes, type StudyStepType } from '#lib/things.ts';
+	import type { StudyPlanStep } from '#lib/server/db/schema/index.ts';
 
 	let {
 		projectId,
@@ -47,10 +47,10 @@
 
 	const isCreating = $derived(selectedStep == null);
 
-	async function handleCreateSubmit(submit: () => Promise<void>) {
+	async function handleCreateSubmit(submit: () => Promise<boolean>) {
 		submitting = true;
 		try {
-			await submit();
+			if (!(await submit())) return;
 			const createdStep = createStudyStep.result;
 			if (!createdStep) throw new Error('Missing created study step result');
 			onCreated(createdStep);
@@ -63,10 +63,10 @@
 		}
 	}
 
-	async function handleUpdateSubmit(submit: () => Promise<void>) {
+	async function handleUpdateSubmit(submit: () => Promise<boolean>) {
 		submitting = true;
 		try {
-			await submit();
+			if (!(await submit())) return;
 			const updatedStep = updateStudyStep.result;
 			if (!updatedStep) throw new Error('Missing updated study step result');
 			onUpdated(updatedStep);
@@ -99,10 +99,10 @@
 			})}
 			class="space-y-4"
 		>
-			<input type="hidden" name="projectId" value={projectId} />
+			<input {...createStudyStep.fields.projectId.as('hidden', projectId)} />
 			<Field.Field>
 				<Field.Label for="title">Title</Field.Label>
-				<Input id="title" name="title" bind:value={title} />
+				<Input {...createStudyStep.fields.title.as('text')} id="title" bind:value={title} />
 				{#if createStudyStep.fields.title.issues()}
 					{#each createStudyStep.fields.title.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -111,7 +111,12 @@
 			</Field.Field>
 			<Field.Field>
 				<Field.Label for="description">Description</Field.Label>
-				<Textarea id="description" name="description" rows={7} bind:value={description} />
+				<Textarea
+					{...createStudyStep.fields.description.as('text')}
+					id="description"
+					rows={7}
+					bind:value={description}
+				/>
 				{#if createStudyStep.fields.description.issues()}
 					{#each createStudyStep.fields.description.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -121,7 +126,7 @@
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Field.Field>
 					<Field.Label for="date">Date</Field.Label>
-					<Input id="date" name="date" type="date" bind:value={date} />
+					<Input {...createStudyStep.fields.date.as('date')} id="date" bind:value={date} />
 					{#if createStudyStep.fields.date.issues()}
 						{#each createStudyStep.fields.date.issues() as issue, idx (idx)}
 							<Field.Error>{issue.message}</Field.Error>
@@ -130,7 +135,11 @@
 				</Field.Field>
 				<Field.Field>
 					<Field.Label for="type">Type</Field.Label>
-					<Select.Root name="type" bind:value={type} type="single">
+					<Select.Root
+						name={createStudyStep.fields.type.as('select').name}
+						bind:value={type}
+						type="single"
+					>
 						<Select.Trigger id="type">{type}</Select.Trigger>
 						<Select.Content>
 							{#each studyStepTypes as option (option)}
@@ -152,11 +161,11 @@
 			})}
 			class="space-y-4"
 		>
-			<input type="hidden" name="id" value={selectedStep.id} />
-			<input type="hidden" name="projectId" value={projectId} />
+			<input {...updateStudyStep.fields.id.as('hidden', selectedStep.id)} />
+			<input {...updateStudyStep.fields.projectId.as('hidden', projectId)} />
 			<Field.Field>
 				<Field.Label for="edit-title">Title</Field.Label>
-				<Input id="edit-title" name="title" bind:value={title} />
+				<Input {...updateStudyStep.fields.title.as('text')} id="edit-title" bind:value={title} />
 				{#if updateStudyStep.fields.title.issues()}
 					{#each updateStudyStep.fields.title.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -165,7 +174,12 @@
 			</Field.Field>
 			<Field.Field>
 				<Field.Label for="edit-description">Description</Field.Label>
-				<Textarea id="edit-description" name="description" rows={7} bind:value={description} />
+				<Textarea
+					{...updateStudyStep.fields.description.as('text')}
+					id="edit-description"
+					rows={7}
+					bind:value={description}
+				/>
 				{#if updateStudyStep.fields.description.issues()}
 					{#each updateStudyStep.fields.description.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -175,7 +189,7 @@
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Field.Field>
 					<Field.Label for="edit-date">Date</Field.Label>
-					<Input id="edit-date" name="date" type="date" bind:value={date} />
+					<Input {...updateStudyStep.fields.date.as('date')} id="edit-date" bind:value={date} />
 					{#if updateStudyStep.fields.date.issues()}
 						{#each updateStudyStep.fields.date.issues() as issue, idx (idx)}
 							<Field.Error>{issue.message}</Field.Error>
@@ -184,7 +198,11 @@
 				</Field.Field>
 				<Field.Field>
 					<Field.Label for="edit-type">Type</Field.Label>
-					<Select.Root name="type" bind:value={type} type="single">
+					<Select.Root
+						name={updateStudyStep.fields.type.as('select').name}
+						bind:value={type}
+						type="single"
+					>
 						<Select.Trigger id="edit-type">{type}</Select.Trigger>
 						<Select.Content>
 							{#each studyStepTypes as option (option)}

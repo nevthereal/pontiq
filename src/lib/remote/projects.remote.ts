@@ -1,16 +1,16 @@
 import { command, form, query } from '$app/server';
 import { z } from 'zod';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { error, redirect } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
-import { project, subject } from '$lib/server/db/schema';
+import { project, subject } from '#lib/server/db/schema/index.ts';
 import { eq } from 'drizzle-orm';
-import { autumn } from '$lib/server/autumn';
+import { autumn } from '#lib/server/autumn.ts';
 import {
 	deleteProjectEntity,
 	ensureProjectEntityExists,
 	isAutumnErrorCode
-} from '$lib/server/project-entities';
+} from '#lib/server/project-entities.ts';
 
 export const getSubjectsWithProjects = query(async () => {
 	const user = await requireAuth();

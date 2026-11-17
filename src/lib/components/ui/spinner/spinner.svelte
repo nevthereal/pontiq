@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import type { IconProps } from '@lucide/svelte';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
 
@@ -28,5 +28,5 @@
 	stroke={stroke ?? undefined}
 	aria-label={ariaLabel ?? 'Loading'}
 	class={cn('size-4 animate-spin', className)}
-	{...(restProps as Omit<IconProps, 'name'>)}
+	{...restProps as Omit<IconProps, 'name'>}
 />

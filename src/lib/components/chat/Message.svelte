@@ -1,8 +1,8 @@
 <script lang="ts">
 	import DOMPurify from 'isomorphic-dompurify';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import type { MyUIMessage } from '#lib/server/ai.ts';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import {
 		FileText,
 		Brain,
@@ -22,14 +22,14 @@
 		Coffee,
 		type IconProps
 	} from '@lucide/svelte';
-	import type { StudyStepType } from '$lib/things';
+	import type { StudyStepType } from '#lib/things.ts';
 	import type { Component } from 'svelte';
-	import { marked } from '$lib/things';
+	import { marked } from '#lib/things.ts';
 	import { fade, slide } from 'svelte/transition';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import MathVisualization from '$lib/components/math/MathVisualization.svelte';
-	import { parseMathVizSegments } from '$lib/math-viz';
+	import MathVisualization from '#lib/components/math/MathVisualization.svelte';
+	import { parseMathVizSegments } from '#lib/math-viz.ts';
 
 	let { message }: { message: MyUIMessage } = $props();
 

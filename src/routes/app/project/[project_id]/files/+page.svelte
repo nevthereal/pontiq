@@ -1,23 +1,23 @@
 <script lang="ts">
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import * as Item from '$lib/components/ui/item/index.js';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import * as Item from '#lib/components/ui/item/index.js';
 
-	import { getFiles } from '$lib/remote/files.remote';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import File from '$lib/components/files/File.svelte';
-	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { getFiles } from '#lib/remote/files.remote.ts';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import File from '#lib/components/files/File.svelte';
+	import { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { resolve } from '$app/paths';
 	import { generateSvelteHelpers, UploadDropzone } from '@uploadthing/svelte';
 	import { toast } from 'svelte-sonner';
-	import type { MyRouter } from '$lib/server/uploadthing';
+	import type { MyRouter } from '#lib/server/uploadthing.ts';
 	import { FileX, Folder, Upload } from '@lucide/svelte';
 	import { twMerge } from 'tailwind-merge';
 	import { settled, tick } from 'svelte';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
-	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
-	import { getFileLimit, subscribeToPro } from '$lib/remote/billing.remote';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
+	import Spinner from '#lib/components/ui/spinner/spinner.svelte';
+	import { getFileLimit, subscribeToPro } from '#lib/remote/billing.remote.ts';
 
 	let { params } = $props();
 	let open = $state(false);

@@ -1,8 +1,8 @@
 <script>
-	import { authClient } from '$lib/auth-client';
-	import { Button } from '$lib/components/ui/button';
+	import { authClient } from '#lib/auth-client.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
 	import { DoorOpen } from '@lucide/svelte';
-	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
+	import Spinner from '#lib/components/ui/spinner/spinner.svelte';
 
 	let loading = $state(false);
 </script>

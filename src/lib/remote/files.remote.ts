@@ -2,12 +2,12 @@ import { command, query } from '$app/server';
 import { eq, and } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import { requireAuth } from './auth.remote';
-import { db } from '$lib/server/db';
-import { file } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { file } from '#lib/server/db/schema/index.ts';
 import { getFileLimit } from './billing.remote';
-import { refundProjectFileUpload } from '$lib/server/file-upload-limits';
+import { refundProjectFileUpload } from '#lib/server/file-upload-limits.ts';
 import z from 'zod';
-import { utapi } from '$lib/server/uploadthing';
+import { utapi } from '#lib/server/uploadthing.ts';
 import { DrizzleError } from 'drizzle-orm/errors';
 import { UploadThingError } from 'uploadthing/server';
 
