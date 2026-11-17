@@ -13,10 +13,13 @@
 	let { spec }: { spec: MathVizSpec } = $props();
 
 	const width = 760;
-	const height = 340;
-	const margin = { top: 30, right: 32, bottom: 36, left: 74 };
-	const plotWidth = width - margin.left - margin.right;
-	const plotHeight = height - margin.top - margin.bottom;
+	const hasDecisionRegions = $derived(
+		spec.kind === 'binomial' && (spec.rejectLte != null || spec.rejectGte != null)
+	);
+	const height = $derived(hasDecisionRegions ? 364 : 340);
+	const margin = $derived({ top: 30, right: 32, bottom: hasDecisionRegions ? 60 : 36, left: 74 });
+	const plotWidth = $derived(width - margin.left - margin.right);
+	const plotHeight = $derived(height - margin.top - margin.bottom);
 	const minDomainSpan = 1e-7;
 	const maxDomainSpan = 1e9;
 
@@ -177,6 +180,10 @@
 
 	const yAxisLabel = $derived(spec.yLabel ?? (spec.kind === 'binomial' ? 'P(X = x)' : 'f(x)'));
 	const xAxisLabel = $derived(spec.xLabel ?? 'x');
+	const decisionLabelY = $derived(height - 6);
+	const xAxisBadgeY = $derived(
+		spec.kind === 'binomial' ? height - margin.bottom + 21 : height - margin.bottom - 12
+	);
 
 	const svgId = $derived(`math-viz-${title.replace(/\W+/g, '-').toLowerCase()}`);
 	const clipId = $derived(`${svgId}-clip`);
@@ -297,6 +304,15 @@
 			parts.push('reject H0');
 		}
 		return parts.join(', ');
+	}
+
+	function getObservedLabelX(x: number) {
+		if (x > width - margin.right - 96) return x - 9;
+		return x + 9;
+	}
+
+	function getObservedLabelAnchor(x: number) {
+		return x > width - margin.right - 96 ? 'end' : 'start';
 	}
 
 	function handleAnnotationPointerDown(event: PointerEvent) {
@@ -505,12 +521,7 @@
 					class="plot-bg"
 				/>
 				<text x={margin.left + 12} y={margin.top + 22} class="axis-badge">{yAxisLabel}</text>
-				<text
-					x={width - margin.right - 12}
-					y={height - margin.bottom - 12}
-					text-anchor="end"
-					class="axis-badge"
-				>
+				<text x={width - margin.right - 12} y={xAxisBadgeY} text-anchor="end" class="axis-badge">
 					{xAxisLabel}
 				</text>
 
@@ -605,9 +616,6 @@
 							y2={height - margin.bottom}
 							class="critical-line"
 						/>
-						<text x={lowerX - 8} y={margin.top + 18} text-anchor="end" class="critical-label">
-							reject H0: x &lt;= {spec.rejectLte}
-						</text>
 					{/if}
 					{#if spec.rejectGte != null}
 						{@const upperX = xScale(spec.rejectGte)}
@@ -618,9 +626,6 @@
 							y2={height - margin.bottom}
 							class="critical-line"
 						/>
-						<text x={upperX + 8} y={margin.top + 18} class="critical-label">
-							reject H0: x &gt;= {spec.rejectGte}
-						</text>
 					{/if}
 					{#if spec.observed != null}
 						{@const observedX = xScale(spec.observed)}
@@ -632,24 +637,58 @@
 							class="observed-line"
 						/>
 						<circle cx={observedX} cy={margin.top - 8} r="5" class="observed-dot" />
-						<text x={observedX + 9} y={margin.top - 12} class="observed-label">
+						<text
+							x={getObservedLabelX(observedX)}
+							y={margin.top - 12}
+							text-anchor={getObservedLabelAnchor(observedX)}
+							class="observed-label"
+						>
 							observed x = {spec.observed}
 						</text>
 					{/if}
-					<g class="binomial-legend" transform={`translate(${margin.left + 12} ${height - 18})`}>
-						<rect x="0" y="-10" width="10" height="10" rx="2" class="legend-accept" />
-						<text x="16" y="-1">do not reject H0</text>
-						<rect x="142" y="-10" width="10" height="10" rx="2" class="legend-reject" />
-						<text x="158" y="-1">reject H0</text>
-						{#if spec.alternativeP != null}
-							<text x="250" y="-1">
-								{spec.nullLabel ?? `H0: p = ${niceNumber(spec.p)}`} ·
-								{spec.alternativeLabel ?? `p1 = ${niceNumber(spec.alternativeP)}`}
-							</text>
-						{:else if spec.nullLabel}
-							<text x="250" y="-1">{spec.nullLabel}</text>
-						{/if}
-					</g>
+					{#if hasDecisionRegions}
+						<line
+							x1={margin.left}
+							x2={width - margin.right}
+							y1={height - margin.bottom + 42}
+							y2={height - margin.bottom + 42}
+							class="decision-baseline"
+						/>
+						<g class="decision-labels">
+							{#if spec.rejectLte != null && spec.rejectGte != null}
+								<g transform={`translate(${margin.left + 22} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-reject" />
+									<text x="16" y="-3">reject H0: x &lt;= {spec.rejectLte}</text>
+								</g>
+								<g transform={`translate(${width / 2 - 70} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-accept" />
+									<text x="16" y="-3">do not reject H0</text>
+								</g>
+								<g transform={`translate(${width - margin.right - 134} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-reject" />
+									<text x="16" y="-3">reject H0: x &gt;= {spec.rejectGte}</text>
+								</g>
+							{:else if spec.rejectLte != null}
+								<g transform={`translate(${margin.left + 22} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-reject" />
+									<text x="16" y="-3">reject H0: x &lt;= {spec.rejectLte}</text>
+								</g>
+								<g transform={`translate(${width - margin.right - 132} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-accept" />
+									<text x="16" y="-3">do not reject H0</text>
+								</g>
+							{:else if spec.rejectGte != null}
+								<g transform={`translate(${margin.left + 22} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-accept" />
+									<text x="16" y="-3">do not reject H0</text>
+								</g>
+								<g transform={`translate(${width - margin.right - 134} ${decisionLabelY})`}>
+									<rect x="0" y="-12" width="10" height="10" rx="2" class="legend-reject" />
+									<text x="16" y="-3">reject H0: x &gt;= {spec.rejectGte}</text>
+								</g>
+							{/if}
+						</g>
+					{/if}
 				{/if}
 
 				{#if spec.kind === 'function'}
@@ -710,6 +749,14 @@
 				{/if}
 			</svg>
 		</section>
+		{#if spec.kind === 'binomial' && (spec.nullLabel || spec.alternativeP != null)}
+			<p class="binomial-hypothesis-label">
+				{spec.nullLabel ?? `H0: p = ${niceNumber(spec.p)}`}
+				{#if spec.alternativeP != null}
+					· {spec.alternativeLabel ?? `p1 = ${niceNumber(spec.alternativeP)}`}
+				{/if}
+			</p>
+		{/if}
 	{/if}
 </figure>
 
@@ -867,11 +914,15 @@
 		stroke-width: 1.6;
 	}
 
-	.critical-label,
 	.observed-label {
 		fill: color-mix(in oklab, var(--foreground) 92%, var(--card));
 		font-size: 11px;
 		font-weight: 720;
+	}
+
+	.decision-baseline {
+		stroke: color-mix(in oklab, var(--border) 58%, transparent);
+		stroke-width: 1;
 	}
 
 	.observed-line {
@@ -885,10 +936,21 @@
 		stroke-width: 1.5;
 	}
 
-	.binomial-legend text {
+	.decision-labels text {
 		fill: var(--muted-foreground);
 		font-size: 10.5px;
 		font-weight: 650;
+	}
+
+	.decision-labels text {
+		fill: color-mix(in oklab, var(--foreground) 78%, var(--muted-foreground));
+	}
+
+	.binomial-hypothesis-label {
+		margin: 0;
+		padding: 0 1.1rem 0.75rem;
+		overflow-wrap: anywhere;
+		font-size: 0.75rem;
 	}
 
 	.legend-accept {
