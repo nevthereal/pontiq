@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Trash2 } from '@lucide/svelte';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { Button } from '$lib/components/ui/button';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import type { StudyPlanStep } from '$lib/server/db/schema';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import type { StudyPlanStep } from '#lib/server/db/schema/index.ts';
 
 	let {
 		steps,

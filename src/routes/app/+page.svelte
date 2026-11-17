@@ -1,15 +1,15 @@
 <script lang="ts">
-	import * as Item from '$lib/components/ui/item';
+	import * as Item from '#lib/components/ui/item/index.ts';
 	import { resolve } from '$app/paths';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import { getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import Muted from '$lib/components/typography/Muted.svelte';
-	import CreateDialog from '$lib/components/projects/CreateDialog.svelte';
-	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import { getCustomer, subscribeToPro } from '$lib/remote/billing.remote';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import { getSubjectsWithProjects } from '#lib/remote/projects.remote.ts';
+	import Muted from '#lib/components/typography/Muted.svelte';
+	import CreateDialog from '#lib/components/projects/CreateDialog.svelte';
+	import SiteHeading from '#lib/components/typography/SiteHeading.svelte';
+	import Button from '#lib/components/ui/button/button.svelte';
+	import { getCustomer, subscribeToPro } from '#lib/remote/billing.remote.ts';
 	import { CircleFadingArrowUp } from '@lucide/svelte';
-	import Spinner from '$lib/components/ui/spinner/spinner.svelte';
+	import Spinner from '#lib/components/ui/spinner/spinner.svelte';
 
 	let loading = $state(false);
 </script>
@@ -47,10 +47,7 @@
 					{#each sub.projects as prj (prj.id)}
 						<Item.Root variant="outline">
 							{#snippet child({ props })}
-								<a
-									href={resolve('/app/project/[project_id]', { project_id: prj.id })}
-									{...props}
-								>
+								<a href={resolve('/app/project/[project_id]', { project_id: prj.id })} {...props}>
 									<Item.Title>
 										{prj.name}
 									</Item.Title>

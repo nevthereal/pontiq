@@ -1,11 +1,21 @@
+import {
+	currentPracticeProgress,
+	nextPracticeProgress,
+	practiceDay
+} from '#lib/flashcard-practice.ts';
 import { command, form, query } from '$app/server';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { flashcard, flashcardReviewState, studyPlanStep } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import {
+	flashcard,
+	flashcardReview,
+	flashcardReviewState,
+	studyPlanStep
+} from '#lib/server/db/schema/index.ts';
 import { requireAuth } from './auth.remote';
 import z from 'zod';
 import { error } from '@sveltejs/kit';
-import { ratings, studyStepTypes } from '$lib/things';
+import { studyStepTypes } from '#lib/things.ts';
 
 async function requireOwnedProject(
 	database: Pick<typeof db, 'query'>,
@@ -35,8 +45,26 @@ function normalizeDateInput(date: string) {
 const flashcardFormSchema = z.object({
 	projectId: z.uuid(),
 	term: z.string().trim().min(1),
-	definition: z.string().trim().min(1)
+	definition: z.string().trim().min(1),
+	termImageUrl: z.union([z.url().startsWith('https://'), z.literal('')]).optional(),
+	definitionImageUrl: z.union([z.url().startsWith('https://'), z.literal('')]).optional()
 });
+
+async function validateFlashcardImages(
+	database: Pick<typeof db, 'query'>,
+	projectId: string,
+	userId: string,
+	urls: (string | undefined)[]
+) {
+	for (const url of urls) {
+		if (!url) continue;
+		const image = await database.query.file.findFirst({
+			where: { projectId, ownerId: userId, utURL: url }
+		});
+		if (!image?.type.startsWith('image/'))
+			throw error(400, 'Choose an image uploaded to this project');
+	}
+}
 
 const studyStepFormSchema = z.object({
 	projectId: z.uuid(),
@@ -184,14 +212,16 @@ export const getFlashcardReviewState = query(z.string(), async (projectId) => {
 		}
 	});
 
-	return {
-		reviewedFlashcardIds: reviewState?.reviewedFlashcardIds ?? []
-	};
+	return currentPracticeProgress(reviewState);
 });
 
 export const createFlashcard = form(flashcardFormSchema, async ({ projectId, ...data }) => {
 	const user = await requireAuth();
 	await requireOwnedProject(db, projectId, user.id);
+	await validateFlashcardImages(db, projectId, user.id, [
+		data.termImageUrl,
+		data.definitionImageUrl
+	]);
 
 	const [createdFlashcard] = await db
 		.insert(flashcard)
@@ -199,6 +229,8 @@ export const createFlashcard = form(flashcardFormSchema, async ({ projectId, ...
 			projectId,
 			term: data.term,
 			definition: data.definition,
+			termImageUrl: data.termImageUrl || null,
+			definitionImageUrl: data.definitionImageUrl || null,
 			source: 'manual'
 		})
 		.returning();
@@ -225,12 +257,18 @@ export const updateFlashcard = form(
 			});
 
 			if (!existingFlashcard) throw error(404, 'Flashcard not found');
+			await validateFlashcardImages(tx, projectId, user.id, [
+				data.termImageUrl,
+				data.definitionImageUrl
+			]);
 
 			const [nextFlashcard] = await tx
 				.update(flashcard)
 				.set({
 					term: data.term,
 					definition: data.definition,
+					termImageUrl: data.termImageUrl || null,
+					definitionImageUrl: data.definitionImageUrl || null,
 					rating: 'Unrated',
 					manuallyEditedAt: new Date()
 				})
@@ -240,7 +278,8 @@ export const updateFlashcard = form(
 			await tx
 				.update(flashcardReviewState)
 				.set({
-					reviewedFlashcardIds: sql`array_remove(${flashcardReviewState.reviewedFlashcardIds}, ${id})`
+					reviewedFlashcardIds: sql`array_remove(${flashcardReviewState.reviewedFlashcardIds}, ${id})`,
+					retryFlashcardIds: sql`array_remove(${flashcardReviewState.retryFlashcardIds}, ${id})`
 				})
 				.where(eq(flashcardReviewState.projectId, projectId));
 
@@ -277,7 +316,8 @@ export const deleteFlashcard = command(
 			await tx
 				.update(flashcardReviewState)
 				.set({
-					reviewedFlashcardIds: sql`array_remove(${flashcardReviewState.reviewedFlashcardIds}, ${id})`
+					reviewedFlashcardIds: sql`array_remove(${flashcardReviewState.reviewedFlashcardIds}, ${id})`,
+					retryFlashcardIds: sql`array_remove(${flashcardReviewState.retryFlashcardIds}, ${id})`
 				})
 				.where(eq(flashcardReviewState.projectId, projectId));
 		});
@@ -304,59 +344,59 @@ export const deleteAllFlashcards = command(z.string(), async (projectId) => {
 	]);
 });
 
-export const applyRating = command(
-	z.object({ rating: z.enum(ratings), flashcardId: z.string(), projectId: z.string() }),
-	async ({ flashcardId, rating, projectId }) => {
+export const reviewFlashcard = command(
+	z.object({
+		rating: z.enum(['Blank', 'Hard', 'Good', 'Easy']),
+		flashcardId: z.uuid(),
+		projectId: z.uuid(),
+		reviewId: z.uuid()
+	}),
+	async ({ flashcardId, rating, projectId, reviewId }) => {
 		const user = await requireAuth();
-		await requireOwnedProject(db, projectId, user.id);
-
-		await db
-			.update(flashcard)
-			.set({ rating })
-			.where(and(eq(flashcard.id, flashcardId), eq(flashcard.projectId, projectId)));
-	}
-);
-
-export const markFlashcardReviewed = command(
-	z.object({ flashcardId: z.string(), projectId: z.string() }),
-	async ({ flashcardId, projectId }) => {
-		const user = await requireAuth();
-
 		await db.transaction(async (tx) => {
 			await requireOwnedProject(tx, projectId, user.id);
-
-			const flashcardRow = await tx.query.flashcard.findFirst({
-				where: {
-					id: flashcardId,
-					projectId
-				}
-			});
-
-			if (!flashcardRow) throw error(404, 'Flashcard not found');
-
+			// Lock the card so edits, deletion and concurrent reviews serialize.
+			const [card] = await tx
+				.select({ id: flashcard.id })
+				.from(flashcard)
+				.where(and(eq(flashcard.id, flashcardId), eq(flashcard.projectId, projectId)))
+				.for('update');
+			if (!card) throw error(404, 'Flashcard not found');
+			const [review] = await tx
+				.insert(flashcardReview)
+				.values({ id: reviewId, flashcardId, projectId, userId: user.id, rating })
+				.onConflictDoNothing()
+				.returning({ id: flashcardReview.id });
+			if (!review) return; // A retry of an already committed response.
 			await tx
 				.insert(flashcardReviewState)
-				.values({
-					projectId,
-					userId: user.id,
-					reviewedFlashcardIds: [flashcardId]
-				})
+				.values({ projectId, userId: user.id, sessionDay: practiceDay() })
 				.onConflictDoNothing({
 					target: [flashcardReviewState.userId, flashcardReviewState.projectId]
 				});
-
-			await tx
-				.update(flashcardReviewState)
-				.set({
-					reviewedFlashcardIds: sql`array_append(${flashcardReviewState.reviewedFlashcardIds}, ${flashcardId})`
-				})
+			const [state] = await tx
+				.select()
+				.from(flashcardReviewState)
 				.where(
 					and(
 						eq(flashcardReviewState.projectId, projectId),
-						eq(flashcardReviewState.userId, user.id),
-						sql`not (${flashcardId} = any(${flashcardReviewState.reviewedFlashcardIds}))`
+						eq(flashcardReviewState.userId, user.id)
 					)
-				);
+				)
+				.for('update');
+			const today = practiceDay();
+			const current = currentPracticeProgress(state);
+			const progress = nextPracticeProgress(
+				current.reviewedFlashcardIds,
+				current.retryFlashcardIds,
+				flashcardId,
+				rating
+			);
+			await tx.update(flashcard).set({ rating }).where(eq(flashcard.id, flashcardId));
+			await tx
+				.update(flashcardReviewState)
+				.set({ ...progress, sessionDay: today })
+				.where(eq(flashcardReviewState.id, state.id));
 		});
 	}
 );

@@ -2,12 +2,12 @@ import { tool, type InferUITools, type ToolSet, type UIMessage } from 'ai';
 import { error } from '@sveltejs/kit';
 import { db } from './db';
 import { flashcard, project, studyPlanStep } from './db/schema';
-import { studyStepTypes } from '$lib/things';
+import { studyStepTypes } from '#lib/things.ts';
 import z from 'zod';
-import { EXA_API_KEY } from '$env/static/private';
+import { EXA_API_KEY } from '$app/env/private';
 import { and, asc, eq } from 'drizzle-orm';
 import { webSearch } from '@exalabs/ai-sdk';
-import type { ChatConfig } from '$lib/chat-config';
+import type { ChatConfig } from '#lib/chat-config.ts';
 import { ensureProjectBelongsToUser } from './chat';
 
 export type ChatToolContext = {

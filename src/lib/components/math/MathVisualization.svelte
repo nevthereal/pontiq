@@ -8,7 +8,7 @@
 		type FunctionAnnotationPoint,
 		type FunctionPlotPoint,
 		type MathVizSpec
-	} from '$lib/math-viz';
+	} from '#lib/math-viz.ts';
 
 	let { spec }: { spec: MathVizSpec } = $props();
 

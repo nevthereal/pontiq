@@ -1,6 +1,6 @@
 import { command, getRequestEvent, query } from '$app/server';
-import { autumn } from '$lib/server/autumn';
-import { getProjectFileUploadLimit } from '$lib/server/file-upload-limits';
+import { autumn } from '#lib/server/autumn.ts';
+import { getProjectFileUploadLimit } from '#lib/server/file-upload-limits.ts';
 import z from 'zod';
 import { requireAuth } from './auth.remote';
 

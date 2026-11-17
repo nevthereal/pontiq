@@ -1,16 +1,16 @@
 import { createUIMessageStreamResponse } from 'ai';
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { autumn } from '$lib/server/autumn';
+import { autumn } from '#lib/server/autumn.ts';
 import {
 	createChatThread,
 	listThreadMessages,
 	appendChatMessage,
 	requireOwnedThread,
 	setChatThreadRunState
-} from '$lib/server/chat';
-import { normalizeChatConfig } from '$lib/chat-config';
-import type { MyUIMessage } from '$lib/server/ai';
+} from '#lib/server/chat.ts';
+import { normalizeChatConfig } from '#lib/chat-config.ts';
+import type { MyUIMessage } from '#lib/server/ai.ts';
 import { generateProjectChatTitle, runProjectChatTurn } from '../../../../../../workflows/chat';
 import { start } from 'workflow/api';
 

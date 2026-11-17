@@ -1,8 +1,11 @@
 <script lang="ts">
 	import DOMPurify from 'isomorphic-dompurify';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import type { MyUIMessage } from '#lib/server/ai.ts';
+	import * as Message from '#lib/components/ui/message/index.js';
+	import * as Bubble from '#lib/components/ui/bubble/index.js';
+	import * as Attachment from '#lib/components/ui/attachment/index.js';
+	import * as Trace from '#lib/components/ui/trace/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import {
 		FileText,
 		Brain,
@@ -22,14 +25,14 @@
 		Coffee,
 		type IconProps
 	} from '@lucide/svelte';
-	import type { StudyStepType } from '$lib/things';
+	import type { StudyStepType } from '#lib/things.ts';
 	import type { Component } from 'svelte';
-	import { marked } from '$lib/things';
+	import { marked } from '#lib/things.ts';
 	import { fade, slide } from 'svelte/transition';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import MathVisualization from '$lib/components/math/MathVisualization.svelte';
-	import { parseMathVizSegments } from '$lib/math-viz';
+	import MathVisualization from '#lib/components/math/MathVisualization.svelte';
+	import { parseMathVizSegments } from '#lib/math-viz.ts';
 
 	let { message }: { message: MyUIMessage } = $props();
 
@@ -172,23 +175,8 @@
 		expandedState[index] = !expandedState[index];
 	}
 
-	function toggleReasoning(index: number) {
-		expandedState[index] = !(expandedState[index] ?? false);
-	}
-
 	function isExpanded(index: number, defaultValue: boolean): boolean {
 		return expandedState[index] ?? defaultValue;
-	}
-
-	function isReasoningStreaming(part: Extract<GroupedPart, { kind: 'reasoning' }>): boolean {
-		return part.state === 'streaming';
-	}
-
-	function isReasoningExpanded(
-		part: Extract<GroupedPart, { kind: 'reasoning' }>,
-		index: number
-	): boolean {
-		return isReasoningStreaming(part) || isExpanded(index, false);
 	}
 
 	// Study step type configuration with icons
@@ -316,30 +304,32 @@
 	}
 </script>
 
-<li in:fade|global>
-	{#if message.role === 'user'}
-		{@render userMessage(message)}
-	{:else if message.role === 'assistant'}
-		{@render assistantMessage(groupedParts)}
-	{/if}
-</li>
+<Message.Root align={message.role === 'user' ? 'end' : 'start'}>
+	<Message.Content class="min-w-0 gap-3">
+		{#if message.role === 'user'}
+			{@render userMessage(message)}
+		{:else if message.role === 'assistant'}
+			{@render assistantMessage(groupedParts)}
+		{/if}
+	</Message.Content>
+</Message.Root>
 
 {#snippet userMessage(message: MyUIMessage)}
-	<Item.Root class="ml-auto w-fit max-w-lg" variant="muted">
-		<Item.Content>
+	<Bubble.Root align="end" variant="muted" class="max-w-full">
+		<Bubble.Content>
 			<!-- Files container - flex row -->
 			{#if message.parts.some((part) => part.type === 'file')}
 				<div class="mb-2 flex flex-wrap gap-1">
 					{#each message.parts as part, partIndex (partIndex)}
 						{#if part.type === 'file'}
-							<Item.Root variant="outline" size="sm">
-								<Item.Media>
+							<Attachment.Root>
+								<Attachment.Media>
 									<FileText class="h-lh" />
-								</Item.Media>
-								<Item.Content>
-									<Item.Title>{part.filename}</Item.Title>
-								</Item.Content>
-							</Item.Root>
+								</Attachment.Media>
+								<Attachment.Content>
+									<Attachment.Title>{part.filename ?? 'Attached file'}</Attachment.Title>
+								</Attachment.Content>
+							</Attachment.Root>
 						{/if}
 					{/each}
 				</div>
@@ -351,8 +341,8 @@
 					{@render richText(part.text)}
 				{/if}
 			{/each}
-		</Item.Content>
-	</Item.Root>
+		</Bubble.Content>
+	</Bubble.Root>
 {/snippet}
 
 {#snippet assistantMessage(groupedParts: GroupedPart[])}
@@ -391,27 +381,25 @@
 {/snippet}
 
 {#snippet assistantReasoning(part: Extract<GroupedPart, { kind: 'reasoning' }>, idx: number)}
-	<button
-		onclick={() => toggleReasoning(idx)}
-		class="group flex w-full cursor-pointer items-center gap-2 py-1 text-left text-sm transition-colors"
-	>
-		<Brain size={14} class="text-muted-foreground" />
-		<span class="flex-1 text-muted-foreground">Reasoning</span>
-		<ChevronDown
-			size={14}
-			class="text-muted-foreground transition-transform duration-200 {isReasoningExpanded(part, idx)
-				? 'rotate-180'
-				: ''}"
-		/>
-	</button>
-	{#if isReasoningExpanded(part, idx)}
-		<div transition:slide={{ duration: 200 }} class="py-2 pl-6">
-			<div class="prose prose-sm max-w-full text-muted-foreground dark:prose-invert">
-				<!-- eslint-disable svelte/no-at-html-tags -->
-				{@html renderMarkdown(part.text)}
-			</div>
-		</div>
-	{/if}
+	<Trace.Root>
+		<Trace.Collapsible
+			open={expandedState[idx] ?? part.state === 'streaming'}
+			onOpenChange={(open) => (expandedState[idx] = open)}
+		>
+			<Trace.CollapsibleTrigger>
+				<Trace.Line status={part.state === 'streaming' ? 'running' : undefined}>
+					<Trace.Icon><Brain /></Trace.Icon>
+					<Trace.Title>{part.state === 'streaming' ? 'Thinking' : 'Thought'}</Trace.Title>
+				</Trace.Line>
+			</Trace.CollapsibleTrigger>
+			<Trace.CollapsibleContent>
+				<div class="prose prose-sm max-w-full text-muted-foreground dark:prose-invert">
+					<!-- eslint-disable svelte/no-at-html-tags -->
+					{@html renderMarkdown(part.text)}
+				</div>
+			</Trace.CollapsibleContent>
+		</Trace.Collapsible>
+	</Trace.Root>
 {/snippet}
 
 {#snippet assistantToolGroup(part: Extract<GroupedPart, { kind: 'tool-group' }>, idx: number)}

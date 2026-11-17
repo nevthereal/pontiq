@@ -1,17 +1,17 @@
 <script lang="ts">
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import Button, { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import { Toaster } from '#lib/components/ui/sonner/index.js';
 	import { mode, ModeWatcher, toggleMode } from 'mode-watcher';
 	import '../app.css';
-	import Logo from '$lib/assets/favicon.png';
-	import { getUser } from '$lib/remote/auth.remote';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Avatar from '$lib/components/ui/avatar';
+	import Logo from '#lib/assets/favicon.png';
+	import { getUser } from '#lib/remote/auth.remote.ts';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.ts';
+	import * as Avatar from '#lib/components/ui/avatar/index.ts';
 	import { Check, ChevronsUpDown, LogOut, MoonIcon, SunIcon } from '@lucide/svelte';
-	import { authClient } from '$lib/auth-client';
+	import { authClient } from '#lib/auth-client.ts';
 	import { resolve } from '$app/paths';
-	import { getProject, getSubjectsWithProjects } from '$lib/remote/projects.remote';
-	import { getCustomer } from '$lib/remote/billing.remote';
+	import { getProject, getSubjectsWithProjects } from '#lib/remote/projects.remote.ts';
+	import { getCustomer } from '#lib/remote/billing.remote.ts';
 
 	let { children, params } = $props();
 

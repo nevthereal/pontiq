@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Item from '$lib/components/ui/item/index.js';
+	import * as Item from '#lib/components/ui/item/index.js';
 
-	import { getProject } from '$lib/remote/projects.remote';
+	import { getProject } from '#lib/remote/projects.remote.ts';
 	import { CreditCard, MessageCircle, NotebookPen, Workflow } from '@lucide/svelte';
 
 	import { resolve } from '$app/paths';

@@ -1,4 +1,4 @@
-import { VERCEL_AI_KEY } from '$env/static/private';
+import { VERCEL_AI_KEY } from '$app/env/private';
 import { createGateway } from '@ai-sdk/gateway';
 import type { OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
 import {
@@ -10,13 +10,13 @@ import {
 	type UIMessageChunk
 } from 'ai';
 import { getWritable, getWorkflowMetadata } from 'workflow';
-import type { ChatConfig } from '$lib/chat-config';
+import type { ChatConfig } from '#lib/chat-config.ts';
 import {
 	appendChatMessage,
 	clearChatThreadActiveRun,
 	updateChatThreadTitleIfDefault
-} from '$lib/server/chat';
-import { createChatTools, getChatSystemPrompt, type MyUIMessage } from '$lib/server/ai';
+} from '#lib/server/chat.ts';
+import { createChatTools, getChatSystemPrompt, type MyUIMessage } from '#lib/server/ai.ts';
 
 const gateway = createGateway({
 	apiKey: VERCEL_AI_KEY
@@ -68,6 +68,7 @@ function isIgnorableStreamDisconnectError(error: unknown) {
 		}
 
 		const message = error.message.toLowerCase();
+
 		return (
 			message.includes('aborted') ||
 			message.includes('closed') ||

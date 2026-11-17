@@ -2,17 +2,17 @@
 	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { ArrowLeft, MessageSquareX, Settings2 } from '@lucide/svelte';
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import * as Item from '$lib/components/ui/item/index.js';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
+	import Button, { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import * as Item from '#lib/components/ui/item/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
 	import {
 		deleteProjectChatThread,
 		getProjectChatThreads,
 		renameProjectChatThread
-	} from '$lib/remote/chat.remote';
+	} from '#lib/remote/chat.remote.ts';
 
 	let { params } = $props();
 
@@ -82,7 +82,8 @@
 								</Dialog.Header>
 								<form
 									class="flex flex-col gap-3"
-									{...renameForm.enhance(async ({ submit, data }) => {
+									{...renameForm.enhance(async ({ submit, fields }) => {
+										const data = fields.value();
 										const toastId = `rename-chat-${thread.id}`;
 										toast.loading('Renaming chat...', { id: toastId });
 
@@ -104,7 +105,7 @@
 										renameDialogThreadId = null;
 									})}
 								>
-									<input type="hidden" name="projectId" value={params.project_id} />
+									<input {...renameForm.fields.projectId.as('hidden', params.project_id)} />
 									<Input
 										{...renameForm.fields.title.as('text')}
 										value={thread.title}
@@ -139,7 +140,7 @@
 								});
 							})}
 						>
-							<input type="hidden" name="projectId" value={params.project_id} />
+							<input {...deleteForm.fields.projectId.as('hidden', params.project_id)} />
 							<Button
 								size="sm"
 								variant="destructive"

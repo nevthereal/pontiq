@@ -2,7 +2,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { UIMessage } from 'ai';
 import { error } from '@sveltejs/kit';
 import { db } from './db';
-import { chatMessage, chatThread, project } from './db/schema';
+import { chatMessage, chatThread } from './db/schema';
 
 export type StoredChatMessage = UIMessage;
 

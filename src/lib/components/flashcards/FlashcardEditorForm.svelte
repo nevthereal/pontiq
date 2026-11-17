@@ -1,12 +1,13 @@
 <script lang="ts">
+	import FlashcardImageUpload from './FlashcardImageUpload.svelte';
 	import { toast } from 'svelte-sonner';
 	import { CircleCheck } from '@lucide/svelte';
-	import { createFlashcard, updateFlashcard } from '$lib/remote/tools.remote';
-	import { Button } from '$lib/components/ui/button';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Field from '$lib/components/ui/field';
-	import type { Flashcard } from '$lib/server/db/schema';
+	import { createFlashcard, updateFlashcard } from '#lib/remote/tools.remote.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import { Textarea } from '#lib/components/ui/textarea/index.ts';
+	import * as Field from '#lib/components/ui/field/index.ts';
+	import type { Flashcard } from '#lib/server/db/schema/index.ts';
 
 	let {
 		projectId,
@@ -20,21 +21,22 @@
 		onUpdated: (flashcard: Flashcard) => void;
 	} = $props();
 
-	let term = $state('');
-	let definition = $state('');
+	let term = $derived(selectedFlashcard?.term ?? '');
+	let definition = $derived(selectedFlashcard?.definition ?? '');
+	let termImageUrl = $derived(selectedFlashcard?.termImageUrl ?? '');
+	let definitionImageUrl = $derived(selectedFlashcard?.definitionImageUrl ?? '');
 	let submitting = $state(false);
-
-	$effect(() => {
-		term = selectedFlashcard?.term ?? '';
-		definition = selectedFlashcard?.definition ?? '';
-	});
+	let termUploading = $state(false);
+	let definitionUploading = $state(false);
+	const busy = $derived(submitting || termUploading || definitionUploading);
 
 	const isCreating = $derived(selectedFlashcard == null);
 
-	async function handleCreateSubmit(submit: () => Promise<void>) {
+	async function handleCreateSubmit(submit: () => Promise<boolean>) {
+		if (busy) return;
 		submitting = true;
 		try {
-			await submit();
+			if (!(await submit())) return;
 			const createdFlashcard = createFlashcard.result;
 			if (!createdFlashcard) throw new Error('Missing created flashcard result');
 			onCreated(createdFlashcard);
@@ -47,10 +49,11 @@
 		}
 	}
 
-	async function handleUpdateSubmit(submit: () => Promise<void>) {
+	async function handleUpdateSubmit(submit: () => Promise<boolean>) {
+		if (busy) return;
 		submitting = true;
 		try {
-			await submit();
+			if (!(await submit())) return;
 			const updatedFlashcard = updateFlashcard.result;
 			if (!updatedFlashcard) throw new Error('Missing updated flashcard result');
 			onUpdated(updatedFlashcard);
@@ -83,10 +86,10 @@
 			})}
 			class="space-y-4"
 		>
-			<input type="hidden" name="projectId" value={projectId} />
+			<input {...createFlashcard.fields.projectId.as('hidden', projectId)} />
 			<Field.Field>
 				<Field.Label for="term">Term</Field.Label>
-				<Input id="term" name="term" bind:value={term} />
+				<Input {...createFlashcard.fields.term.as('text')} id="term" bind:value={term} />
 				{#if createFlashcard.fields.term.issues()}
 					{#each createFlashcard.fields.term.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -95,14 +98,37 @@
 			</Field.Field>
 			<Field.Field>
 				<Field.Label for="definition">Definition</Field.Label>
-				<Textarea id="definition" name="definition" rows={7} bind:value={definition} />
+				<Textarea
+					{...createFlashcard.fields.definition.as('text')}
+					id="definition"
+					rows={7}
+					bind:value={definition}
+				/>
 				{#if createFlashcard.fields.definition.issues()}
 					{#each createFlashcard.fields.definition.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
 					{/each}
 				{/if}
 			</Field.Field>
-			<Button type="submit" disabled={submitting}>
+			<input {...createFlashcard.fields.termImageUrl.as('hidden', termImageUrl)} />
+			<input {...createFlashcard.fields.definitionImageUrl.as('hidden', definitionImageUrl)} />
+			{#key `${projectId}:${selectedFlashcard?.id ?? 'new'}`}
+				<FlashcardImageUpload
+					{projectId}
+					label="Term image"
+					bind:value={termImageUrl}
+					bind:uploading={termUploading}
+					disabled={submitting || definitionUploading}
+				/>
+				<FlashcardImageUpload
+					{projectId}
+					label="Definition image"
+					bind:value={definitionImageUrl}
+					bind:uploading={definitionUploading}
+					disabled={submitting || termUploading}
+				/>
+			{/key}
+			<Button type="submit" disabled={busy}>
 				<CircleCheck />
 				{submitting ? 'Saving…' : 'Create Flashcard'}
 			</Button>
@@ -114,11 +140,11 @@
 			})}
 			class="space-y-4"
 		>
-			<input type="hidden" name="id" value={selectedFlashcard.id} />
-			<input type="hidden" name="projectId" value={projectId} />
+			<input {...updateFlashcard.fields.id.as('hidden', selectedFlashcard.id)} />
+			<input {...updateFlashcard.fields.projectId.as('hidden', projectId)} />
 			<Field.Field>
 				<Field.Label for="edit-term">Term</Field.Label>
-				<Input id="edit-term" name="term" bind:value={term} />
+				<Input {...updateFlashcard.fields.term.as('text')} id="edit-term" bind:value={term} />
 				{#if updateFlashcard.fields.term.issues()}
 					{#each updateFlashcard.fields.term.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
@@ -127,14 +153,37 @@
 			</Field.Field>
 			<Field.Field>
 				<Field.Label for="edit-definition">Definition</Field.Label>
-				<Textarea id="edit-definition" name="definition" rows={7} bind:value={definition} />
+				<Textarea
+					{...updateFlashcard.fields.definition.as('text')}
+					id="edit-definition"
+					rows={7}
+					bind:value={definition}
+				/>
 				{#if updateFlashcard.fields.definition.issues()}
 					{#each updateFlashcard.fields.definition.issues() as issue, idx (idx)}
 						<Field.Error>{issue.message}</Field.Error>
 					{/each}
 				{/if}
 			</Field.Field>
-			<Button type="submit" disabled={submitting}>
+			<input {...updateFlashcard.fields.termImageUrl.as('hidden', termImageUrl)} />
+			<input {...updateFlashcard.fields.definitionImageUrl.as('hidden', definitionImageUrl)} />
+			{#key `${projectId}:${selectedFlashcard?.id ?? 'new'}`}
+				<FlashcardImageUpload
+					{projectId}
+					label="Term image"
+					bind:value={termImageUrl}
+					bind:uploading={termUploading}
+					disabled={submitting || definitionUploading}
+				/>
+				<FlashcardImageUpload
+					{projectId}
+					label="Definition image"
+					bind:value={definitionImageUrl}
+					bind:uploading={definitionUploading}
+					disabled={submitting || termUploading}
+				/>
+			{/key}
+			<Button type="submit" disabled={busy}>
 				<CircleCheck />
 				{submitting ? 'Saving…' : 'Save Changes'}
 			</Button>

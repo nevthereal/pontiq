@@ -6,19 +6,20 @@
 		GraduationCap,
 		Paperclip,
 		SlidersHorizontal,
-		Trash2
+		X,
+		FileText
 	} from '@lucide/svelte';
-	import * as InputGroup from '$lib/components/ui/input-group';
-	import * as ButtonGroup from '$lib/components/ui/button-group';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Item from '$lib/components/ui/item';
+	import * as InputGroup from '#lib/components/ui/input-group/index.ts';
+	import * as Attachment from '#lib/components/ui/attachment/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.ts';
+	import * as Item from '#lib/components/ui/item/index.ts';
 	import { buttonVariants } from '../ui/button';
-	import { getFiles } from '$lib/remote/files.remote';
+	import { getFiles } from '#lib/remote/files.remote.ts';
 	import { fade } from 'svelte/transition';
-	import { getChatLimit, subscribeToPro } from '$lib/remote/billing.remote';
+	import { getChatLimit, subscribeToPro } from '#lib/remote/billing.remote.ts';
 	import type { Chat } from '@ai-sdk/svelte';
-	import type { MyUIMessage } from '$lib/server/ai';
-	import { attachments, chatConfig } from '$lib/chat.svelte';
+	import type { MyUIMessage } from '#lib/server/ai.ts';
+	import { attachments, chatConfig } from '#lib/chat.svelte.ts';
 	import { Spinner } from '../ui/spinner';
 	import Button from '../ui/button/button.svelte';
 
@@ -48,7 +49,7 @@
 	}
 
 	async function handleSubmit() {
-		if (chat.status !== 'ready') return;
+		if (chat.status !== 'ready' && chat.status !== 'error') return;
 		if (!input.trim() && attachments.files.length === 0) return;
 
 		chat.sendMessage(
@@ -74,7 +75,7 @@
 			e.preventDefault();
 			if (chatLimitQuery.current && chatLimitQuery.current.allowed) handleSubmit();
 		}}
-		class="absolute bottom-0 w-full backdrop-blur-sm"
+		class="relative w-full"
 	>
 		{#if !hideMessageItem && chatLimitQuery.current && !chatLimitQuery.current.balance?.unlimited}
 			<div transition:fade={{ duration: 100 }} class="fixed w-full max-w-md -translate-y-full">
@@ -103,29 +104,41 @@
 		{/if}
 
 		<InputGroup.Root class="rounded-xl">
-			<InputGroup.Input
+			<InputGroup.Textarea
 				bind:value={input}
 				id="chat-input"
 				name="message"
-				placeholder="Ask, Search or Chat..."
+				placeholder="Ask about your documents..."
+				aria-label="Message"
+				class="min-h-20 resize-none"
+				onkeydown={(event) => {
+					if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+						event.preventDefault();
+						event.currentTarget.form?.requestSubmit();
+					}
+				}}
 			/>
 
-			<InputGroup.Addon align="block-start" class="overflow-scroll">
-				{#each attachments.files as att (att.id)}
-					<ButtonGroup.Root class="w-48">
-						<ButtonGroup.Text class="no-scrollbar min-w-0 truncate overflow-x-auto font-mono">
-							{att.name}
-						</ButtonGroup.Text>
-						<InputGroup.Button
-							variant="destructive"
-							size="icon-xs"
-							onclick={() => attachments.remove(att.id)}><Trash2 /></InputGroup.Button
-						>
-					</ButtonGroup.Root>
-				{:else}
-					<InputGroup.Text>No files in Chat</InputGroup.Text>
-				{/each}
-			</InputGroup.Addon>
+			{#if attachments.files.length > 0}
+				<InputGroup.Addon align="block-start">
+					<Attachment.Group class="flex-wrap">
+						{#each attachments.files as att (att.id)}
+							<Attachment.Root>
+								<Attachment.Media><FileText /></Attachment.Media>
+								<Attachment.Content
+									><Attachment.Title>{att.name}</Attachment.Title></Attachment.Content
+								>
+								<Attachment.Actions
+									><Attachment.Action
+										aria-label={`Remove ${att.name}`}
+										onclick={() => attachments.remove(att.id)}><X /></Attachment.Action
+									></Attachment.Actions
+								>
+							</Attachment.Root>
+						{/each}
+					</Attachment.Group>
+				</InputGroup.Addon>
+			{/if}
 
 			<InputGroup.Addon align="block-end">
 				<DropdownMenu.Root>
@@ -153,8 +166,9 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 				<DropdownMenu.Root>
-					<DropdownMenu.Trigger class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
-						><Paperclip /></DropdownMenu.Trigger
+					<DropdownMenu.Trigger
+						class={buttonVariants({ size: 'icon-sm', variant: 'outline' })}
+						aria-label="Attach project files"><Paperclip /></DropdownMenu.Trigger
 					>
 					<DropdownMenu.Content class="w-80">
 						<DropdownMenu.Group>
@@ -183,12 +197,15 @@
 				</DropdownMenu.Root>
 				{#if chatLimitQuery.current}
 					<InputGroup.Button
+						type="submit"
 						variant="default"
 						class="ml-auto rounded-full"
 						size="icon-sm"
-						disabled={chat.status !== 'ready' || !chatLimitQuery.current.allowed}
+						disabled={(chat.status !== 'ready' && chat.status !== 'error') ||
+							!chatLimitQuery.current.allowed ||
+							(!input.trim() && attachments.files.length === 0)}
 					>
-						{#if chat.status === 'ready'}
+						{#if chat.status === 'ready' || chat.status === 'error'}
 							<ArrowUpIcon />
 							<span class="sr-only">Send</span>
 						{:else}

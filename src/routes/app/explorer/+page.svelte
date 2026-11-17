@@ -1,17 +1,21 @@
 <script lang="ts">
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Field from '$lib/components/ui/field';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.ts';
+	import * as Field from '#lib/components/ui/field/index.ts';
 
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { deleteSubject, getSubjectsWithProjects, editSubject } from '$lib/remote/projects.remote';
+	import Button, { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import {
+		deleteSubject,
+		getSubjectsWithProjects,
+		editSubject
+	} from '#lib/remote/projects.remote.ts';
 	import { CircleCheck, Pencil, Trash2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import Input from '$lib/components/ui/input/input.svelte';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import Muted from '$lib/components/typography/Muted.svelte';
+	import Input from '#lib/components/ui/input/input.svelte';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import Muted from '#lib/components/typography/Muted.svelte';
 	import { resolve } from '$app/paths';
-	import SiteHeading from '$lib/components/typography/SiteHeading.svelte';
+	import SiteHeading from '#lib/components/typography/SiteHeading.svelte';
 </script>
 
 <section class="py-4">
@@ -39,12 +43,13 @@
 											<Dialog.Title>Edit subject</Dialog.Title>
 											<Dialog.Description>
 												<form
-													{...editSubject.for(sub.id).enhance(async ({ submit, data }) => {
+													{...editSubject.for(sub.id).enhance(async ({ submit, fields }) => {
+														const data = fields.value();
 														toast.promise(
 															submit().updates(
 																getSubjectsWithProjects().withOverride((subs) =>
 																	subs.map((s) =>
-																		s.id === sub.id ? { ...s, title: data.title } : s
+																		s.id === sub.id ? { ...s, title: data.title ?? s.title } : s
 																	)
 																)
 															),
@@ -60,7 +65,11 @@
 														<Field.Group>
 															<Field.Field>
 																<Field.Label for="title">Subject name</Field.Label>
-																<Input id="title" name="title" placeholder="eg. Redox Chemistry" />
+																<Input
+																	id="title"
+																	{...editSubject.for(sub.id).fields.title.as('text')}
+																	placeholder="eg. Redox Chemistry"
+																/>
 																{#if editSubject.fields.title.issues()}
 																	{#each editSubject.fields.title.issues() as issue, idx (idx)}
 																		<Field.Error>{issue.message}</Field.Error>

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import { buttonVariants } from '$lib/components/ui/button/button.svelte';
-	import { getStudySteps } from '$lib/remote/tools.remote';
-	import Loading from '$lib/components/typography/Loading.svelte';
-	import ToolHeading from '$lib/components/typography/ToolHeading.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
+	import Badge from '#lib/components/ui/badge/badge.svelte';
+	import { buttonVariants } from '#lib/components/ui/button/button.svelte';
+	import { getStudySteps } from '#lib/remote/tools.remote.ts';
+	import Loading from '#lib/components/typography/Loading.svelte';
+	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
 	import {
 		AlarmClockOff,
 		CalendarDays,

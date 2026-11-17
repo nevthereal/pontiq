@@ -6,7 +6,7 @@ import {
 	getChatThreadDetail,
 	getRecentChatThreads,
 	renameChatThread
-} from '$lib/server/chat';
+} from '#lib/server/chat.ts';
 
 const zProjectInput = z.object({
 	projectId: z.uuid()
