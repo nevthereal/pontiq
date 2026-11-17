@@ -5,16 +5,16 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { tick } from 'svelte';
+	import * as MessageScroller from '#lib/components/ui/message-scroller/index.js';
 	import { WorkflowChatTransport } from '@workflow/ai';
 	import { Chat } from '@ai-sdk/svelte';
-	import { ArrowLeftRight, ChevronDown, MessageCircle, Plus } from '@lucide/svelte';
+	import { ArrowLeftRight, MessageCircle, Plus } from '@lucide/svelte';
 	import Spinner from '#lib/components/ui/spinner/spinner.svelte';
 	import Button, { buttonVariants } from '#lib/components/ui/button/button.svelte';
 	import type { MyUIMessage } from '#lib/server/ai.ts';
 	import ToolHeading from '#lib/components/typography/ToolHeading.svelte';
 	import { attachments } from '#lib/chat.svelte.ts';
-	import { ScrollState, watch } from 'runed';
+
 	import Message from '#lib/components/chat/Message.svelte';
 	import { getChatLimit } from '#lib/remote/billing.remote.ts';
 	import { getProjectChatThread, getRecentProjectChats } from '#lib/remote/chat.remote.ts';
@@ -42,7 +42,6 @@
 		initialThread?.activeRunId ? initialThread.id : null
 	);
 	let loadingThread = $state(false);
-	let chatContainer = $state<HTMLElement>();
 	let currentChatVersion = 0;
 	let currentThreadSelectionVersion = 0;
 
@@ -189,30 +188,6 @@
 			!hasRenderableAssistantContent(lastChatMessage)
 	);
 
-	const scroll = new ScrollState({ element: () => chatContainer, behavior: 'smooth' });
-	const atBottom = $derived(scroll.arrived.bottom);
-
-	async function scrollToLatestMessages() {
-		await tick();
-		scroll.scrollToBottom();
-	}
-
-	watch(
-		() => chat.status,
-		(status) => {
-			if (status === 'ready') scroll.scrollToBottom();
-		}
-	);
-
-	watch(
-		() => loadingThread,
-		(isLoading) => {
-			if (!isLoading) {
-				void scrollToLatestMessages();
-			}
-		}
-	);
-
 	function syncThreadUrl(threadId: string | null) {
 		const baseChatPath = resolve('/app/project/[project_id]/chat', {
 			project_id: getProjectId()
@@ -272,7 +247,6 @@
 		activeResponseThreadId = null;
 		replaceChat(null, null);
 		syncThreadUrl(null);
-		void scrollToLatestMessages();
 	}
 
 	async function selectThread(threadId: string) {
@@ -315,7 +289,7 @@
 			<MessageCircle /> Document Chat
 		</ToolHeading>
 		<div class="flex items-center gap-1">
-			<Button onclick={openDraftChat} size="icon"><Plus /></Button>
+			<Button onclick={openDraftChat} size="icon" aria-label="New chat"><Plus /></Button>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
 					<ArrowLeftRight /> Switch chat
@@ -357,54 +331,66 @@
 
 	<div class="flex min-h-0 flex-1 flex-col">
 		<div class="relative no-scrollbar flex h-full min-h-0 flex-col">
-			<ul
-				bind:this={chatContainer}
-				data-chat-scroll-container
-				class="flex min-h-0 flex-1 flex-col gap-8 overflow-x-hidden overflow-y-auto pb-48"
-			>
-				{#if loadingThread}
-					<p class="flex items-center gap-2 font-medium text-muted-foreground">
-						<Spinner /> Loading chat
-					</p>
-				{:else}
-					{#each chat.messages as message, messageIndex (message.id ?? messageIndex)}
-						{#if !(isWaitingForAssistantContent && messageIndex === chat.messages.length - 1 && message.role === 'assistant')}
-							<Message {message} />
-						{/if}
-					{/each}
-				{/if}
-
-				{#if chat.status === 'submitted' || isWaitingForAssistantContent}
-					<p class="flex items-center gap-2 font-medium text-muted-foreground">
-						<Spinner /> Loading message
-					</p>
-				{:else if chat.status === 'error'}
-					<Item.Root variant="outline" class="bg-destructive/10">
-						<Item.Content>
-							<Item.Title>An unexpected error occured.</Item.Title>
-							<Item.Description>
-								{#if chat.error}
-									{chat.error.name}: {chat.error.message}
-								{:else}
-									Try again later
+			<MessageScroller.Provider autoScroll>
+				<MessageScroller.Root class="min-h-0 flex-1">
+					<MessageScroller.Viewport>
+						<MessageScroller.Content
+							aria-busy={loadingThread ||
+								chat.status === 'submitted' ||
+								chat.status === 'streaming'}
+							class="gap-8 pb-6"
+						>
+							{#if loadingThread}
+								<p class="flex items-center gap-2 font-medium text-muted-foreground">
+									<Spinner /> Loading chat
+								</p>
+							{:else}
+								{#if chat.messages.length === 0}
+									<div
+										class="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-16 text-center"
+									>
+										<MessageCircle class="mb-2 size-8 text-muted-foreground" />
+										<h2 class="text-lg font-medium">What would you like to learn?</h2>
+										<p class="max-w-sm text-sm text-muted-foreground">
+											Ask a question, explore your documents, or build study materials together.
+										</p>
+									</div>
 								{/if}
-							</Item.Description>
-						</Item.Content>
-					</Item.Root>
-				{/if}
-			</ul>
+								{#each chat.messages as message, messageIndex (message.id ?? messageIndex)}
+									{#if !(isWaitingForAssistantContent && messageIndex === chat.messages.length - 1 && message.role === 'assistant')}
+										<MessageScroller.Item
+											messageId={message.id}
+											scrollAnchor={message.role === 'user'}
+										>
+											<Message {message} />
+										</MessageScroller.Item>
+									{/if}
+								{/each}
+							{/if}
 
-			{#if !atBottom}
-				<Button
-					size="icon-sm"
-					class="absolute right-0 bottom-40"
-					variant="outline"
-					onclick={() => scroll.scrollToBottom()}
-					aria-label="Scroll to bottom"
-				>
-					<ChevronDown class="h-5 w-5" />
-				</Button>
-			{/if}
+							{#if chat.status === 'submitted' || isWaitingForAssistantContent}
+								<p class="flex items-center gap-2 font-medium text-muted-foreground">
+									<Spinner /> Loading message
+								</p>
+							{:else if chat.status === 'error'}
+								<Item.Root variant="outline" class="bg-destructive/10">
+									<Item.Content>
+										<Item.Title>An unexpected error occurred.</Item.Title>
+										<Item.Description>
+											{#if chat.error}
+												{chat.error.name}: {chat.error.message}
+											{:else}
+												Try again later
+											{/if}
+										</Item.Description>
+									</Item.Content>
+								</Item.Root>
+							{/if}
+						</MessageScroller.Content>
+					</MessageScroller.Viewport>
+					<MessageScroller.Button />
+				</MessageScroller.Root>
+			</MessageScroller.Provider>
 
 			<ChatInput projectId={getProjectId()} threadId={selectedThreadId} {chat} />
 		</div>
